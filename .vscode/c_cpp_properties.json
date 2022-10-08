@@ -1,0 +1,23 @@
+{
+    "configurations": [
+        {
+            "name": "PS2SDK",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/usr/local/ps2dev/ps2sdk/common/include/",
+                "/usr/local/ps2dev/ps2sdk/ee/include/",
+                "/usr/local/ps2dev/gsKit/include",
+                "${workspaceFolder}/include"
+            ],
+            "defines": [
+                "_EE"
+            ],
+            "compilerPath": "/usr/local/ps2dev/ee/bin/mips64r5900el-ps2-elf-gcc",
+            "cStandard": "gnu17",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "${default}",
+            "configurationProvider": "ms-vscode.makefile-tools"
+        }
+    ],
+    "version": 4
+}

@@ -1,2 +1,8 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+*.elf  binary
+*.irx  binary
+*.kelf binary
+*.img binary
+*.sys binary

@@ -1,0 +1,12 @@
+{
+    "files.associations": {
+        "stdlib.h": "c",
+        "unistd.h": "c",
+        "libpad.h": "c",
+        "sifrpc.h": "c",
+        "common.h": "c",
+        "debugprintf.h": "c",
+        "libcdvd_add.h": "c",
+        "iopcontrol_special.h": "c"
+    }
+}
