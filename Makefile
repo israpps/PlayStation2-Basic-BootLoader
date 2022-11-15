@@ -74,12 +74,13 @@ endif
 
 EE_OBJS := $(EE_OBJS:%=$(EE_OBJS_DIR)%)
 
-all: greeting $(EE_BIN)
+all: greeting 
+	$(MAKE) $(EE_BIN)
 
 greeting:
 	@echo building PS2BBL PSX=$(PSX), KERNEL_NOPATCH=$(KERNEL_NOPATCH), NEWLIB_NANO=$(NEWLIB_NANO)
 
-release: all $(EE_BIN_PACKED)
+release: $(EE_BIN_PACKED)
 	@echo "$$HEADER"
 
 clean:
