@@ -7,6 +7,7 @@
         "common.h": "c",
         "debugprintf.h": "c",
         "libcdvd_add.h": "c",
-        "iopcontrol_special.h": "c"
+        "iopcontrol_special.h": "c",
+        "osdconfig.h": "c"
     }
 }

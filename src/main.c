@@ -15,6 +15,8 @@
 #include <ps2sdkapi.h>
 #include <usbhdfsd-common.h>
 
+#include <osd_config.h>
+
 #include <libpad.h>
 #include <libmc.h>
 #include <libcdvd.h>
@@ -64,9 +66,12 @@ void SetDefaultSettings(void);
 void TimerInit(void);
 u64 Timer(void);
 void TimerEnd(void);
-char* CheckPath(char* path);
+char *CheckPath(char *path);
 static void AlarmCallback(s32 alarm_id, u16 time, void *common);
 int dischandler();
+int loadIRXFile(char *path, u32 arg_len, const char *args, int *mod_res);
+void LoadUSBIRX();
+void CDVDBootCertify(u8 romver[16]);
 
 
 typedef struct
@@ -76,14 +81,16 @@ typedef struct
 } CONFIG;
 CONFIG GLOBCFG;
 
-char* EXECPATHS[3];
+char *EXECPATHS[3];
+u8 ROMVER[16];
 int PAD = 0;
 
 int main()
 {
-    int button, x, j, cnf_size, is_PCMCIA = 0;
+    u32 STAT;
+    int button, x, j, cnf_size, is_PCMCIA = 0, fd, result;
     static int config_source = SOURCE_INVALID;
-    unsigned char *RAM_p=NULL;
+    unsigned char *RAM_p = NULL;
     char *CNFBUFF, *name, *value;
     static int num_buttons = 4, pad_button = 0x0100; // first pad button is L2
     SifInitRpc(0);                                   // Initialize SIFCMD & SIFRPC
@@ -99,37 +106,76 @@ int main()
     DPRINTF("sbv_patch_disable_prefix_check\n");
     sbv_patch_disable_prefix_check(); /* disable the MODLOAD module black/white list, allowing executables to be freely loaded from any device. */
 
-    DPRINTF("Loading SIO2MAN.IRX\n");
-    SifExecModuleBuffer(sio2man_irx, size_sio2man_irx, 0, NULL, NULL); /*  Load SDK modules to avoid different behavior across different models*/
-    DPRINTF("Loading MCMAN.IRX\n");
-    SifExecModuleBuffer(mcman_irx, size_mcman_irx, 0, NULL, NULL);
-    DPRINTF("Loading MCSERV.IRX\n");
-    SifExecModuleBuffer(mcserv_irx, size_mcserv_irx, 0, NULL, NULL);
-    DPRINTF("Loading PADMAN.IRX\n");
-    SifExecModuleBuffer(padman_irx, size_padman_irx, 0, NULL, NULL);
+    j = SifExecModuleBuffer(sio2man_irx, size_sio2man_irx, 0, NULL, NULL); /*  Load SDK modules to avoid different behavior across different models*/
+    DPRINTF("[SIO2MAN.IRX]: %d\n", j);
+    j = SifExecModuleBuffer(mcman_irx, size_mcman_irx, 0, NULL, NULL);
+    DPRINTF("[MCMAN.IRX]: %d\n", j);
+    j = SifExecModuleBuffer(mcserv_irx, size_mcserv_irx, 0, NULL, NULL);
+    DPRINTF("[MCSERV.IRX]: %d\n", j);
     mcInit(MC_TYPE_XMC);
-    DPRINTF("Loading USBD.IRX\n");
-    SifExecModuleBuffer(usbd_irx, size_usbd_irx, 0, NULL, NULL);
-    delay(3);
-#ifdef NO_BDM
-    DPRINTF("Loading USBHDFSD.IRX\n");
-    SifExecModuleBuffer(usb_mass_irx, size_usb_mass_irx, 0, NULL, NULL);
-#else
-    DPRINTF("Loading BDM.IRX\n");
-    SifExecModuleBuffer(bdm_irx, size_bdm_irx, 0, NULL, NULL);
-    DPRINTF("Loading BDMFS_FATFS.IRX\n");
-    SifExecModuleBuffer(bdmfs_fatfs_irx, size_bdmfs_fatfs_irx, 0, NULL, NULL);
-    DPRINTF("Loading USBMASS_BD.IRX\n");
-    SifExecModuleBuffer(usbmass_bd_irx, size_usbmass_bd_irx, 0, NULL, NULL);
-#endif
-    delay(3);
+    j = SifExecModuleBuffer(padman_irx, size_padman_irx, 0, NULL, NULL);
+    DPRINTF("[PADMAN.IRX]: %d\n", j);
+    if ((fd = open("rom0:ROMVER", O_RDONLY)) >= 0) {
+        read(fd, ROMVER, sizeof(ROMVER));
+        close(fd);
+    }
+    SifLoadModule("rom0:ADDDRV", 0, NULL); // Load ADDDRV. The OSD has it listed in rom0:OSDCNF/IOPBTCONF, but it is otherwise not loaded automatically.
+
+	
+	int type, freespace, format;
+	mcGetInfo(0, 0, &type, &freespace, &format);
+	mcSync(0, NULL, &result);
+	printf("Slot0\t type=%d, freespace=%d, format=%d\n", type, freespace, format);
+	mcGetInfo(1, 0, &type, &freespace, &format);
+	mcSync(0, NULL, &result);
+	printf("Slot1\t type=%d, freespace=%d, format=%d\n", type, freespace, format);
+	sleep(10);
     InitOsd(); // Initialize OSD so kernel patches can do their magic
+    OSDInitSystemPaths();
+    CDVDBootCertify(ROMVER);
+    LoadUSBIRX();
+
+    OSDInitROMVER(); // Initialize ROM version (must be done first).
+    ModelNameInit(); // Initialize model name
+    PS1DRVInit();    // Initialize PlayStation Driver (PS1DRV)
+    DVDPlayerInit(); // Initialize ROM DVD player. It is normal for this to fail on consoles that have no DVD ROM chip (i.e. DEX or the SCPH-10000/SCPH-15000).
+
+    if (OSDConfigLoad() != 0) // Load OSD configuration
+    {                         // OSD configuration not initialized. Defaults loaded.
+        DPRINTF("OSD Configuration not initialized. Defaults loaded.\n");
+    }
+
+    // Applies OSD configuration (saves settings into the EE kernel)
+    OSDConfigApply();
+
+    /*  Try to enable the remote control, if it is enabled.
+        Indicate no hardware support for it, if it cannot be enabled. */
+    do {
+        result = sceCdRcBypassCtl(OSDConfigGetRcGameFunction() ^ 1, &STAT);
+        if (STAT & 0x100) { // Not supported by the PlayStation 2.
+            // Note: it does not seem like the browser updates the NVRAM here to change this status.
+            OSDConfigSetRcEnabled(0);
+            OSDConfigSetRcSupported(0);
+            break;
+        }
+    } while ((STAT & 0x80) || (result == 0));
+
+    // Remember to set the video output option (RGB or Y Cb/Pb Cr/Pr) accordingly, before SetGsCrt() is called.
+    SetGsVParam(OSDConfigGetVideoOutput() == VIDEO_OUTPUT_RGB ? 0 : 1);
+    scr_printf("\nModel:\t\t%s\n"
+               "PlayStation Driver:\t%s\n"
+               "DVD Player:\t%s\n",
+               ModelNameGet(),
+               PS1DRVGetVersion(),
+               DVDPlayerGetVersion());
     PadInitPads();
+
     for (x = 0; x < 3; x++, sleep(1)) {
         PAD = ReadCombinedPadStatus();
         if ((PAD & PAD_R1) && (PAD & PAD_START)) // if ONLY R1+START are pressed...
             EMERGENCY();
     }
+
     SetDefaultSettings();
     FILE *fp;
     fp = fopen("mc0:/PS2BBL/CONFIG.INI", "r");
@@ -174,7 +220,7 @@ int main()
                 int var_cnt = 0;
                 char TMP[64];
                 for (var_cnt = 0; get_CNF_string(&CNFBUFF, &name, &value); var_cnt++) {
-                    //DPRINTF("reading entry %d", var_cnt);
+                    // DPRINTF("reading entry %d", var_cnt);
                     if (!strcmp("SKIP_PS2LOGO", name)) {
                         GLOBCFG.SKIPLOGO = atoi(value);
                         continue;
@@ -192,72 +238,66 @@ int main()
                 }
                 free(RAM_p);
             } else {
+                fclose(fp);
                 DPRINTF("ERROR: could not read %d bytes of config file, only %d readed\n", cnf_size, temp);
             }
         } else {
             scr_setbgcolor(0x0000ff);
             DPRINTF("Failed to allocate %d+1 bytes!\n", cnf_size);
         }
-    }
-    else
-    {
+    } else {
         DPRINTF("Invalid config, loading hardcoded shit\n");
-		for (x = 0; x < 5; x++)
-			for (j = 0; j < 3; j++)
-				GLOBCFG.KEYPATHS[x][j] = CheckPath(DEFPATH[3 * x + j]);
+        for (x = 0; x < 5; x++)
+            for (j = 0; j < 3; j++)
+                GLOBCFG.KEYPATHS[x][j] = CheckPath(DEFPATH[3 * x + j]);
     }
     if (RAM_p != NULL)
         free(RAM_p);
 
-	//Stores last key during DELAY msec
+    // Stores last key during DELAY msec
     u64 tstart;
     TimerInit();
-	tstart = Timer();
+    tstart = Timer();
     DPRINTF("Reading PADs\n");
-	//while (Timer() <= (tstart + DELAY))
-    while(1)
-	{
-		//If key was detected
-        //DPRINTF("Trying to read PADs\n");
-	    PAD = ReadCombinedPadStatus();
-		button = pad_button;
-		for (x = 0; x < num_buttons; x++) {  // check all pad buttons
-			if (PAD & button) {
+    // while (Timer() <= (tstart + DELAY))
+    while (1) {
+        // If key was detected
+        // DPRINTF("Trying to read PADs\n");
+        PAD = ReadCombinedPadStatus();
+        button = pad_button;
+        for (x = 0; x < num_buttons; x++) { // check all pad buttons
+            if (PAD & button) {
                 DPRINTF("PAD detected\n");
-				// if button detected , copy path to corresponding index
-				for (j = 0; j < 3; j++)
-					EXECPATHS[j] = GLOBCFG.KEYPATHS[x + 1][j];
+                // if button detected , copy path to corresponding index
                 for (j = 0; j < 3; j++)
-                {
-				    EXECPATHS[j] = CheckPath(EXECPATHS[j]);
-                    if (exist(EXECPATHS[j]))
-                    {
+                    EXECPATHS[j] = GLOBCFG.KEYPATHS[x + 1][j];
+                for (j = 0; j < 3; j++) {
+                    EXECPATHS[j] = CheckPath(EXECPATHS[j]);
+                    if (exist(EXECPATHS[j])) {
                         scr_setfontcolor(0x00ff00);
                         scr_printf("Loading %s\n", EXECPATHS[j]);
                         if (!is_PCMCIA)
                             PadDeinitPads();
                         RunLoaderElf(EXECPATHS[j], NULL);
-                    } else {DPRINTF("%s not found\n", EXECPATHS[j]);}
+                    } else {
+                        DPRINTF("%s not found\n", EXECPATHS[j]);
+                    }
                 }
                 break;
-			}
-			button = button << 1;  // sll of 1 cleared bit to move to next pad button
-		}
-        if (Timer() <= (tstart + 4000))
-        {
-            for (j = 0; j < 3; j++)
-            {
-                if (exist(CheckPath(GLOBCFG.KEYPATHS[0][j])))
-                {
-                if (!is_PCMCIA)
-                    PadDeinitPads();
-                RunLoaderElf(CheckPath(GLOBCFG.KEYPATHS[0][j]), NULL);
+            }
+            button = button << 1; // sll of 1 cleared bit to move to next pad button
+        }
+        if (Timer() <= (tstart + 4000)) {
+            for (j = 0; j < 3; j++) {
+                if (exist(CheckPath(GLOBCFG.KEYPATHS[0][j]))) {
+                    if (!is_PCMCIA)
+                        PadDeinitPads();
+                    RunLoaderElf(CheckPath(GLOBCFG.KEYPATHS[0][j]), NULL);
                 }
-
             }
         }
-	}
-	TimerEnd();
+    }
+    TimerEnd();
 
     scr_printf("END OF EXECUTION REACHED\n");
     while (1) {
@@ -282,17 +322,13 @@ void EMERGENCY(void)
     }
 }
 
-char* CheckPath(char* path)
+char *CheckPath(char *path)
 {
-    if (!strncmp("mc?", path, 3))
-    {
+    if (!strncmp("mc?", path, 3)) {
         path[2] = '0';
-        if (exist(path))
-        {
+        if (exist(path)) {
             return path;
-        }
-        else
-        {
+        } else {
             path[2] = '1';
             if (exist(path))
                 return path;
@@ -300,8 +336,7 @@ char* CheckPath(char* path)
     }
     if (!strcmp("$CDVD", path))
         dischandler();
-    if (!strcmp("$CDVD_NO_PS2LOGO", path))
-    {
+    if (!strcmp("$CDVD_NO_PS2LOGO", path)) {
         GLOBCFG.SKIPLOGO = 1;
         dischandler();
     }
@@ -319,65 +354,77 @@ void SetDefaultSettings(void)
 
 int dischandler()
 {
-    scr_clear();
-    scr_printf("%s: Activated\n",__func__);
     int OldDiscType, DiscType, ValidDiscInserted, result;
-    u32 stat;
+    u32 STAT;
+
+    scr_clear();
+    scr_printf("%s: Activated\n", __func__);
+    sceCdInit(SCECdINoD);
+    cdInitAdd();
+
     scr_printf("\tEnabling Diagnosis...\n");
-    do
-    { // 0 = enable, 1 = disable.
-        result = sceCdAutoAdjustCtrl(0, &stat);
-    } while ((stat & 0x08) || (result == 0));
+    do { // 0 = enable, 1 = disable.
+        result = sceCdAutoAdjustCtrl(0, &STAT);
+    } while ((STAT & 0x08) || (result == 0));
 
     // For this demo, wait for a valid disc to be inserted.
     scr_printf("Waiting for disc to be inserted...\n");
 
     ValidDiscInserted = 0;
-    OldDiscType       = -1;
-    while (!ValidDiscInserted)
-    {
+    OldDiscType = -1;
+    while (!ValidDiscInserted) {
         DiscType = sceCdGetDiskType();
-        if (DiscType != OldDiscType)
-        {
+        if (DiscType != OldDiscType) {
             scr_printf("New Disc:\t");
             OldDiscType = DiscType;
 
-            switch (DiscType)
-            {
+            switch (DiscType) {
                 case SCECdNODISC:
+                    scr_setfontcolor(0x0000ff);
                     scr_printf("No Disc\n");
+                    scr_setfontcolor(0xffffff);
                     break;
 
                 case SCECdDETCT:
                 case SCECdDETCTCD:
                 case SCECdDETCTDVDS:
                 case SCECdDETCTDVDD:
-                    scr_printf("Reading Disc...\n");
+                    scr_printf("Reading...\n");
                     break;
 
                 case SCECdPSCD:
                 case SCECdPSCDDA:
+                    scr_setfontcolor(0x00ff00);
                     scr_printf("PlayStation\n");
+                    scr_setfontcolor(0xffffff);
                     ValidDiscInserted = 1;
                     break;
 
                 case SCECdPS2CD:
                 case SCECdPS2CDDA:
                 case SCECdPS2DVD:
+                    scr_setfontcolor(0x00ff00);
                     scr_printf("PlayStation 2\n");
+                    scr_setfontcolor(0xffffff);
                     ValidDiscInserted = 1;
                     break;
 
                 case SCECdCDDA:
+                    scr_setfontcolor(0xffff00);
                     scr_printf("Audio Disc (not supported by this program)\n");
+                    scr_setfontcolor(0xffffff);
                     break;
 
                 case SCECdDVDV:
+                    scr_setfontcolor(0x00ff00);
                     scr_printf("DVD Video\n");
+                    scr_setfontcolor(0xffffff);
                     ValidDiscInserted = 1;
                     break;
                 default:
+                    scr_setfontcolor(0x0000ff);
                     scr_printf("Unknown\n");
+                    scr_setfontcolor(0xffffff);
             }
         }
 
@@ -389,8 +436,7 @@ int dischandler()
 
     // Now that a valid disc is inserted, do something.
     // CleanUp() will be called, to deinitialize RPCs. SIFRPC will be deinitialized by the respective disc-handlers.
-    switch (DiscType)
-    {
+    switch (DiscType) {
         case SCECdPSCD:
         case SCECdPSCDDA:
             // Boot PlayStation disc
@@ -420,6 +466,37 @@ int dischandler()
     return 0;
 }
 
+void LoadUSBIRX(void)
+{
+    int TMP;
+#ifdef HAS_EMBEDDED_IRX
+    TMP = SifExecModuleBuffer(usbd_irx, size_usbd_irx, 0, NULL, NULL);
+#else
+    TMP = loadIRXFile("mc?:/PS2BBL/USBD.IRX", 0, NULL, NULL);
+#endif
+    delay(3);
+    DPRINTF("[USBD.IRX]: %d\n", TMP);
+#ifdef HAS_EMBEDDED_IRX
+    TMP = SifExecModuleBuffer(bdm_irx, size_bdm_irx, 0, NULL, NULL);
+#else
+    TMP = loadIRXFile("mc?:/PS2BBL/BDM.IRX", 0, NULL, NULL);
+#endif
+    DPRINTF("[BDM.IRX]: %d\n", TMP);
+#ifdef HAS_EMBEDDED_IRX
+    TMP = SifExecModuleBuffer(bdmfs_fatfs_irx, size_bdmfs_fatfs_irx, 0, NULL, NULL);
+#else
+    TMP = loadIRXFile("mc?:/PS2BBL/BDMFS_FATFS.IRX", 0, NULL, NULL);
+#endif
+    DPRINTF("[BDMFS_FATFS.IRX]: %d\n", TMP);
+#ifdef HAS_EMBEDDED_IRX
+    TMP = SifExecModuleBuffer(usbmass_bd_irx, size_usbmass_bd_irx, 0, NULL, NULL);
+#else
+    TMP = loadIRXFile("mc?:/PS2BBL/USBMASS_BD.IRX", 0, NULL, NULL);
+#endif
+    DPRINTF("[USBMASS_BD.IRX]: %d\n", TMP);
+    delay(3);
+}
+
 void ResetIOP(void)
 {
 #ifndef PSX
@@ -436,13 +513,14 @@ void ResetIOP(void)
     };
 
 #ifdef PSX
-    //InitPSX();
+        // InitPSX();
 #endif
 }
 
+#ifdef PSX
 static void InitPSX()
 {
-    int result, stat;
+    int result, STAT;
 
     SifInitRpc(0);
     sceCdInit(SCECdINoD);
@@ -451,10 +529,9 @@ static void InitPSX()
     while (sceCdChgSys(2) != 2) {}; // Switch the drive into PS2 mode.
 
     // Signal the start of a game, so that the user can use the "quit" game button.
-    do
-    {
-        result = sceCdNoticeGameStart(1, &stat);
-    } while ((result == 0) || (stat & 0x80));
+    do {
+        result = sceCdNoticeGameStart(1, &STAT);
+    } while ((result == 0) || (STAT & 0x80));
 
     // Reset the IOP again to get the standard PS2 default modules.
     while (!SifIopReset("", 0)) {};
@@ -469,6 +546,38 @@ static void InitPSX()
 
     while (!SifIopSync()) {};
 }
+#endif
+
+#ifndef PSX
+void CDVDBootCertify(u8 romver[16])
+{
+    u8 RomName[4];
+    /*  Perform boot certification to enable the CD/DVD drive.
+        This is not required for the PSX, as its OSDSYS will do it before booting the update. */
+    if (romver != NULL) {
+        // e.g. 0160HC = 1,60,'H','C'
+        RomName[0] = (romver[0] - '0') * 10 + (romver[1] - '0');
+        RomName[1] = (romver[2] - '0') * 10 + (romver[3] - '0');
+        RomName[2] = romver[4];
+        RomName[3] = romver[5];
+
+        // Do not check for success/failure. Early consoles do not support (and do not require) boot-certification.
+        sceCdBootCertify(RomName);
+    } else {
+        scr_setfontcolor(0x0000ff);
+        scr_printf("ERROR: Could not certify CDVD Boot. ROMVER was NULL\n");
+        scr_setfontcolor(0xffffff);
+    }
+
+    // This disables DVD Video Disc playback. This functionality is restored by loading a DVD Player KELF.
+    /*    Hmm. What should the check for STAT be? In v1.xx, it seems to be a check against 0x08. In v2.20, it checks against 0x80.
+          The HDD Browser does not call this function, but I guess it would check against 0x08. */
+    /*  do
+     {
+         sceCdForbidDVDP(&STAT);
+     } while (STAT & 0x08); */
+}
+#endif
 
 static void AlarmCallback(s32 alarm_id, u16 time, void *common)
 {

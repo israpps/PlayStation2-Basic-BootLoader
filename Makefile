@@ -14,6 +14,7 @@ export HEADER
 PSX ?= 0 # PSX DESR support
 KERNEL_NOPATCH ?= 1
 NEWLIB_NANO ?= 1
+HAS_EMBEDDED_IRX ?= 0
 PROHBIT_DVD_0100 ?= 0 #Enable to prohibit the DVD Players v1.00 and v1.01  from being booted.
 XCDVD_READKEY ?= 0 #Enable to enable the newer sceCdReadKey checks, which are only supported by a newer CDVDMAN module.
 #--
@@ -27,25 +28,25 @@ EE_SRC_DIR = src/
 EE_ASM_DIR = asm/
 
 
-IOP_OBJS = sio2man_irx.o mcman_irx.o mcserv_irx.o padman_irx.o usbd_irx.o 
+IOP_OBJS = sio2man_irx.o mcman_irx.o mcserv_irx.o padman_irx.o
 
-ifeq ($(NO_BDM),1)
-	IOP_OBJS += usb_mass_irx.o
-else
-	IOP_OBJS += bdm_irx.o bdmfs_fatfs_irx.o usbmass_bd_irx.o
+ifeq ($(HAS_EMBEDDED_IRX),1)
+	IOP_OBJS += usbd.o bdm_irx.o bdmfs_fatfs_irx.o usbmass_bd_irx.o
+	EE_CFLAGS += -DHAS_EMBEDDED_IRX
 endif
+
 EE_OBJS = main.o \
-		pad.o util.o elf.o timer.o ps2.o ps1.o dvdplayer.o modelname.o libcdvd_add.o OSDHistory.o OSDInit.o \
+		pad.o util.o elf.o timer.o ps2.o ps1.o dvdplayer.o modelname.o libcdvd_add.o OSDHistory.o OSDInit.o OSDConfig.o \
 		icon_sys_A.o icon_sys_J.o icon_sys_C.o \
 		loader_elf.o \
 		$(IOP_OBJS)
 
-EE_CFLAGS = -Os -DNEWLIB_PORT_AWARE
+EE_CFLAGS = -Os -DNEWLIB_PORT_AWARE -G0 -Wall
 EE_CFLAGS += -fdata-sections -ffunction-sections
 # EE_LDFLAGS += -nodefaultlibs -Wl,--start-group -lc_nano -lps2sdkc -lkernel-nopatch -Wl,--end-group
 EE_LDFLAGS += -s
 EE_LDFLAGS += -Wl,--gc-sections -Wno-sign-compare
-EE_LIBS = -ldebug -lc -lmc -lpadx -lpatches
+EE_LIBS = -ldebug -lc -lmc -lpadx -lpatches -lkernel
 EE_INCS += -Iinclude
 
 ifeq ($(PSX),1)
@@ -78,7 +79,8 @@ all: greeting
 	$(MAKE) $(EE_BIN)
 
 greeting:
-	@echo building PS2BBL PSX=$(PSX), KERNEL_NOPATCH=$(KERNEL_NOPATCH), NEWLIB_NANO=$(NEWLIB_NANO)
+	@echo building PS2BBL PSX=$(PSX), EMBEDDED_IRX= $(HAS_EMBEDDED_IRX)
+	@echo KERNEL_NOPATCH=$(KERNEL_NOPATCH), NEWLIB_NANO=$(NEWLIB_NANO)
 
 release: $(EE_BIN_PACKED)
 	@echo "$$HEADER"
