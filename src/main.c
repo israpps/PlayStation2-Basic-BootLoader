@@ -132,7 +132,10 @@ int main()
 	sleep(10);
     InitOsd(); // Initialize OSD so kernel patches can do their magic
     OSDInitSystemPaths();
-    CDVDBootCertify(ROMVER);
+
+#ifndef PSX
+    CDVDBootCertify(ROMVER); /* This is not required for the PSX, as its OSDSYS will do it before booting the update. */
+#endif
     LoadUSBIRX();
 
     OSDInitROMVER(); // Initialize ROM version (must be done first).
