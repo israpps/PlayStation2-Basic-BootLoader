@@ -75,7 +75,7 @@ endif
 
 EE_OBJS := $(EE_OBJS:%=$(EE_OBJS_DIR)%)
 
-all: greeting 
+all: 
 	$(MAKE) $(EE_BIN)
 
 greeting:
