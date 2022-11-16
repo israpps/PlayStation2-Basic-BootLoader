@@ -544,8 +544,10 @@ static void InitPSX()
         or with ExecPS2().
         WARNING! If the stack pointer resides above the 32MB offset at the point of remap, a TLB exception will occur.
         This example has the stack pointer configured to be within the 32MB limit. */
+#ifndef PSX_SKIP_32MB_RAM_MODE
     SetMemoryMode(1);
     _InitTLB();
+#endif
 
     while (!SifIopSync()) {};
 }
