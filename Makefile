@@ -133,4 +133,4 @@ $(EE_OBJS_DIR)%.o: $(EE_ASM_DIR)%.s | $(EE_OBJS_DIR)
 # Include makefiles
 include $(PS2SDK)/samples/Makefile.pref
 include $(PS2SDK)/samples/Makefile.eeglobal
-include Makefile.embed
+include embed.make

@@ -11,3 +11,6 @@
 *.elf
 *.irx
 *.s
+
+src/
+asm/

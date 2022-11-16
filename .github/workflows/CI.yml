@@ -2,6 +2,23 @@ name: CI
 
 on:
   push:
+    tags:
+      - 'v*'
+    branches:
+      - 'master'
+    paths-ignore:
+      - '**.MD'
+      - '**.gitkeep'
+      - '**.gitignore'
+    paths:
+      - 'Makefile'
+      - '*.make'
+      - 'linkfile'
+      - 'src/*'
+      - 'include/*'
+      - 'embed/*'
+      - 'modules/*/*'
+  
   pull_request:
   workflow_dispatch:
 
