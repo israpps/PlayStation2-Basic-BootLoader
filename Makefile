@@ -18,10 +18,10 @@ HAS_EMBEDDED_IRX ?= 0
 PROHBIT_DVD_0100 ?= 0 #Enable to prohibit the DVD Players v1.00 and v1.01  from being booted.
 XCDVD_READKEY ?= 0 #Enable to enable the newer sceCdReadKey checks, which are only supported by a newer CDVDMAN module.
 #--
-
-EE_BIN = PS2BBL.ELF
-EE_BIN_STRIPPED = stripped_$(EE_BIN)
-EE_BIN_PACKED = COMPRESSED_$(EE_BIN)
+RELDIR = release
+EE_BIN = $(RELDIR)/PS2BBL.ELF
+EE_BIN_STRIPPED = stripped_PS2BBL.ELF
+EE_BIN_PACKED = $(RELDIR)/COMPRESSED_PS2BBL.ELF
 
 EE_OBJS_DIR = obj/
 EE_SRC_DIR = src/
@@ -82,7 +82,8 @@ greeting:
 	@echo building PS2BBL PSX=$(PSX), EMBEDDED_IRX= $(HAS_EMBEDDED_IRX)
 	@echo KERNEL_NOPATCH=$(KERNEL_NOPATCH), NEWLIB_NANO=$(NEWLIB_NANO)
 
-release: $(EE_BIN_PACKED)
+release: clean
+	$(MAKE) $(EE_BIN_PACKED)
 	@echo "$$HEADER"
 
 clean:
