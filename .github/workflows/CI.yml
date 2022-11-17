@@ -6,10 +6,6 @@ on:
       - 'v*'
     branches:
       - 'master'
-    paths-ignore:
-      - '**.MD'
-      - '**.gitkeep'
-      - '**.gitignore'
     paths:
       - 'Makefile'
       - '*.make'
@@ -18,6 +14,10 @@ on:
       - 'include/*'
       - 'embed/*'
       - 'modules/*/*'
+    paths-ignore:
+      - '**.MD'
+      - '**.gitkeep'
+      - '**.gitignore'
   
   pull_request:
   workflow_dispatch:
@@ -60,7 +60,7 @@ jobs:
           DATE=$(date "+%d-%m-%Y")
           TARGET="PS2BBL[$DATE]-[$CSH]"
           mv release/ $TARGET/
-          7z a -t7z ${{ github.event.repository.name }}.7z $TARGET/*
+          7z a -t7z PS2BBL.7z $TARGET/*
 
       - name: Upload artifacts
         if: ${{ success() }}
@@ -68,8 +68,7 @@ jobs:
         with:
           name: PS2BBL
           path: |
-            PS2BBL.ELF
-            COMPRESSED_PS2BBL.ELF
+            PS2BBL.7z
 
       - name: Create release
         if: github.ref == 'refs/heads/main'
@@ -79,5 +78,4 @@ jobs:
           automatic_release_tag: "latest"
           title: "Latest development build"
           files: |
-            PS2BBL.ELF
-            COMPRESSED_PS2BBL.ELF
+            PS2BBL.7z
