@@ -312,8 +312,12 @@ int PS2DiscBoot(int skip_PS2LOGO)
 
     SifExitCmd();
     if (skip_PS2LOGO)
+    {
         LoadExecPS2(ps2disc_boot, 0, NULL);
+    }
     else
+    {
         LoadExecPS2("rom0:PS2LOGO", 1, args);
+    }
     return 0;
 }

@@ -14,12 +14,9 @@ $(EE_ASM_DIR)usbd_irx.s: $(PS2SDK)/iop/irx/usbd.irx | $(EE_ASM_DIR)
 	@bin2s $< $@ usbd_irx
 
 ifeq ($(NO_BDM),1)
-
 $(EE_ASM_DIR)usbhdfsd_irx.s: $(PS2SDK)/iop/irx/usbhdfsd.irx | $(EE_ASM_DIR)
 	@bin2s $< $@ usb_mass_irx
-
 else
-
 $(EE_ASM_DIR)bdm_irx.s: $(PS2SDK)/iop/irx/bdm.irx | $(EE_ASM_DIR)
 	@bin2s $< $@ bdm_irx
 
@@ -28,7 +25,6 @@ $(EE_ASM_DIR)bdmfs_fatfs_irx.s: $(PS2SDK)/iop/irx/bdmfs_fatfs.irx | $(EE_ASM_DIR
 
 $(EE_ASM_DIR)usbmass_bd_irx.s: $(PS2SDK)/iop/irx/usbmass_bd.irx | $(EE_ASM_DIR)
 	@bin2s $< $@ usbmass_bd_irx
-
 endif
 
 $(EE_ASM_DIR)loader_elf.s: modules/ELF_LOADER/loader.elf | $(EE_ASM_DIR)

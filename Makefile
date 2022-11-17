@@ -12,11 +12,12 @@ export HEADER
 
 #BUILD CFG
 PSX ?= 0 # PSX DESR support
-KERNEL_NOPATCH ?= 1
+
+KERNEL_NOPATCH ?= 1 
 NEWLIB_NANO ?= 1
-HAS_EMBEDDED_IRX ?= 0
-PROHBIT_DVD_0100 ?= 0 #Enable to prohibit the DVD Players v1.00 and v1.01  from being booted.
-XCDVD_READKEY ?= 0 #Enable to enable the newer sceCdReadKey checks, which are only supported by a newer CDVDMAN module.
+HAS_EMBEDDED_IRX ?= 0 # whether to embed or not non vital IRX (wich will be loaded from memcard files)
+PROHBIT_DVD_0100 ?= 0 #prohibit the DVD Players v1.00 and v1.01 from being booted.
+XCDVD_READKEY ?= 0 #Enable the newer sceCdReadKey checks, which are only supported by a newer CDVDMAN module.
 #--
 RELDIR = release
 EE_BIN = $(RELDIR)/PS2BBL.ELF
@@ -33,6 +34,13 @@ IOP_OBJS = sio2man_irx.o mcman_irx.o mcserv_irx.o padman_irx.o
 ifeq ($(HAS_EMBEDDED_IRX),1)
 	IOP_OBJS += usbd.o bdm_irx.o bdmfs_fatfs_irx.o usbmass_bd_irx.o
 	EE_CFLAGS += -DHAS_EMBEDDED_IRX
+endif
+
+ifdef COMMIT_HASH
+    EE_CFLAGS += -DCOMMIT_HASH=\"$(COMMIT_HASH)\"
+else
+
+    EE_CFLAGS += -DCOMMIT_HASH=\"UNKNOWN\"
 endif
 
 EE_OBJS = main.o \
@@ -79,7 +87,7 @@ all:
 	$(MAKE) $(EE_BIN)
 
 greeting:
-	@echo building PS2BBL PSX=$(PSX), EMBEDDED_IRX= $(HAS_EMBEDDED_IRX)
+	@echo building PS2BBL PSX=$(PSX), EMBEDDED_IRX=$(HAS_EMBEDDED_IRX)
 	@echo KERNEL_NOPATCH=$(KERNEL_NOPATCH), NEWLIB_NANO=$(NEWLIB_NANO)
 
 release: clean

@@ -50,6 +50,8 @@ IMPORT_BIN2C(sio2man_irx);
 IMPORT_BIN2C(mcman_irx);
 IMPORT_BIN2C(mcserv_irx);
 IMPORT_BIN2C(padman_irx);
+
+#ifdef HAS_EMBEDDED_IRX
 IMPORT_BIN2C(usbd_irx);
 #ifdef NO_BDM
 IMPORT_BIN2C(usb_mass_irx);
@@ -57,7 +59,8 @@ IMPORT_BIN2C(usb_mass_irx);
 IMPORT_BIN2C(bdm_irx);
 IMPORT_BIN2C(bdmfs_fatfs_irx);
 IMPORT_BIN2C(usbmass_bd_irx);
-#endif
+#endif //NO_BDM
+#endif //HAS_EMBEDDED_IRX
 
 void RunLoaderElf(char *filename, char *party);
 void EMERGENCY(void);
@@ -72,12 +75,14 @@ int dischandler();
 int loadIRXFile(char *path, u32 arg_len, const char *args, int *mod_res);
 void LoadUSBIRX();
 void CDVDBootCertify(u8 romver[16]);
+void credits(void);
 
 
 typedef struct
 {
     int SKIPLOGO;
     char *KEYPATHS[17][3];
+    int DELAY;
 } CONFIG;
 CONFIG GLOBCFG;
 
@@ -93,50 +98,47 @@ int main()
     unsigned char *RAM_p = NULL;
     char *CNFBUFF, *name, *value;
     static int num_buttons = 4, pad_button = 0x0100; // first pad button is L2
-    SifInitRpc(0);                                   // Initialize SIFCMD & SIFRPC
+    GLOBCFG.DELAY = DEFDELAY;
+
+    SifInitRpc(0); // Initialize SIFCMD & SIFRPC
     ResetIOP();
-    // Initialize SIF services for loading modules and files.
-    SifInitIopHeap();
+    SifInitIopHeap(); // Initialize SIF services for loading modules and files.
     SifLoadFileInit();
     fioInit(); // NO scr_printf BEFORE here
     init_scr();
-    DPRINTF("sbv_patch_enable_lmb\n");
+    DPRINTF("enabling LoadModuleBuffer\n");
     sbv_patch_enable_lmb(); // The old IOP kernel has no support for LoadModuleBuffer. Apply the patch to enable it.
 
-    DPRINTF("sbv_patch_disable_prefix_check\n");
+    DPRINTF("disabling MODLOAD device blacklist/whitelist\n");
     sbv_patch_disable_prefix_check(); /* disable the MODLOAD module black/white list, allowing executables to be freely loaded from any device. */
-
-    j = SifExecModuleBuffer(sio2man_irx, size_sio2man_irx, 0, NULL, NULL); /*  Load SDK modules to avoid different behavior across different models*/
-    DPRINTF("[SIO2MAN.IRX]: %d\n", j);
-    j = SifExecModuleBuffer(mcman_irx, size_mcman_irx, 0, NULL, NULL);
-    DPRINTF("[MCMAN.IRX]: %d\n", j);
-    j = SifExecModuleBuffer(mcserv_irx, size_mcserv_irx, 0, NULL, NULL);
-    DPRINTF("[MCSERV.IRX]: %d\n", j);
+    DPRINTF("Loading IRX:\n");
+    j = SifExecModuleBuffer(sio2man_irx, size_sio2man_irx, 0, NULL, &x); /*  Load SDK modules to avoid different behavior across different models*/
+    DPRINTF(" [SIO2MAN.IRX]: %d\n", j);
+    j = SifExecModuleBuffer(mcman_irx, size_mcman_irx, 0, NULL, &x);
+    DPRINTF(" [MCMAN.IRX]: %d\n", j);
+    j = SifExecModuleBuffer(mcserv_irx, size_mcserv_irx, 0, NULL, &x);
+    DPRINTF(" [MCSERV.IRX]: %d\n", j);
     mcInit(MC_TYPE_XMC);
-    j = SifExecModuleBuffer(padman_irx, size_padman_irx, 0, NULL, NULL);
-    DPRINTF("[PADMAN.IRX]: %d\n", j);
+    j = SifExecModuleBuffer(padman_irx, size_padman_irx, 0, NULL, &x);
+    DPRINTF(" [PADMAN.IRX]: %d\n", j);
+
+    LoadUSBIRX();
     if ((fd = open("rom0:ROMVER", O_RDONLY)) >= 0) {
         read(fd, ROMVER, sizeof(ROMVER));
         close(fd);
     }
-    SifLoadModule("rom0:ADDDRV", 0, NULL); // Load ADDDRV. The OSD has it listed in rom0:OSDCNF/IOPBTCONF, but it is otherwise not loaded automatically.
-
+    j = SifLoadModule("rom0:ADDDRV", 0, NULL); // Load ADDDRV. The OSD has it listed in rom0:OSDCNF/IOPBTCONF, but it is otherwise not loaded automatically.
+    DPRINTF(" [ADDDRV.IRX]: %d\n", j);
 	
-	int type, freespace, format;
-	mcGetInfo(0, 0, &type, &freespace, &format);
-	mcSync(0, NULL, &result);
-	printf("Slot0\t type=%d, freespace=%d, format=%d\n", type, freespace, format);
-	mcGetInfo(1, 0, &type, &freespace, &format);
-	mcSync(0, NULL, &result);
-	printf("Slot1\t type=%d, freespace=%d, format=%d\n", type, freespace, format);
-	sleep(10);
+    DPRINTF("init OSD\n");
     InitOsd(); // Initialize OSD so kernel patches can do their magic
+    DPRINTF("init OSD system paths\n");
     OSDInitSystemPaths();
 
 #ifndef PSX
+    DPRINTF("Certify CDVD Boot\n");
     CDVDBootCertify(ROMVER); /* This is not required for the PSX, as its OSDSYS will do it before booting the update. */
 #endif
-    LoadUSBIRX();
 
     OSDInitROMVER(); // Initialize ROM version (must be done first).
     ModelNameInit(); // Initialize model name
@@ -145,7 +147,9 @@ int main()
 
     if (OSDConfigLoad() != 0) // Load OSD configuration
     {                         // OSD configuration not initialized. Defaults loaded.
+        scr_setfontcolor(0x00ffff);
         DPRINTF("OSD Configuration not initialized. Defaults loaded.\n");
+        scr_setfontcolor(0xffffff);
     }
 
     // Applies OSD configuration (saves settings into the EE kernel)
@@ -153,6 +157,7 @@ int main()
 
     /*  Try to enable the remote control, if it is enabled.
         Indicate no hardware support for it, if it cannot be enabled. */
+    DPRINTF("trying to enable remote control...\n");
     do {
         result = sceCdRcBypassCtl(OSDConfigGetRcGameFunction() ^ 1, &STAT);
         if (STAT & 0x100) { // Not supported by the PlayStation 2.
@@ -173,7 +178,7 @@ int main()
                DVDPlayerGetVersion());
     PadInitPads();
 
-    for (x = 0; x < 3; x++, sleep(1)) {
+    for (x = 0; x < 3; x++, sleep(1)) { //wait for him 3 secs
         PAD = ReadCombinedPadStatus();
         if ((PAD & PAD_R1) && (PAD & PAD_START)) // if ONLY R1+START are pressed...
             EMERGENCY();
@@ -181,6 +186,7 @@ int main()
 
     SetDefaultSettings();
     FILE *fp;
+    DPRINTF("Reading settings...\n");
     fp = fopen("mc0:/PS2BBL/CONFIG.INI", "r");
     if (fp == NULL) {
         DPRINTF("Cant load config from mc0\n");
@@ -202,10 +208,9 @@ int main()
     }
 
     if (config_source != SOURCE_INVALID) {
-        DPRINTF("Config nvalid, reading now\n");
+        DPRINTF("valid config, reading now\n");
         pad_button = 0x0001;
         num_buttons = 16;
-        DPRINTF("Check CNF size\n");
         fseek(fp, 0, SEEK_END);
         cnf_size = ftell(fp);
         fseek(fp, 0, SEEK_SET);
@@ -213,12 +218,10 @@ int main()
         RAM_p = (unsigned char *)malloc(cnf_size + 1);
         if (RAM_p != NULL) {
             CNFBUFF = RAM_p;
-            DPRINTF("Read data INTO the buffer\n");
             int temp;
             if ((temp = fread(RAM_p, 1, cnf_size, fp)) == cnf_size) {
                 DPRINTF("Reading finished... Closing fp*\n");
                 fclose(fp);
-                DPRINTF("NULL Terminate buffer\n");
                 CNFBUFF[cnf_size] = '\0';
                 int var_cnt = 0;
                 char TMP[64];
@@ -228,7 +231,10 @@ int main()
                         GLOBCFG.SKIPLOGO = atoi(value);
                         continue;
                     }
-
+                    if (!strcmp("KEY_READ_WAIT_TIME", name)) {
+                        GLOBCFG.DELAY = atoi(value);
+                        continue;
+                    }
                     for (x = 0; x < 17; x++) {
                         for (j = 0; j < 3; j++) {
                             sprintf(TMP, "LK_%s_E%d", KEYS_ID[x], j + 1);
@@ -242,10 +248,13 @@ int main()
                 free(RAM_p);
             } else {
                 fclose(fp);
+                scr_setfontcolor(0x0000ff);
                 DPRINTF("ERROR: could not read %d bytes of config file, only %d readed\n", cnf_size, temp);
+                scr_setfontcolor(0xffffff);
             }
         } else {
             scr_setbgcolor(0x0000ff);
+            scr_setfontcolor(0xffffff);
             DPRINTF("Failed to allocate %d+1 bytes!\n", cnf_size);
         }
     } else {
@@ -261,9 +270,10 @@ int main()
     u64 tstart;
     TimerInit();
     tstart = Timer();
+    scr_clear();
     DPRINTF("Reading PADs\n");
-    // while (Timer() <= (tstart + DELAY))
-    while (1) {
+    while (Timer() <= (tstart + GLOBCFG.DELAY)) {
+    //while (1) {
         // If key was detected
         // DPRINTF("Trying to read PADs\n");
         PAD = ReadCombinedPadStatus();
@@ -283,20 +293,24 @@ int main()
                             PadDeinitPads();
                         RunLoaderElf(EXECPATHS[j], NULL);
                     } else {
+                        scr_setfontcolor(0x00ffff);
                         DPRINTF("%s not found\n", EXECPATHS[j]);
+                        scr_setfontcolor(0xffffff);
                     }
                 }
                 break;
             }
             button = button << 1; // sll of 1 cleared bit to move to next pad button
         }
-        if (Timer() <= (tstart + 4000)) {
-            for (j = 0; j < 3; j++) {
-                if (exist(CheckPath(GLOBCFG.KEYPATHS[0][j]))) {
-                    if (!is_PCMCIA)
-                        PadDeinitPads();
-                    RunLoaderElf(CheckPath(GLOBCFG.KEYPATHS[0][j]), NULL);
-                }
+    }
+    
+    tstart = Timer();
+    if (Timer() <= (tstart + 4000)) {
+        for (j = 0; j < 3; j++) {
+            if (exist(CheckPath(GLOBCFG.KEYPATHS[0][j]))) {
+                if (!is_PCMCIA)
+                    PadDeinitPads();
+                RunLoaderElf(CheckPath(GLOBCFG.KEYPATHS[0][j]), NULL);
             }
         }
     }
@@ -343,6 +357,8 @@ char *CheckPath(char *path)
         GLOBCFG.SKIPLOGO = 1;
         dischandler();
     }
+    if (!strcmp("$CREDITS", path))
+        credits();
     return path;
 }
 
@@ -471,32 +487,32 @@ int dischandler()
 
 void LoadUSBIRX(void)
 {
-    int TMP;
+    int TMP, x;
 #ifdef HAS_EMBEDDED_IRX
-    TMP = SifExecModuleBuffer(usbd_irx, size_usbd_irx, 0, NULL, NULL);
+    TMP = SifExecModuleBuffer(usbd_irx, size_usbd_irx, 0, NULL, &x);
 #else
-    TMP = loadIRXFile("mc?:/PS2BBL/USBD.IRX", 0, NULL, NULL);
+    TMP = loadIRXFile("mc?:/PS2BBL/USBD.IRX", 0, NULL, &x);
 #endif
     delay(3);
-    DPRINTF("[USBD.IRX]: %d\n", TMP);
+    DPRINTF(" [USBD.IRX]: %d\n", TMP);
 #ifdef HAS_EMBEDDED_IRX
-    TMP = SifExecModuleBuffer(bdm_irx, size_bdm_irx, 0, NULL, NULL);
+    TMP = SifExecModuleBuffer(bdm_irx, size_bdm_irx, 0, NULL, &x);
 #else
-    TMP = loadIRXFile("mc?:/PS2BBL/BDM.IRX", 0, NULL, NULL);
+    TMP = loadIRXFile("mc?:/PS2BBL/BDM.IRX", 0, NULL, &x);
 #endif
-    DPRINTF("[BDM.IRX]: %d\n", TMP);
+    DPRINTF(" [BDM.IRX]: %d\n", TMP);
 #ifdef HAS_EMBEDDED_IRX
-    TMP = SifExecModuleBuffer(bdmfs_fatfs_irx, size_bdmfs_fatfs_irx, 0, NULL, NULL);
+    TMP = SifExecModuleBuffer(bdmfs_fatfs_irx, size_bdmfs_fatfs_irx, 0, NULL, &x);
 #else
-    TMP = loadIRXFile("mc?:/PS2BBL/BDMFS_FATFS.IRX", 0, NULL, NULL);
+    TMP = loadIRXFile("mc?:/PS2BBL/BDMFS_FATFS.IRX", 0, NULL, &x);
 #endif
-    DPRINTF("[BDMFS_FATFS.IRX]: %d\n", TMP);
+    DPRINTF(" [BDMFS_FATFS.IRX]: %d\n", TMP);
 #ifdef HAS_EMBEDDED_IRX
-    TMP = SifExecModuleBuffer(usbmass_bd_irx, size_usbmass_bd_irx, 0, NULL, NULL);
+    TMP = SifExecModuleBuffer(usbmass_bd_irx, size_usbmass_bd_irx, 0, NULL, &x);
 #else
-    TMP = loadIRXFile("mc?:/PS2BBL/USBMASS_BD.IRX", 0, NULL, NULL);
+    TMP = loadIRXFile("mc?:/PS2BBL/USBMASS_BD.IRX", 0, NULL, &x);
 #endif
-    DPRINTF("[USBMASS_BD.IRX]: %d\n", TMP);
+    DPRINTF(" [USBMASS_BD.IRX]: %d\n", TMP);
     delay(3);
 }
 
@@ -593,6 +609,18 @@ void CleanUp(void)
 {
     sceCdInit(SCECdEXIT);
     PadDeinitPads();
+}
+
+void credits(void)
+{
+    scr_clear();
+    scr_printf("PLayStation2 Basic Bootloader\n"
+                "Made by Matias Israelson (AKA: El_isra)\n"
+                "This project is heavily based on SP193 OSD initialization libraries. all credits go to him\n"
+                "this build corresponds to the hash ["COMMIT_HASH"]\n"
+                "compiled on "__DATE__" "__TIME__"\n"
+        );
+    while(1){};
 }
 
 #if defined(DUMMY_TIMEZONE)

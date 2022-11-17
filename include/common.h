@@ -4,7 +4,7 @@ enum {SOURCE_INVALID = 0, SOURCE_MC0, SOURCE_MC1, SOURCE_MASS} CONFIG_SOURCES_ID
 
 #define MAX_LEN 64
 #define CNF_LEN_MAX 20480 // 20kb should be enough for massive CNF's
-#define DELAY 3000
+#define DEFDELAY 5000
 enum {AUTO, SELECT, L3, R3, START, UP, RIGHT, DOWN, LEFT, L2, R2, L1, R1, TRIANGLE, CIRCLE, CROSS, SQUARE};
 const char* KEYS_ID[17] = {
     "AUTO",
@@ -43,5 +43,9 @@ char* DEFPATH[] = {
     "mc?:/BOOT/BOOT2.ELF",
     "mc?:/APPS/ULE.ELF",
 };
+
+#ifndef COMMIT_HASH
+#define COMMIT_HASH "UNKNOWN"
+#endif
 
 #endif //COMMONDEF
