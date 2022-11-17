@@ -45,7 +45,7 @@ char* DEFPATH[] = {
 };
 
 #ifndef COMMIT_HASH
-#define COMMIT_HASH "UNKNOWN"
+#define COMMIT_HASH "UNKNOWn"
 #endif
 
 #endif //COMMONDEF
