@@ -14,11 +14,6 @@ on:
       - 'include/*'
       - 'embed/*'
       - 'modules/*/*'
-    paths-ignore:
-      - '**.MD'
-      - '**.gitkeep'
-      - '**.gitignore'
-  
   pull_request:
   workflow_dispatch:
 
