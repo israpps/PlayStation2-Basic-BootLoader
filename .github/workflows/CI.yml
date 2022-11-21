@@ -5,16 +5,12 @@ on:
     tags:
       - 'v*'
     branches:
-      - 'master'
-    paths:
-      - '.github/workflows/CI.yml'
-      - 'Makefile'
-      - '*.make'
-      - 'linkfile'
-      - 'src/*'
-      - 'include/*'
-      - 'embed/*'
-      - 'modules/*/*'
+      - 'main'
+    paths-ignore:
+      - '**.MD'
+      - '**.gitkeep'
+      - '**.gitignore'
+
   pull_request:
   workflow_dispatch:
 
@@ -35,11 +31,19 @@ jobs:
 
       - name: Compile PS2 build
         run: |
-          make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PS2
+          make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PS2/
+
+      - name: list
+        run: |
+          git ls-files -i --exclude-standard -c
 
       - name: Compile PSX build
         run: |
-          make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PSX PSX=1
+          make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PSX/ PSX=1
+
+      - name: list
+        run: |
+          git ls-files -i --exclude-standard -c
 
       - name: prepare release folder
         run: |
