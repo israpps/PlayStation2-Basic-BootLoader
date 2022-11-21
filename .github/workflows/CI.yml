@@ -33,10 +33,6 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git fetch --prune --unshallow
 
-      - name: pre compilation steps
-        run: |
-          mkdir release/
-
       - name: Compile PS2 build
         run: |
           make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PS2
