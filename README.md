@@ -66,8 +66,7 @@ LK_CROSS_E1 = $CDVD
 ```
 ## Known bugs/issues
 
-1. due to my lack of knoledge on how to deal with the linkfile, the PSX-DESR initialization function is not fit for user usage, without the proper linkfile configuration there is a chance that the system will crash when the program sets the PSX to 32mb RAM mode.
-
+you tell me ;)
 
 ## Credits
 
