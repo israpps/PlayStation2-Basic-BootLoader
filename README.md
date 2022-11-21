@@ -1,5 +1,7 @@
 # PlayStation Basic Bootloader
 
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/4ea4628e3d444807bf5df8430a327c5b)](https://www.codacy.com/gh/israpps/PlayStation2-Basic-BootLoader/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=israpps/PlayStation2-Basic-BootLoader&amp;utm_campaign=Badge_Grade)
+
 A simple PS2 bootloader that handles system init and ELF programs execution amongst other things
 
 ## Program usage
@@ -66,8 +68,7 @@ LK_CROSS_E1 = $CDVD
 ```
 ## Known bugs/issues
 
-1. due to my lack of knoledge on how to deal with the linkfile, the PSX-DESR initialization function is not fit for user usage, without the proper linkfile configuration there is a chance that the system will crash when the program sets the PSX to 32mb RAM mode.
-
+you tell me ;)
 
 ## Credits
 
