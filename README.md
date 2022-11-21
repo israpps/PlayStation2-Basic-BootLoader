@@ -1,5 +1,7 @@
 # PlayStation Basic Bootloader
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/d1893464aef646f089c2a81e59ea5c4c)](https://app.codacy.com/gh/israpps/PlayStation2-Basic-BootLoader?utm_source=github.com&utm_medium=referral&utm_content=israpps/PlayStation2-Basic-BootLoader&utm_campaign=Badge_Grade_Settings)
+
 A simple PS2 bootloader that handles system init and ELF programs execution amongst other things
 
 ## Program usage
