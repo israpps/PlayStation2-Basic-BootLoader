@@ -10,19 +10,20 @@ __________  _________________   ____________________.____
 endef
 export HEADER
 
-#BUILD CFG
+# ---{BUILD CFG}---
 PSX ?= 0 # PSX DESR support
-
 KERNEL_NOPATCH ?= 1 
 NEWLIB_NANO ?= 1
 HAS_EMBEDDED_IRX ?= 0 # whether to embed or not non vital IRX (wich will be loaded from memcard files)
-PROHBIT_DVD_0100 ?= 0 #prohibit the DVD Players v1.00 and v1.01 from being booted.
-XCDVD_READKEY ?= 0 #Enable the newer sceCdReadKey checks, which are only supported by a newer CDVDMAN module.
+PROHBIT_DVD_0100 ?= 0 # prohibit the DVD Players v1.00 and v1.01 from being booted.
+XCDVD_READKEY ?= 0 # Enable the newer sceCdReadKey checks, which are only supported by a newer CDVDMAN module.
 #--
-RELDIR = release
-EE_BIN = $(RELDIR)/PS2BBL.ELF
-EE_BIN_STRIPPED = stripped_PS2BBL.ELF
-EE_BIN_PACKED = $(RELDIR)/COMPRESSED_PS2BBL.ELF
+
+BINDIR ?= bin/
+BASENAME ?= PS2BBL
+EE_BIN = $(BINDIR)$(BASENAME).ELF
+EE_BIN_STRIPPED = $(BINDIR)stripped_$(BASENAME).ELF
+EE_BIN_PACKED = $(BINDIR)COMPRESSED_$(BASENAME).ELF
 
 EE_OBJS_DIR = obj/
 EE_SRC_DIR = src/
@@ -39,13 +40,14 @@ endif
 ifdef COMMIT_HASH
     EE_CFLAGS += -DCOMMIT_HASH=\"$(COMMIT_HASH)\"
 else
-
     EE_CFLAGS += -DCOMMIT_HASH=\"UNKNOWN\"
 endif
 
 EE_OBJS = main.o \
 		pad.o util.o elf.o timer.o ps2.o ps1.o dvdplayer.o modelname.o libcdvd_add.o OSDHistory.o OSDInit.o OSDConfig.o \
-		icon_sys_A.o icon_sys_J.o icon_sys_C.o \
+		$(EMBEDDED_STUFF)
+
+EMBEDDED_STUFF = icon_sys_A.o icon_sys_J.o icon_sys_C.o \
 		loader_elf.o \
 		$(IOP_OBJS)
 
@@ -83,15 +85,18 @@ endif
 
 EE_OBJS := $(EE_OBJS:%=$(EE_OBJS_DIR)%)
 
-all: 
+all:
 	$(MAKE) $(EE_BIN)
 
 greeting:
-	@echo building PS2BBL PSX=$(PSX), EMBEDDED_IRX=$(HAS_EMBEDDED_IRX)
+	@echo built PS2BBL PSX=$(PSX), EMBEDDED_IRX=$(HAS_EMBEDDED_IRX)
+	@echo PROHBIT_DVD_0100=$(PROHBIT_DVD_0100), XCDVD_READKEY=$(XCDVD_READKEY)
 	@echo KERNEL_NOPATCH=$(KERNEL_NOPATCH), NEWLIB_NANO=$(NEWLIB_NANO)
+	@echo binaries dispatched to $(BINDIR)
 
 release: clean
 	$(MAKE) $(EE_BIN_PACKED)
+	$(MAKE) greeting
 	@echo "$$HEADER"
 
 clean:
@@ -99,13 +104,10 @@ clean:
 	@echo - Objects
 	@rm -rf $(EE_OBJS)
 	@echo - Objects folders 
-	@rm -rf $(EE_OBJS_DIR) $(EE_ASM_DIR)
+	@rm -rf $(EE_OBJS_DIR) $(EE_ASM_DIR) $(BINDIR)
 	@echo -- ELF loader
 	$(MAKE) -C modules/ELF_LOADER/ clean
-	@echo - ELF programs
-	@rm -rf $(EE_BIN) $(EE_BIN_PACKED) $(EE_BIN_STRIPPED)
-
-celan: clean #repetitive typo that i have when quicktyping
+	@echo  "\n\n\n"
 
 cleaniop:
 	@echo cleaning only embedded IOP binaries
@@ -130,6 +132,9 @@ $(EE_OBJS_DIR):
 $(EE_ASM_DIR):
 	@mkdir -p $@
 
+$(BINDIR):
+	@mkdir -p $@
+
 $(EE_OBJS_DIR)%.o: $(EE_SRC_DIR)%.c | $(EE_OBJS_DIR)
 	@echo "  - $@"
 	@$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
@@ -138,6 +143,8 @@ $(EE_OBJS_DIR)%.o: $(EE_ASM_DIR)%.s | $(EE_OBJS_DIR)
 	@echo "  - $@"
 	@$(EE_AS) $(EE_ASFLAGS) $< -o $@
 #
+
+celan: clean #repetitive typo that i have when quicktyping
 
 # Include makefiles
 include $(PS2SDK)/samples/Makefile.pref

@@ -33,13 +33,17 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git fetch --prune --unshallow
 
-      - name: Compile
+      - name: pre compilation steps
         run: |
-          make release COMMIT_HASH=${GITHUB_SHA::7}
+          mkdir release/
 
-      - name: list
+      - name: Compile PS2 build
         run: |
-          git ls-files -i --exclude-standard -c
+          make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PS2
+
+      - name: Compile PSX build
+        run: |
+          make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PSX PSX=1
 
       - name: prepare release folder
         run: |
@@ -49,6 +53,8 @@ jobs:
           cp $PS2SDK/iop/irx/usbmass_bd.irx release/PS2BBL/USBMASS_BD.IRX
           cp LICENSE release/LICENSE.TXT
           cp README.md release/README.md
+          mv PS2/ release/PS2/
+          mv PSX/ release/PSX/
 
       - name: pack release
         run: |
