@@ -368,7 +368,7 @@ void SetDefaultSettings(void)
     for (i = 0; i < 17; i++)
         for (j = 0; j < 3; j++)
             GLOBCFG.KEYPATHS[i][j] = NULL;
-    GLOBCFG.SKIPLOGO = 1;
+    GLOBCFG.SKIPLOGO = 0;
 }
 
 int dischandler()
@@ -532,7 +532,7 @@ void ResetIOP(void)
     };
 
 #ifdef PSX
-        // InitPSX();
+    InitPSX();
 #endif
 }
 
