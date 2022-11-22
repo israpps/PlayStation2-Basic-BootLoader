@@ -20,6 +20,7 @@
 #include <libpad.h>
 #include <libmc.h>
 #include <libcdvd.h>
+#include <libcdvd-common.h>
 
 #include "debugprintf.h"
 #include "pad.h"
