@@ -76,7 +76,7 @@ int loadIRXFile(char *path, u32 arg_len, const char *args, int *mod_res);
 void LoadUSBIRX();
 void CDVDBootCertify(u8 romver[16]);
 void credits(void);
-
+void InitPSX();
 
 typedef struct
 {
