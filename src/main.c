@@ -642,17 +642,13 @@ void credits(void)
 /* BELOW THIS POINT ALL MACROS and MISC STUFF MADE TO REDUCE BINARY SIZE WILL BE PLACED */
 
 #if defined(DUMMY_TIMEZONE)
-void _ps2sdk_timezone_update()
-{
-}
+   void _ps2sdk_timezone_update() {}
 #endif
 
 #if defined(DUMMY_LIBC_INIT)
-void _ps2sdk_libc_init()
-{
-}
-void _ps2sdk_libc_deinit() {}
-void _ps2sdk_args_parse(int argc, char **argv) {}
+   void _ps2sdk_libc_init() {}
+   void _ps2sdk_libc_deinit() {}
+   void _ps2sdk_args_parse(int argc, char ** argv) {}
 #endif
 
 PS2_DISABLE_AUTOSTART_PTHREAD();
