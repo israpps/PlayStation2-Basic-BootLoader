@@ -188,24 +188,24 @@ int main()
     SetDefaultSettings();
     FILE *fp;
     DPRINTF("Reading settings...\n");
-    fp = fopen("mc0:/PS2BBL/CONFIG.INI", "r");
+    fp = fopen("mass:/PS2BBL/CONFIG.INI", "r");
     if (fp == NULL) {
-        DPRINTF("Cant load config from mc0\n");
-        fp = fopen("mc1:/PS2BBL/CONFIG.INI", "r");
+        DPRINTF("Cant load config from mass\n");
+        fp = fopen("mc0:/PS2BBL/CONFIG.INI", "r");
         if (fp == NULL) {
-            DPRINTF("Cant load config from mc1\n");
-            fp = fopen("mass:/PS2BBL/CONFIG.INI", "r");
+            DPRINTF("Cant load config from mc0\n");
+            fp = fopen("mc1:/PS2BBL/CONFIG.INI", "r");
             if (fp == NULL) {
-                DPRINTF("Cant load config from mass\n");
+                DPRINTF("Cant load config from mc1\n");
                 config_source = SOURCE_INVALID;
             } else {
-                config_source = SOURCE_MASS;
+                config_source = SOURCE_MC1;
             }
         } else {
-            config_source = SOURCE_MC1;
+            config_source = SOURCE_MC0;
         }
     } else {
-        config_source = SOURCE_MC0;
+        config_source = SOURCE_MASS;
     }
 
     if (config_source != SOURCE_INVALID) {
@@ -571,11 +571,11 @@ static void InitPSX()
     // Reset the IOP again to get the standard PS2 default modules.
     while (!SifIopReset("", 0)) {};
 
-        /*    Set the EE kernel into 32MB mode. Let's do this, while the IOP is being reboot.
-            The memory will be limited with the TLB. The remap can be triggered by calling the _InitTLB syscall
-            or with ExecPS2().
-            WARNING! If the stack pointer resides above the 32MB offset at the point of remap, a TLB exception will occur.
-            This example has the stack pointer configured to be within the 32MB limit. */
+    /*    Set the EE kernel into 32MB mode. Let's do this, while the IOP is being reboot.
+        The memory will be limited with the TLB. The remap can be triggered by calling the _InitTLB syscall
+        or with ExecPS2().
+        WARNING! If the stack pointer resides above the 32MB offset at the point of remap, a TLB exception will occur.
+        This example has the stack pointer configured to be within the 32MB limit. */
 
     SetMemoryMode(1);
     _InitTLB();
