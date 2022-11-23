@@ -10,10 +10,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        KERNEL_NOPATCH: [0,1]
-        DUMMY_TIMEZONE: [0,1]
-        NEWLIB_NANO: [0,1]
-        DUMMY_LIBC_INIT: [0,1]
+        flags: [
+          DUMMY_LIBC_INIT=1, 
+          DUMMY_TIMEZONE=1, 
+          KERNEL_NOPATCH=1, 
+          NEWLIB_NANO=1, 
+          KERNEL_NOPATCH=1 NEWLIB_NANO=1,
+          KERNEL_NOPATCH=1 NEWLIB_NANO=1 DUMMY_LIBC_INIT=1,
+          KERNEL_NOPATCH=1 NEWLIB_NANO=1 DUMMY_TIMEZONE=1,  
+          DEFAULT=1
+          ]
 
     container: ps2dev/ps2dev:latest
     steps:
@@ -26,11 +32,11 @@ jobs:
 
     - name: Compile project
       run: |
-        make release KERNEL_NOPATCH=${{ matrix.KERNEL_NOPATCH }} DUMMY_TIMEZONE=${{ matrix.DUMMY_TIMEZONE }} NEWLIB_NANO=${{ matrix.NEWLIB_NANO }} DUMMY_LIBC_INIT=${{ matrix.DUMMY_LIBC_INIT }}
+        make release ${{ matrix.flags }}
         
     - name: repack project
       run: |
-       7z a -t7z PS2BBL_KERNEL_NOPATCH=${{ matrix.KERNEL_NOPATCH }}-DUMMY_TIMEZONE=${{ matrix.DUMMY_TIMEZONE }}-NEWLIB_NANO=${{ matrix.NEWLIB_NANO }}-DUMMY_LIBC_INIT=${{ matrix.DUMMY_LIBC_INIT }}_.7z bin/*.ELF
+       7z a -t7z PS2BBL_${{ matrix.flags }}_.7z bin/*.ELF
 
     - name: Upload artifacts
       if: ${{ success() }}

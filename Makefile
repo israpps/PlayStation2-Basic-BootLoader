@@ -21,7 +21,7 @@ XCDVD_READKEY ?= 0 # Enable the newer sceCdReadKey checks, which are only suppor
 # Related to binary size reduction
 KERNEL_NOPATCH ?= 1 
 NEWLIB_NANO ?= 1
-DUMMY_TIMEZONE ?= 1
+DUMMY_TIMEZONE ?= 0
 DUMMY_LIBC_INIT ?= 1
 
 # ---{ EXECUTABLES }--- #
