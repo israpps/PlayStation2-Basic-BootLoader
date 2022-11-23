@@ -1,0 +1,39 @@
+name: SIZE_TEST
+#workflow that compares the different patches to reduce binary size, only runs if manually requested or each time a tagged relase is made
+on:
+  workflow_dispatch:
+  release:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        KERNEL_NOPATCH: [0,1]
+        DUMMY_TIMEZONE: [0,1]
+        NEWLIB_NANO: [0,1]
+        DUMMY_LIBC_INIT: [0,1]
+
+    container: ps2dev/ps2dev:latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install dependencies
+      run: |
+        apk add build-base p7zip
+    
+
+    - name: Compile project
+      run: |
+        make release KERNEL_NOPATCH=${{ matrix.KERNEL_NOPATCH }} DUMMY_TIMEZONE=${{ matrix.DUMMY_TIMEZONE }} NEWLIB_NANO=${{ matrix.NEWLIB_NANO }} DUMMY_LIBC_INIT=${{ matrix.DUMMY_LIBC_INIT }}
+        
+    - name: repack project
+      run: |
+       7z a -t7z PS2BBL_KERNEL_NOPATCH=${{ matrix.KERNEL_NOPATCH }}-DUMMY_TIMEZONE=${{ matrix.DUMMY_TIMEZONE }}-NEWLIB_NANO=${{ matrix.NEWLIB_NANO }}-DUMMY_LIBC_INIT=${{ matrix.DUMMY_LIBC_INIT }}_.7z bin/*.ELF
+
+    - name: Upload artifacts
+      if: ${{ success() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: PS2BBL_TEST_SIZE
+        path: PS2BBL*.7z
