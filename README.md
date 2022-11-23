@@ -30,6 +30,7 @@ supported commands:
 - `$CDVD`: execute disc respecting the value passed to `SKIP_PS2LOGO` on config
 - `$CDVD_NO_PS2LOGO`: execute disc enforcing the `SKIP_PS2LOGO` to `1`
 - `$CREDITS`: displays credits (duh). and shows compilation date and associated git commit hash
+- `$RUNKELF:KELFPATH`: executes the file path specified in `KELFPATH` as a PS2 KELF
 
 #### Defining a launch key
 a launch key is a configuration entry wich defines the path to a program to be executed when a specific key is pressed, for each key, there are `3` paths, wich are searched for in order
@@ -67,6 +68,7 @@ LK_SELECT_E1 = rom0:TESTMODE
 LK_START_E1 = rom0:OSDSYS
 
 LK_CROSS_E1 = $CDVD
+LK_TRIANGLE_E1 = $RUNKELF:mc?:/BAEXEC-SYSTEM/osdmain.elf
 ```
 ## Known bugs/issues
 

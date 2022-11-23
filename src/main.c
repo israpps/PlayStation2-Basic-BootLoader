@@ -75,7 +75,10 @@ int loadIRXFile(char *path, u32 arg_len, const char *args, int *mod_res);
 void LoadUSBIRX();
 void CDVDBootCertify(u8 romver[16]);
 void credits(void);
+
+#ifdef PSX
 static void InitPSX();
+#endif
 
 typedef struct
 {
@@ -338,8 +341,34 @@ void EMERGENCY(void)
     }
 }
 
+void runKELF(const char* kelfpath)
+{
+    char arg3[64];
+    char *args[4] = {"-m rom0:SIO2MAN", "-m rom0:MCMAN", "-m rom0:MCSERV", arg3};
+    sprintf(arg3, "-x %s", kelfpath);
+
+    PadDeinitPads();
+    LoadExecPS2("moduleload", 4, args);
+}
+
 char *CheckPath(char *path)
 {
+    if (path[0] == '$') // we found a program command
+    {
+        if (!strcmp("$CDVD", path))
+            dischandler();
+        if (!strcmp("$CDVD_NO_PS2LOGO", path)) 
+        {
+            GLOBCFG.SKIPLOGO = 1;
+            dischandler();
+        }
+        if (!strcmp("$CREDITS", path))
+            credits();
+        if (!strncmp("$RUNKELF:", path, strlen("$RUNKELF:")))
+        {
+            runKELF(CheckPath(path+ strlen("$RUNKELF:"))); // pass to runKELF the path without the command token, digested again by CheckPath()
+        }
+    }
     if (!strncmp("mc?", path, 3)) {
         path[2] = '0';
         if (exist(path)) {
@@ -350,14 +379,6 @@ char *CheckPath(char *path)
                 return path;
         }
     }
-    if (!strcmp("$CDVD", path))
-        dischandler();
-    if (!strcmp("$CDVD_NO_PS2LOGO", path)) {
-        GLOBCFG.SKIPLOGO = 1;
-        dischandler();
-    }
-    if (!strcmp("$CREDITS", path))
-        credits();
     return path;
 }
 
