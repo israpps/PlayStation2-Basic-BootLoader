@@ -13,7 +13,7 @@ static int timezone = 0x80; // This (as well as related checks) seems to be 0x7F
 int OSDConfigLoad(void)
 {
     int result;
-    result       = OSDLoadConfigFromNVM(&osdConfigPS1, &osdConfigPS2);
+    result = OSDLoadConfigFromNVM(&osdConfigPS1, &osdConfigPS2);
     ps1drvConfig = osdConfigPS1.data[0] & 0x11;
 
     return result;
@@ -31,14 +31,14 @@ void OSDConfigApply(void)
     ConfigParam config;
     Config2Param config2;
 
-    config.spdifMode      = OSDConfigGetSPDIF();
-    config.screenType     = OSDConfigGetScreenType();
-    config.videoOutput    = OSDConfigGetVideoOutput();
-    config.japLanguage    = 1;
-    config.ps1drvConfig   = ps1drvConfig;
-    config.version        = 2;
-    language              = OSDConfigGetLanguage();
-    config.language       = (language <= LANGUAGE_PORTUGUESE) ? language : LANGUAGE_ENGLISH;
+    config.spdifMode = OSDConfigGetSPDIF();
+    config.screenType = OSDConfigGetScreenType();
+    config.videoOutput = OSDConfigGetVideoOutput();
+    config.japLanguage = 1;
+    config.ps1drvConfig = ps1drvConfig;
+    config.version = 2;
+    language = OSDConfigGetLanguage();
+    config.language = (language <= LANGUAGE_PORTUGUESE) ? language : LANGUAGE_ENGLISH;
     config.timezoneOffset = OSDConfigGetTimezoneOffset();
 
     SetOsdConfigParam(&config);
@@ -51,11 +51,11 @@ void OSDConfigApply(void)
         config2.format = 2;
 
     config2.daylightSaving = OSDConfigGetDaylightSaving();
-    config2.timeFormat     = OSDConfigGetTimeFormat();
-    config2.dateFormat     = OSDConfigGetDateFormat();
+    config2.timeFormat = OSDConfigGetTimeFormat();
+    config2.dateFormat = OSDConfigGetDateFormat();
 
-    config2.version        = 2;
-    config2.language       = OSDConfigGetLanguage();
+    config2.version = 2;
+    config2.language = OSDConfigGetLanguage();
 
     SetOsdConfigParam2(&config2, 4, 0);
 }
@@ -120,12 +120,10 @@ int OSDConfigGetLanguage(void)
 {
     int region, DefaultLanguage;
 
-    region          = OSDGetRegion();
+    region = OSDGetRegion();
     DefaultLanguage = OSDGetDefaultLanguage();
-    if (region != OSD_REGION_JAPAN)
-    { // Export sets cannot have Japanese set as a language
-        if (osdConfigPS2.language == LANGUAGE_JAPANESE)
-        {
+    if (region != OSD_REGION_JAPAN) { // Export sets cannot have Japanese set as a language
+        if (osdConfigPS2.language == LANGUAGE_JAPANESE) {
             osdConfigPS2.language = DefaultLanguage;
             return osdConfigPS2.language;
         }
@@ -136,8 +134,7 @@ int OSDConfigGetLanguage(void)
 
 int OSDConfigSetLanguage(int language)
 {
-    if (OSDIsLanguageValid(OSDGetRegion(), osdConfigPS2.language) < 0)
-    {
+    if (OSDIsLanguageValid(OSDGetRegion(), osdConfigPS2.language) < 0) {
         if (OSDGetDefaultLanguage() == language)
             return language;
     }
@@ -214,8 +211,7 @@ int OSDConfigSetTimezoneOffset(int offset)
 
 int OSDConfigGetTimezone(void)
 {
-    if (osdConfigPS2.timezone >= 0x80)
-    {
+    if (osdConfigPS2.timezone >= 0x80) {
         timezone = osdConfigPS2.timezone;
         return 0x80;
     }
@@ -225,13 +221,10 @@ int OSDConfigGetTimezone(void)
 
 int OSDConfigSetTimezone(int value)
 {
-    if (value == 0x80)
-    {
+    if (value == 0x80) {
         osdConfigPS2.timezone = timezone;
         return 0x80;
-    }
-    else
-    {
+    } else {
         osdConfigPS2.timezone = value;
         return osdConfigPS2.timezone;
     }

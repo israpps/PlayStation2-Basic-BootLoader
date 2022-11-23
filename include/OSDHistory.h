@@ -1,4 +1,4 @@
-#define MAX_HISTORY_ENTRIES                     21
+#define MAX_HISTORY_ENTRIES 21
 
 /*  If the record is valid, the launch count will be >0.
 

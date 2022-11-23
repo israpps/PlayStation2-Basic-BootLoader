@@ -17,11 +17,9 @@ int cdInitAdd(void)
     unsigned int MECHA_version;
 
     // Like how CDVDMAN checks sceCdMV(), do not continuously attempt to get the MECHACON version because some consoles (e.g. DTL-H301xx) can't return one.
-    for (i = 0; i <= 100; i++)
-    {
-        if ((result = sceCdMV(MECHA_version_data, &status)) != 0 && ((status & 0x80) == 0))
-        {
-            MECHA_version              = MECHA_version_data[2] | ((unsigned int)MECHA_version_data[1] << 8) | ((unsigned int)MECHA_version_data[0] << 16);
+    for (i = 0; i <= 100; i++) {
+        if ((result = sceCdMV(MECHA_version_data, &status)) != 0 && ((status & 0x80) == 0)) {
+            MECHA_version = MECHA_version_data[2] | ((unsigned int)MECHA_version_data[1] << 8) | ((unsigned int)MECHA_version_data[0] << 16);
             MECHACON_CMD_S36_supported = (0x5FFFF < MECHA_version); // v6.0 and later
             MECHACON_CMD_S27_supported = (0x501FF < MECHA_version); // v5.2 and later
             MECHACON_CMD_S24_supported = (0x4FFFF < MECHA_version); // v5.0 and later
@@ -44,18 +42,14 @@ int custom_sceCdReadRegionParams(u8 *data, u32 *stat)
     int result;
 
     memset(data, 0, 13);
-    if (MECHACON_CMD_S36_supported)
-    {
-        //if ((result = sceCdApplySCmd(0x36, NULL, 0, RegionData, sizeof(RegionData))) != 0)
-        if ((result = sceCdApplySCmd(0x36, NULL, 0, RegionData)) != 0)
-        {
+    if (MECHACON_CMD_S36_supported) {
+        // if ((result = sceCdApplySCmd(0x36, NULL, 0, RegionData, sizeof(RegionData))) != 0)
+        if ((result = sceCdApplySCmd(0x36, NULL, 0, RegionData)) != 0) {
             *stat = RegionData[0];
             memcpy(data, &RegionData[1], 13);
         }
-    }
-    else
-    {
-        *stat  = 0x100;
+    } else {
+        *stat = 0x100;
         result = 1;
     }
 
@@ -68,9 +62,8 @@ int sceCdBootCertify(const u8 *data)
     int result;
     unsigned char CmdResult;
 
-    //if ((result = sceCdApplySCmd(0x1A, data, 4, &CmdResult, 1)) != 0)
-    if ((result = sceCdApplySCmd(0x1A, data, 4, &CmdResult)) != 0)
-    {
+    // if ((result = sceCdApplySCmd(0x1A, data, 4, &CmdResult, 1)) != 0)
+    if ((result = sceCdApplySCmd(0x1A, data, 4, &CmdResult)) != 0) {
         result = CmdResult;
     }
 
@@ -83,16 +76,16 @@ int sceCdRM(char *ModelName, u32 *stat)
     unsigned char sdata;
     int result1, result2;
 
-    sdata   = 0;
+    sdata = 0;
     result1 = sceCdApplySCmd(0x17, &sdata, 1, rdata);
-    //result1 = sceCdApplySCmd(0x17, &sdata, 1, rdata, 9);
+    // result1 = sceCdApplySCmd(0x17, &sdata, 1, rdata, 9);
 
-    *stat   = rdata[0];
+    *stat = rdata[0];
     memcpy(ModelName, &rdata[1], 8);
 
-    sdata   = 8;
+    sdata = 8;
     result2 = sceCdApplySCmd(0x17, &sdata, 1, rdata);
-    //result2 = sceCdApplySCmd(0x17, &sdata, 1, rdata, 9);
+    // result2 = sceCdApplySCmd(0x17, &sdata, 1, rdata, 9);
 
     *stat |= rdata[0];
     memcpy(&ModelName[8], &rdata[1], 8);
@@ -110,18 +103,14 @@ int custom_sceCdReadPS1BootParam(char *param, u32 *stat)
     int result;
 
     memset(param, 0, 11);
-    if (MECHACON_CMD_S27_supported)
-    {
-        //if ((result = sceCdApplySCmd(0x27, NULL, 0, out, 13)) != 0)
-        if ((result = sceCdApplySCmd(0x27, NULL, 0, out)) != 0)
-        {
+    if (MECHACON_CMD_S27_supported) {
+        // if ((result = sceCdApplySCmd(0x27, NULL, 0, out, 13)) != 0)
+        if ((result = sceCdApplySCmd(0x27, NULL, 0, out)) != 0) {
             *stat = out[0];
             memcpy(param, &out[1], 11); // Yes, one byte is not copied.
         }
-    }
-    else
-    {
-        *stat  = 0x100;
+    } else {
+        *stat = 0x100;
         result = 1;
     }
 
@@ -134,18 +123,14 @@ int sceCdRcBypassCtl(int bypass, u32 *stat)
     int result;
 
     memset(in, 0, 11);
-    if (MECHACON_CMD_S24_supported)
-    {
+    if (MECHACON_CMD_S24_supported) {
         // TODO
-        //if ((result = sceCdApplySCmd(0x24, &bypass, 4, out, 13)) != 0)
-        if ((result = sceCdApplySCmd(0x24, &bypass, 4, out)) != 0)
-        {
+        // if ((result = sceCdApplySCmd(0x24, &bypass, 4, out, 13)) != 0)
+        if ((result = sceCdApplySCmd(0x24, &bypass, 4, out)) != 0) {
             *stat = out[0];
         }
-    }
-    else
-    {
-        *stat  = 0x100;
+    } else {
+        *stat = 0x100;
         result = 1;
     }
 

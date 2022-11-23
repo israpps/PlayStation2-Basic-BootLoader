@@ -14,8 +14,8 @@
     Unfortunately, using the right size will cause the icon to be deemed as corrupted data by the HDDOSD. */
 #define SYSDATA_ICON_SYS_SIZE 1776
 
-#define NUM_TABLES            1024
-#define HISTORY_PATH_LEN      1024
+#define NUM_TABLES       1024
+#define HISTORY_PATH_LEN 1024
 
 extern unsigned char icon_sys_A[];
 extern unsigned char icon_sys_J[];
@@ -40,8 +40,7 @@ static int WriteHistoryFile(int port, const char *path, const void *buffer, int 
 {
     int fd, result, size;
 
-    if (append)
-    {
+    if (append) {
         sceMcOpen(port, 0, path, O_RDWR);
         sceMcSync(0, NULL, &fd);
     }
@@ -51,21 +50,17 @@ static int WriteHistoryFile(int port, const char *path, const void *buffer, int 
 
     sceMcSync(0, NULL, &fd);
 
-    if (fd >= 0)
-    {
-        if (append)
-        { // Get length of file
+    if (fd >= 0) {
+        if (append) { // Get length of file
             sceMcSeek(fd, 0, SEEK_END);
             sceMcSync(0, NULL, &size);
 
-            if (size >= 0)
-            { // Seek to the last position within the file.
+            if (size >= 0) { // Seek to the last position within the file.
                 sceMcSeek(fd, size, SEEK_SET);
                 sceMcSync(0, NULL, &size);
             }
 
-            if (size < 0)
-            { // Seek error
+            if (size < 0) { // Seek error
                 result = sceMcClose(fd);
                 sceMcSync(0, NULL, &result);
                 return size;
@@ -75,22 +70,18 @@ static int WriteHistoryFile(int port, const char *path, const void *buffer, int 
         sceMcWrite(fd, buffer, len);
         sceMcSync(0, NULL, &size);
 
-        if (size >= 0)
-        {
+        if (size >= 0) {
             sceMcClose(fd);
             sceMcSync(0, NULL, &result);
 
             return (sceMcResSucceed <= result ? 0 : result);
-        }
-        else
-        {
+        } else {
             result = sceMcClose(fd);
             sceMcSync(0, NULL, &result);
 
             return size;
         }
-    }
-    else
+    } else
         return fd;
 }
 
@@ -103,13 +94,11 @@ static int McCheckFileExists(int port, const char *path)
 
     sceMcSync(0, NULL, &fd);
 
-    if (fd >= 0)
-    {
+    if (fd >= 0) {
         sceMcClose(fd);
         sceMcSync(0, NULL, &result);
         return (sceMcResSucceed <= result ? 1 : result);
-    }
-    else
+    } else
         return 0;
 }
 
@@ -128,8 +117,7 @@ int LoadHistoryFile(int port)
     fd = sceMcOpen(port, 0, fullpath, O_RDONLY);
     sceMcSync(0, NULL, &fd);
 
-    if (fd >= 0)
-    {
+    if (fd >= 0) {
         sceMcRead(fd, HistoryEntries, MAX_HISTORY_ENTRIES * sizeof(struct HistoryEntry));
         sceMcSync(0, NULL, &result);
 
@@ -138,8 +126,7 @@ int LoadHistoryFile(int port)
         sceMcSync(0, NULL, &result2);
 
         return ((result >= 0) ? (result2 >= 0 ? 0 : -1) : result);
-    }
-    else
+    } else
         result = fd;
 
     return result;
@@ -155,11 +142,10 @@ int SaveHistoryFile(int port)
     sceMcTblGetDir iconDirT;
 
     spaceRequired = 0;
-    makeIcon      = 0;
+    makeIcon = 0;
 
     // Not present in older versions. It may be to compensate for those newer regions that were not supported by older ROMs (i.e. China), by having the icon (_SCE8) stored on the memory card.
-    switch (OSDGetConsoleRegion())
-    { // The original may have used simple if/else blocks, as it called OSDGetConsoleRegion() multiple times.
+    switch (OSDGetConsoleRegion()) { // The original may have used simple if/else blocks, as it called OSDGetConsoleRegion() multiple times.
         case CONSOLE_REGION_JAPAN:
         case CONSOLE_REGION_USA:
         case CONSOLE_REGION_EUROPE:
@@ -172,45 +158,35 @@ int SaveHistoryFile(int port)
     sceMcGetInfo(port, 0, &type, &free, &format);
     sceMcSync(0, NULL, &result);
 
-    if ((result >= sceMcResChangedCard) && (type == sceMcTypePS2) && (format != 0))
-    {
+    if ((result >= sceMcResChangedCard) && (type == sceMcTypePS2) && (format != 0)) {
         dataFolderExists = 0;
         sceMcGetDir(port, 0, "/*", 0, NUM_TABLES, table);
         sceMcSync(0, NULL, &result);
 
-        if (result >= sceMcResSucceed)
-        { // Locate system data directory
-            for (i = 0; i < result; i++)
-            {
-                if (strcmp(table[i].EntryName, OSDGetSystemDataFolder()) == 0)
-                {
+        if (result >= sceMcResSucceed) { // Locate system data directory
+            for (i = 0; i < result; i++) {
+                if (strcmp(table[i].EntryName, OSDGetSystemDataFolder()) == 0) {
                     dataFolderExists = 1;
                     break;
                 }
             }
 
-            if (dataFolderExists)
-            { // It exists, so check the icon.
-                if (spaceRequired)
-                {
+            if (dataFolderExists) { // It exists, so check the icon.
+                if (spaceRequired) {
                     sprintf(pathToFile, "%s/%s", OSDGetHistoryDataFolder(), "icon.sys");
                     if ((result = McCheckFileExists(port, pathToFile)) < 0)
                         return -1;
 
-                    if (result == 0)
-                    { // Icon does not exist, hence assume that the system data folder does not exist.
+                    if (result == 0) { // Icon does not exist, hence assume that the system data folder does not exist.
                         spaceRequired = 9;
-                        makeIcon      = 1;
-                    }
-                    else
+                        makeIcon = 1;
+                    } else
                         spaceRequired = 0;
                 }
 
                 if (free < spaceRequired + 2) // Likely a check for at least 2 clusters, for history file (directory entry + file itself)
                     return -1;
-            }
-            else
-            {
+            } else {
                 if (free < spaceRequired + 10)
                     return -1;
 
@@ -234,8 +210,7 @@ int SaveHistoryFile(int port)
             // There was no check on the return value.
             WriteHistoryFile(port, pathToFile, HistoryEntries, sizeof(struct HistoryEntry) * MAX_HISTORY_ENTRIES, 0);
 
-            if (makeIcon)
-            { // There was no code in older versions for writing _SCE8 (see comment above).
+            if (makeIcon) { // There was no code in older versions for writing _SCE8 (see comment above).
 #ifdef WRITE_ICOBYSYS
                 sprintf(pathToFile, "%s/%s", OSDGetHistoryDataFolder(), "_SCE8");
                 // The original got the ICOBYSYS resource's details (buffer position & size) from the resource manager via getter functions.
@@ -247,8 +222,7 @@ int SaveHistoryFile(int port)
             sprintf(pathToFile, "%s/%s", OSDGetHistoryDataFolder(), "icon.sys");
 
             // There is no check on the result of the writing process. If writing fails, the browser will treat it as corrupted data
-            switch (OSDGetConsoleRegion())
-            { // The original may have used simple if/else blocks, as it called OSDGetConsoleRegion() multiple times.
+            switch (OSDGetConsoleRegion()) { // The original may have used simple if/else blocks, as it called OSDGetConsoleRegion() multiple times.
                 case CONSOLE_REGION_JAPAN:
                     WriteHistoryFile(port, pathToFile, icon_sys_J, SYSDATA_ICON_SYS_SIZE, 0);
                     break;
@@ -259,16 +233,13 @@ int SaveHistoryFile(int port)
                     WriteHistoryFile(port, pathToFile, icon_sys_A, SYSDATA_ICON_SYS_SIZE, 0);
             }
 
-            if (HasTooManyHistoryRecords)
-            { // Append the selected history record to the end of history.old.
+            if (HasTooManyHistoryRecords) { // Append the selected history record to the end of history.old.
                 sprintf(pathToFile, "%s/%s", OSDGetHistoryDataFolder(), "history.old");
                 WriteHistoryFile(port, pathToFile, &OldHistoryEntry, sizeof(struct HistoryEntry), 1);
             }
-        }
-        else
+        } else
             result = -1;
-    }
-    else
+    } else
         result = -1;
 
     return result;
@@ -289,44 +260,36 @@ static void AddHistoryRecord(const char *name)
     u8 BlankSlotList[MAX_HISTORY_ENTRIES];
     int IsNewRecord;
 
-    LeastUsedRecord            = 0;
-    LeastUsedRecordTimestamp   = INT_MAX;
+    LeastUsedRecord = 0;
+    LeastUsedRecordTimestamp = INT_MAX;
     LeastUsedRecordLaunchCount = INT_MAX;
-    HasTooManyHistoryRecords   = 0;
-    IsNewRecord                = 1;
+    HasTooManyHistoryRecords = 0;
+    IsNewRecord = 1;
 
-    for (i = 0; i < MAX_HISTORY_ENTRIES; i++)
-    {
-        if (HistoryEntries[i].LaunchCount < LeastUsedRecordLaunchCount)
-        {
-            LeastUsedRecord            = i;
+    for (i = 0; i < MAX_HISTORY_ENTRIES; i++) {
+        if (HistoryEntries[i].LaunchCount < LeastUsedRecordLaunchCount) {
+            LeastUsedRecord = i;
             LeastUsedRecordLaunchCount = HistoryEntries[i].LaunchCount;
         }
-        if (LeastUsedRecordLaunchCount == HistoryEntries[i].LaunchCount)
-        {
-            if (HistoryEntries[i].DateStamp < LeastUsedRecordTimestamp)
-            {
+        if (LeastUsedRecordLaunchCount == HistoryEntries[i].LaunchCount) {
+            if (HistoryEntries[i].DateStamp < LeastUsedRecordTimestamp) {
                 LeastUsedRecordTimestamp = HistoryEntries[i].DateStamp;
-                LeastUsedRecord          = i;
+                LeastUsedRecord = i;
             }
         }
 
         // In v1.0x, this was strcmp
-        if (!strncmp(HistoryEntries[i].name, name, sizeof(HistoryEntries[i].name)))
-        {
-            IsNewRecord                 = 0;
+        if (!strncmp(HistoryEntries[i].name, name, sizeof(HistoryEntries[i].name))) {
+            IsNewRecord = 0;
 
             HistoryEntries[i].DateStamp = GetTimestamp();
-            if ((HistoryEntries[i].bitmask & 0x3F) != 0x3F)
-            {
+            if ((HistoryEntries[i].bitmask & 0x3F) != 0x3F) {
                 NewLaunchCount = HistoryEntries[i].LaunchCount + 1;
                 if (NewLaunchCount >= 0x80)
                     NewLaunchCount = 0x7F;
 
-                if (NewLaunchCount >= 14)
-                {
-                    if ((NewLaunchCount - 14) % 10 == 0)
-                    {
+                if (NewLaunchCount >= 14) {
+                    if ((NewLaunchCount - 14) % 10 == 0) {
                         while ((HistoryEntries[i].bitmask >> (value = rand() % 6)) & 1) {};
                         HistoryEntries[i].ShiftAmount = value;
                         HistoryEntries[i].bitmask |= 1 << value;
@@ -334,15 +297,10 @@ static void AddHistoryRecord(const char *name)
                 }
 
                 HistoryEntries[i].LaunchCount = NewLaunchCount;
-            }
-            else
-            {
-                if (HistoryEntries[i].LaunchCount < 0x3F)
-                { // Was a check against 0x40 in v1.0x
+            } else {
+                if (HistoryEntries[i].LaunchCount < 0x3F) { // Was a check against 0x40 in v1.0x
                     HistoryEntries[i].LaunchCount++;
-                }
-                else
-                {
+                } else {
                     HistoryEntries[i].LaunchCount = HistoryEntries[i].bitmask & 0x3F;
                     HistoryEntries[i].ShiftAmount = 7;
                 }
@@ -357,33 +315,24 @@ static void AddHistoryRecord(const char *name)
         i++;
     } while (i < (currentMinute * 60 + currentSecond)); */
 
-    if (IsNewRecord)
-    {
+    if (IsNewRecord) {
         // Count and consolidate a list of blank slots.
         int NumBlankSlots = 0, NumSlotsUsed = 0;
-        for (i = 0; i < MAX_HISTORY_ENTRIES; i++)
-        {
-            if (HistoryEntries[i].name[0] == '\0')
-            {
+        for (i = 0; i < MAX_HISTORY_ENTRIES; i++) {
+            if (HistoryEntries[i].name[0] == '\0') {
                 BlankSlotList[NumBlankSlots] = i;
                 NumBlankSlots++;
-            }
-            else
-            { // Not present in v1.0x.
+            } else { // Not present in v1.0x.
                 if (HistoryEntries[i].ShiftAmount == 0x7)
                     NumSlotsUsed++;
             }
         }
 
-        if (NumSlotsUsed != MAX_HISTORY_ENTRIES)
-        {
+        if (NumSlotsUsed != MAX_HISTORY_ENTRIES) {
             struct HistoryEntry *NewEntry;
-            if (NumBlankSlots > 0)
-            { // Randomly choose an empty slot.
+            if (NumBlankSlots > 0) { // Randomly choose an empty slot.
                 NewEntry = &HistoryEntries[BlankSlotList[rand() % NumBlankSlots]];
-            }
-            else
-            { // Copy out the victim record
+            } else { // Copy out the victim record
                 NewEntry = &HistoryEntries[LeastUsedRecord];
                 memcpy(&OldHistoryEntry, NewEntry, sizeof(OldHistoryEntry));
                 HasTooManyHistoryRecords = 1;
@@ -392,9 +341,9 @@ static void AddHistoryRecord(const char *name)
             // Initialize the new entry.
             strncpy(NewEntry->name, name, sizeof(NewEntry->name));
             NewEntry->LaunchCount = 1;
-            NewEntry->bitmask     = 1;
+            NewEntry->bitmask = 1;
             NewEntry->ShiftAmount = 0;
-            NewEntry->DateStamp   = GetTimestamp();
+            NewEntry->DateStamp = GetTimestamp();
         }
     }
 }
@@ -402,15 +351,13 @@ static void AddHistoryRecord(const char *name)
 void UpdatePlayHistory(const char *name)
 {
     // Try to load the history file from memory card slot 1
-    if (LoadHistoryFile(0) < 0)
-    { // Try memory card slot 2
+    if (LoadHistoryFile(0) < 0) { // Try memory card slot 2
         if (LoadHistoryFile(1) < 0)
             memset(HistoryEntries, 0, sizeof(HistoryEntries));
     }
 
     AddHistoryRecord(name);
-    if (SaveHistoryFile(0) < 0)
-    {
+    if (SaveHistoryFile(0) < 0) {
         SaveHistoryFile(1);
     }
 }

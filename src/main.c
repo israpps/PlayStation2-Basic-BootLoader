@@ -58,8 +58,8 @@ IMPORT_BIN2C(usb_mass_irx);
 IMPORT_BIN2C(bdm_irx);
 IMPORT_BIN2C(bdmfs_fatfs_irx);
 IMPORT_BIN2C(usbmass_bd_irx);
-#endif //NO_BDM
-#endif //HAS_EMBEDDED_IRX
+#endif // NO_BDM
+#endif // HAS_EMBEDDED_IRX
 
 void RunLoaderElf(char *filename, char *party);
 void EMERGENCY(void);
@@ -131,7 +131,7 @@ int main()
     }
     j = SifLoadModule("rom0:ADDDRV", 0, NULL); // Load ADDDRV. The OSD has it listed in rom0:OSDCNF/IOPBTCONF, but it is otherwise not loaded automatically.
     DPRINTF(" [ADDDRV.IRX]: %d\n", j);
-	
+
     DPRINTF("init OSD\n");
     InitOsd(); // Initialize OSD so kernel patches can do their magic
     DPRINTF("init OSD system paths\n");
@@ -180,7 +180,7 @@ int main()
                DVDPlayerGetVersion());
     PadInitPads();
 
-    for (x = 0; x < 3; x++, sleep(1)) { //wait for him 3 secs
+    for (x = 0; x < 3; x++, sleep(1)) { // wait for him 3 secs
         PAD = ReadCombinedPadStatus();
         if ((PAD & PAD_R1) && (PAD & PAD_START)) // if ONLY R1+START are pressed...
             EMERGENCY();
@@ -275,9 +275,9 @@ int main()
     scr_clear();
     DPRINTF("Reading PADs\n");
     while (Timer() <= (tstart + GLOBCFG.DELAY)) {
-    //while (1) {
-        // If key was detected
-        // DPRINTF("Trying to read PADs\n");
+        // while (1) {
+        //  If key was detected
+        //  DPRINTF("Trying to read PADs\n");
         PAD = ReadCombinedPadStatus();
         button = pad_button;
         for (x = 0; x < num_buttons; x++) { // check all pad buttons
@@ -305,7 +305,7 @@ int main()
             button = button << 1; // sll of 1 cleared bit to move to next pad button
         }
     }
-    
+
     tstart = Timer();
     if (Timer() <= (tstart + 4000)) {
         for (j = 0; j < 3; j++) {
@@ -341,7 +341,7 @@ void EMERGENCY(void)
     }
 }
 
-void runKELF(const char* kelfpath)
+void runKELF(const char *kelfpath)
 {
     char arg3[64];
     char *args[4] = {"-m rom0:SIO2MAN", "-m rom0:MCMAN", "-m rom0:MCSERV", arg3};
@@ -357,16 +357,14 @@ char *CheckPath(char *path)
     {
         if (!strcmp("$CDVD", path))
             dischandler();
-        if (!strcmp("$CDVD_NO_PS2LOGO", path)) 
-        {
+        if (!strcmp("$CDVD_NO_PS2LOGO", path)) {
             GLOBCFG.SKIPLOGO = 1;
             dischandler();
         }
         if (!strcmp("$CREDITS", path))
             credits();
-        if (!strncmp("$RUNKELF:", path, strlen("$RUNKELF:")))
-        {
-            runKELF(CheckPath(path+ strlen("$RUNKELF:"))); // pass to runKELF the path without the command token, digested again by CheckPath()
+        if (!strncmp("$RUNKELF:", path, strlen("$RUNKELF:"))) {
+            runKELF(CheckPath(path + strlen("$RUNKELF:"))); // pass to runKELF the path without the command token, digested again by CheckPath()
         }
     }
     if (!strncmp("mc?", path, 3)) {
@@ -575,11 +573,11 @@ static void InitPSX()
     // Reset the IOP again to get the standard PS2 default modules.
     while (!SifIopReset("", 0)) {};
 
-    /*    Set the EE kernel into 32MB mode. Let's do this, while the IOP is being reboot.
-        The memory will be limited with the TLB. The remap can be triggered by calling the _InitTLB syscall
-        or with ExecPS2().
-        WARNING! If the stack pointer resides above the 32MB offset at the point of remap, a TLB exception will occur.
-        This example has the stack pointer configured to be within the 32MB limit. */
+        /*    Set the EE kernel into 32MB mode. Let's do this, while the IOP is being reboot.
+            The memory will be limited with the TLB. The remap can be triggered by calling the _InitTLB syscall
+            or with ExecPS2().
+            WARNING! If the stack pointer resides above the 32MB offset at the point of remap, a TLB exception will occur.
+            This example has the stack pointer configured to be within the 32MB limit. */
 #ifndef PSX_SKIP_32MB_RAM_MODE
     SetMemoryMode(1);
     _InitTLB();
@@ -635,22 +633,27 @@ void credits(void)
 {
     scr_clear();
     scr_printf("PLayStation2 Basic Bootloader\n"
-                "Made by Matias Israelson (AKA: El_isra)\n"
-                "This project is heavily based on SP193 OSD initialization libraries. all credits go to him\n"
-                "this build corresponds to the hash ["COMMIT_HASH"]\n"
-                "compiled on "__DATE__" "__TIME__"\n"
-        );
-    while(1){};
+               "Made by Matias Israelson (AKA: El_isra)\n"
+               "This project is heavily based on SP193 OSD initialization libraries. all credits go to him\n"
+               "this build corresponds to the hash [" COMMIT_HASH "]\n"
+               "compiled on "__DATE__
+               " "__TIME__
+               "\n");
+    while (1) {};
 }
 
 /* BELOW THIS POINT ALL MACROS and MISC STUFF MADE TO REDUCE BINARY SIZE WILL BE PLACED */
 
 #if defined(DUMMY_TIMEZONE)
-void _ps2sdk_timezone_update() {}
+void _ps2sdk_timezone_update()
+{
+}
 #endif
 
 #if defined(DUMMY_LIBC_INIT)
-void _ps2sdk_libc_init() {}
+void _ps2sdk_libc_init()
+{
+}
 void _ps2sdk_libc_deinit() {}
 void _ps2sdk_args_parse(int argc, char **argv) {}
 #endif

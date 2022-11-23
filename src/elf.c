@@ -20,7 +20,7 @@ extern int size_loader_elf;
 //------------------------------
 typedef struct
 {
-    u8 ident[16];  // struct definition for ELF object header
+    u8 ident[16]; // struct definition for ELF object header
     u16 type;
     u16 machine;
     u32 version;
@@ -38,7 +38,7 @@ typedef struct
 //------------------------------
 typedef struct
 {
-    u32 type;  // struct definition for ELF program section header
+    u32 type; // struct definition for ELF program section header
     u32 offset;
     void *vaddr;
     u32 paddr;
@@ -66,10 +66,11 @@ int checkELFheader(char *path)
 
     strcpy(fullpath, path);
     if (!strncmp(fullpath, "mc", 2) || !strncmp(fullpath, "vmc", 3) || !strncmp(fullpath, "rom", 3) || !strncmp(fullpath, "cdrom", 5) || !strncmp(fullpath, "cdfs", 4)) {
-        ;  // fullpath is already correct
+        ; // fullpath is already correct
 #ifdef HDD_SUPPORT
     } else if (!strncmp(fullpath, "hdd0:", 5)) {
-        char *p,  tmp[MAX_PATH];;
+        char *p, tmp[MAX_PATH];
+        ;
         int ret;
         p = &path[5];
         if (*p == '/')
@@ -107,7 +108,7 @@ int checkELFheader(char *path)
             strcpy(fullpath + 5, path + 6);
 #endif
     } else {
-        return 0;  // return 0 for unrecognized device
+        return 0; // return 0 for unrecognized device
     }
     if ((fd = open(fullpath, O_RDONLY)) < 0)
         goto error;
@@ -123,9 +124,9 @@ int checkELFheader(char *path)
     if ((_lw((u32)&eh->ident) != ELF_MAGIC) || eh->type != 2)
         goto error;
 
-    return 1;  // return 1 for successful check
+    return 1; // return 1 for successful check
 error:
-    return -1;  // return -1 for failed check
+    return -1; // return -1 for failed check
 }
 //------------------------------
 // End of func:  int checkELFheader(const char *path)
@@ -149,9 +150,9 @@ void RunLoaderElf(char *filename, char *party)
     if ((!strncmp(party, "hdd0:", 5)) && (!strncmp(filename, "pfs0:", 5))) {
         if (0 > fileXioMount("pfs0:", party, FIO_MT_RDONLY)) {
             // Some error occurred, it could be due to something else having used pfs0
-            unmountParty(0);  // So we try unmounting pfs0, to try again
+            unmountParty(0); // So we try unmounting pfs0, to try again
             if (0 > fileXioMount("pfs0:", party, FIO_MT_RDONLY))
-                return;  // If it still fails, we have to give up...
+                return; // If it still fails, we have to give up...
         }
         // If a path to a file on PFS is specified, change it to the standard format.
         // hdd0:partition:pfs:path/to/file
@@ -168,9 +169,9 @@ void RunLoaderElf(char *filename, char *party)
     } else if ((!strncmp(party, "dvr_hdd0:", 9)) && (!strncmp(filename, "dvr_pfs0:", 9))) {
         if (0 > fileXioMount("dvr_pfs0:", party, FIO_MT_RDONLY)) {
             // Some error occurred, it could be due to something else having used pfs0
-            unmountDVRPParty(0);  // So we try unmounting pfs0, to try again
+            unmountDVRPParty(0); // So we try unmounting pfs0, to try again
             if (0 > fileXioMount("dvr_pfs0:", party, FIO_MT_RDONLY))
-                return;  // If it still fails, we have to give up...
+                return; // If it still fails, we have to give up...
         }
 
         // If a path to a file on PFS is specified, change it to the standard format.
@@ -188,8 +189,8 @@ void RunLoaderElf(char *filename, char *party)
         argv[1] = filename;
     }
 #else
-        argv[0] = filename;
-        argv[1] = filename;
+    argv[0] = filename;
+    argv[1] = filename;
 #endif
 
     /* NB: LOADER.ELF is embedded  */

@@ -24,10 +24,9 @@
 #include "psx/plibcdvd_add.h"
 #include <string.h>
 
-enum PSX_CD_SCMD_CMDS
-{
-    CD_SCMD_CHG_SYS           = 0x2D, // PSX-only
-    CD_SCMD_NOTICE_GAME_START = 0x2F  // PSX-only
+enum PSX_CD_SCMD_CMDS {
+    CD_SCMD_CHG_SYS = 0x2D,          // PSX-only
+    CD_SCMD_NOTICE_GAME_START = 0x2F // PSX-only
 };
 
 extern int bindSCmd;
@@ -49,12 +48,9 @@ int custom_sceCdChgSys(int mode)
         return 0;
 
     *(int *)sCmdSendBuff = mode;
-    if (SifCallRpc(&clientSCmd, CD_SCMD_CHG_SYS, 0, sCmdSendBuff, 4, sCmdRecvBuff, 4, NULL, NULL) >= 0)
-    {
+    if (SifCallRpc(&clientSCmd, CD_SCMD_CHG_SYS, 0, sCmdSendBuff, 4, sCmdRecvBuff, 4, NULL, NULL) >= 0) {
         result = *(int *)UNCACHED_SEG(sCmdRecvBuff);
-    }
-    else
-    {
+    } else {
         result = 0;
     }
 
@@ -70,13 +66,10 @@ int custom_sceCdNoticeGameStart(int mode, u32 *result)
         return 0;
 
     *(u32 *)sCmdSendBuff = mode;
-    if (SifCallRpc(&clientSCmd, CD_SCMD_NOTICE_GAME_START, 0, sCmdSendBuff, 4, sCmdRecvBuff, 8, NULL, NULL) >= 0)
-    {
+    if (SifCallRpc(&clientSCmd, CD_SCMD_NOTICE_GAME_START, 0, sCmdSendBuff, 4, sCmdRecvBuff, 8, NULL, NULL) >= 0) {
         *result = *(u32 *)UNCACHED_SEG(&sCmdRecvBuff[4]);
-        status  = *(int *)UNCACHED_SEG(sCmdRecvBuff);
-    }
-    else
-    {
+        status = *(int *)UNCACHED_SEG(sCmdRecvBuff);
+    } else {
         status = 0;
     }
 

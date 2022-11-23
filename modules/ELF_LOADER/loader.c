@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
     SifInitRpc(0);
     wipeUserMem();
 
-    if (argc != 2) {  // arg1=path to ELF, arg2=partition to mount
+    if (argc != 2) { // arg1=path to ELF, arg2=partition to mount
         SifExitRpc();
         return -EINVAL;
     }
