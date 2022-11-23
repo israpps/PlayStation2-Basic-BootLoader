@@ -10,7 +10,7 @@ __________  _________________   ____________________.____
 endef
 export HEADER
 
-# ---{BUILD CFG}---
+# ---{BUILD CFG}--- #
 PSX ?= 0 # PSX DESR support
 KERNEL_NOPATCH ?= 1 
 NEWLIB_NANO ?= 1
@@ -25,27 +25,19 @@ EE_BIN = $(BINDIR)$(BASENAME).ELF
 EE_BIN_STRIPPED = $(BINDIR)stripped_$(BASENAME).ELF
 EE_BIN_PACKED = $(BINDIR)COMPRESSED_$(BASENAME).ELF
 
+
+# ---{ OBJECTS & STUFF }--- #
+
+
 EE_OBJS_DIR = obj/
 EE_SRC_DIR = src/
 EE_ASM_DIR = asm/
 
-
 IOP_OBJS = sio2man_irx.o mcman_irx.o mcserv_irx.o padman_irx.o
-
-ifeq ($(HAS_EMBEDDED_IRX),1)
-	IOP_OBJS += usbd.o bdm_irx.o bdmfs_fatfs_irx.o usbmass_bd_irx.o
-	EE_CFLAGS += -DHAS_EMBEDDED_IRX
-endif
-
-ifdef COMMIT_HASH
-    EE_CFLAGS += -DCOMMIT_HASH=\"$(COMMIT_HASH)\"
-else
-    EE_CFLAGS += -DCOMMIT_HASH=\"UNKNOWN\"
-endif
-
 EE_OBJS = main.o \
-		pad.o util.o elf.o timer.o ps2.o ps1.o dvdplayer.o modelname.o libcdvd_add.o OSDHistory.o OSDInit.o OSDConfig.o \
-		$(EMBEDDED_STUFF)
+          pad.o util.o elf.o timer.o ps2.o ps1.o dvdplayer.o \
+          modelname.o libcdvd_add.o OSDHistory.o OSDInit.o OSDConfig.o \
+          $(EMBEDDED_STUFF)
 
 EMBEDDED_STUFF = icon_sys_A.o icon_sys_J.o icon_sys_C.o \
 		loader_elf.o \
@@ -59,6 +51,8 @@ EE_LDFLAGS += -Wl,--gc-sections -Wno-sign-compare
 EE_LIBS = -ldebug -lc -lmc -lpadx -lpatches -lkernel
 EE_INCS += -Iinclude
 
+# ---{ CONDITIONS }--- #
+
 ifeq ($(PSX),1)
 	EE_CFLAGS += -DPSX=1
 	EE_OBJS += scmd_add.o ioprp.o
@@ -67,8 +61,23 @@ else
 	EE_LIBS += -lcdvd
 endif
 
+ifeq ($(DEBUG), 1)
+   EE_CFLAGS += -g
+endif
+
 ifeq ($(DUMMY_TIMEZONE), 1)
    EE_CFLAGS += -DDUMMY_TIMEZONE
+endif
+
+ifeq ($(HAS_EMBEDDED_IRX),1)
+	IOP_OBJS += usbd.o bdm_irx.o bdmfs_fatfs_irx.o usbmass_bd_irx.o
+	EE_CFLAGS += -DHAS_EMBEDDED_IRX
+endif
+
+ifdef COMMIT_HASH
+    EE_CFLAGS += -DCOMMIT_HASH=\"$(COMMIT_HASH)\"
+else
+    EE_CFLAGS += -DCOMMIT_HASH=\"UNKNOWN\"
 endif
 
 ifeq ($(DUMMY_LIBC_INIT), 1)
@@ -83,7 +92,7 @@ ifeq ($(PROHBIT_DVD_0100),1)
 	EE_CFLAGS += -DPROHBIT_DVD_0100=1
 endif
 
-EE_OBJS := $(EE_OBJS:%=$(EE_OBJS_DIR)%)
+# ---{ RECIPES }--- #
 
 all:
 	$(MAKE) $(EE_BIN)
@@ -126,6 +135,9 @@ modules/ELF_LOADER/loader.elf: modules/ELF_LOADER/
 	$(MAKE) -C $<
 
 # move OBJ to folder and search source on src/, borrowed from OPL makefile
+
+EE_OBJS := $(EE_OBJS:%=$(EE_OBJS_DIR)%) # remap all EE_OBJ to obj subdir
+
 $(EE_OBJS_DIR):
 	@mkdir -p $@
 
