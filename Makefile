@@ -10,14 +10,17 @@ __________  _________________   ____________________.____
 endef
 export HEADER
 
+
 # ---{BUILD CFG}--- #
+
 PSX ?= 0 # PSX DESR support
 KERNEL_NOPATCH ?= 1 
 NEWLIB_NANO ?= 1
 HAS_EMBEDDED_IRX ?= 0 # whether to embed or not non vital IRX (wich will be loaded from memcard files)
 PROHBIT_DVD_0100 ?= 0 # prohibit the DVD Players v1.00 and v1.01 from being booted.
 XCDVD_READKEY ?= 0 # Enable the newer sceCdReadKey checks, which are only supported by a newer CDVDMAN module.
-#--
+
+# ---{ EXECUTABLES }--- #
 
 BINDIR ?= bin/
 BASENAME ?= PS2BBL
@@ -25,9 +28,7 @@ EE_BIN = $(BINDIR)$(BASENAME).ELF
 EE_BIN_STRIPPED = $(BINDIR)stripped_$(BASENAME).ELF
 EE_BIN_PACKED = $(BINDIR)COMPRESSED_$(BASENAME).ELF
 
-
 # ---{ OBJECTS & STUFF }--- #
-
 
 EE_OBJS_DIR = obj/
 EE_SRC_DIR = src/
@@ -43,7 +44,7 @@ EMBEDDED_STUFF = icon_sys_A.o icon_sys_J.o icon_sys_C.o \
 		loader_elf.o \
 		$(IOP_OBJS)
 
-EE_CFLAGS = -Os -DNEWLIB_PORT_AWARE -G0 -Wall
+EE_CFLAGS = -Os -DNEWLIB_PORT_AWARE -G0 -Wall -g
 EE_CFLAGS += -fdata-sections -ffunction-sections
 # EE_LDFLAGS += -nodefaultlibs -Wl,--start-group -lc_nano -lps2sdkc -lkernel-nopatch -Wl,--end-group
 EE_LDFLAGS += -s
@@ -62,7 +63,7 @@ else
 endif
 
 ifeq ($(DEBUG), 1)
-   EE_CFLAGS += -g
+   EE_CFLAGS += -DDEBUG
 endif
 
 ifeq ($(DUMMY_TIMEZONE), 1)
