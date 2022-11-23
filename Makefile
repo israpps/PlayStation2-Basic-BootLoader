@@ -14,12 +14,15 @@ export HEADER
 # ---{BUILD CFG}--- #
 
 PSX ?= 0 # PSX DESR support
-KERNEL_NOPATCH ?= 1 
-NEWLIB_NANO ?= 1
 HAS_EMBEDDED_IRX ?= 0 # whether to embed or not non vital IRX (wich will be loaded from memcard files)
 PROHBIT_DVD_0100 ?= 0 # prohibit the DVD Players v1.00 and v1.01 from being booted.
 XCDVD_READKEY ?= 0 # Enable the newer sceCdReadKey checks, which are only supported by a newer CDVDMAN module.
 
+# Related to binary size reduction
+KERNEL_NOPATCH ?= 1 
+NEWLIB_NANO ?= 1
+DUMMY_TIMEZONE ?= 1
+DUMMY_LIBC_INIT ?= 1
 # ---{ EXECUTABLES }--- #
 
 BINDIR ?= bin/
