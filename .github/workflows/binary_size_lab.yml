@@ -8,6 +8,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         KERNEL_NOPATCH: [0,1]
         DUMMY_TIMEZONE: [0,1]
