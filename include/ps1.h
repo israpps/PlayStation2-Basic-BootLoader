@@ -1,8 +1,18 @@
-// Initialize the PlayStation driver in ROM. Returns 0 on success.
+
+/**
+ * @brief Initialize the PlayStation driver in ROM
+ * @returns 0 on success.
+*/
 int PS1DRVInit(void);
 
-// Boots the inserted PlayStation game disc.
+/**
+ * @brief Boots the inserted PlayStation game disc.
+*/
 int PS1DRVBoot(void);
 
-// Returns a human-readable version number for the PlayStation driver.
+
+/**
+ * @brief gets the version number for the PlayStation driver.
+ * @returns a human-readable version number for the PlayStation driver.
+*/
 const char *PS1DRVGetVersion(void);

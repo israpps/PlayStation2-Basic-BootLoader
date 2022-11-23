@@ -4,6 +4,7 @@ int OSDInitROMVER(void);
 
 #define CONFIG_BLOCK_SIZE 15
 
+/** console region enumerator according the system update folders*/
 enum CONSOLE_REGION
 {
     CONSOLE_REGION_INVALID = -1,
@@ -126,21 +127,68 @@ typedef struct
     } PS2;
 } OSDConfigStore_t;
 
-int OSDIsLanguageValid(int region, int language); // Returns >= 0 if language is valid for use in the specified region.
-int OSDGetConsoleRegion(void);                    // Initializes and returns the console's region (CONSOLE_REGION).
-void OSDInitSystemPaths(void);                    // Initializes system directory names
-int OSDGetDefaultLanguage(void);                  // Returns the default language for the console
-int OSDGetRegion(void);                           // Initializes and returns the OSD region (OSD_REGION).
-int OSDGetVideoMode(void);                        // 0 = NTSC, 1 = PAL
+/**
+ * @returns >= 0 if language is valid for use in the specified region.
+ */
+int OSDIsLanguageValid(int region, int language);
+
+/**
+ * @brief Initializes and returns the console's region (CONSOLE_REGION).
+ */
+int OSDGetConsoleRegion(void);
+
+/**
+ * @brief  Initializes system directory names
+ */
+void OSDInitSystemPaths(void);
+
+/**
+ * @returns the default language for the console
+ * @see OSD_LANGUAGES
+ */
+int OSDGetDefaultLanguage(void);
+
+/**
+ * @brief Initializes and returns the OSD region .
+ * @see OSD_REGION
+ */
+int OSDGetRegion(void);
+
+/**
+ * @returns 0 = NTSC, 1 = PAL
+ */
+
+int OSDGetVideoMode(void);
 
 // MagicGate-related functions that are applicable to ROM v2.20 and later
-int OSDGetPS1DRVRegion(char *region);    // Returns the MagicGate region letter for the PlayStation Driver (returns 0 on error)
-int OSDGetDVDPlayerRegion(char *region); // Returns the MagicGate region letter for the DVD Player (returns 0 on error)
-int OSDGetMGRegion(void);                // Returns MagicGate region letter (returns '\0' on error)
+/**
+ * @returns the MagicGate region letter for the PlayStation Driver (returns 0 on error)
+ */
+int OSDGetPS1DRVRegion(char *region);
+
+/**
+ * @returns the MagicGate region letter for the DVD Player (returns 0 on error)
+ */
+int OSDGetDVDPlayerRegion(char *region);
+
+/**
+ * @returns MagicGate region letter (returns '\0' on error)
+ */
+int OSDGetMGRegion(void);
 
 // Low-level OSD configuration-management functions (Please use the functions in OSDConfig instead)
-int OSDLoadConfigFromNVM(OSDConfig1_t *osdConfigPS1, OSDConfig2_t *osdConfigPS2);                       // Load OSD configuration from NVRAM. Returns 0 on success.
-int OSDSaveConfigToNVM(const OSDConfig1_t *osdConfigPS1, const OSDConfig2_t *osdConfigPS2, u8 osdInit); // Save OSD configuration to NVRAM. Returns 0 on success.
+
+/**
+ * @brief Load OSD configuration from NVRAM.
+ * @returns 0 on success.
+ */
+int OSDLoadConfigFromNVM(OSDConfig1_t *osdConfigPS1, OSDConfig2_t *osdConfigPS2);
+
+/**
+ * @brief Save OSD configuration to NVRAM.
+ * @returns 0 on success.
+ */
+int OSDSaveConfigToNVM(const OSDConfig1_t *osdConfigPS1, const OSDConfig2_t *osdConfigPS2, u8 osdInit);
 
 // For retrieving various folder names
 const char *OSDGetSystemExecFolder(void);

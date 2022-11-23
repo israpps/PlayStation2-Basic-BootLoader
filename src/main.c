@@ -71,7 +71,6 @@ void TimerEnd(void);
 char *CheckPath(char *path);
 static void AlarmCallback(s32 alarm_id, u16 time, void *common);
 int dischandler();
-int loadIRXFile(char *path, u32 arg_len, const char *args, int *mod_res);
 void LoadUSBIRX();
 void CDVDBootCertify(u8 romver[16]);
 void credits(void);
@@ -565,7 +564,6 @@ static void InitPSX()
     // No need to perform boot certification because rom0:OSDSYS does it.
     while (custom_sceCdChgSys(2) != 2) {}; // Switch the drive into PS2 mode.
 
-    // Signal the start of a game, so that the user can use the "quit" game button.
     do {
         result = custom_sceCdNoticeGameStart(1, &STAT);
     } while ((result == 0) || (STAT & 0x80));
@@ -578,10 +576,9 @@ static void InitPSX()
             or with ExecPS2().
             WARNING! If the stack pointer resides above the 32MB offset at the point of remap, a TLB exception will occur.
             This example has the stack pointer configured to be within the 32MB limit. */
-#ifndef PSX_SKIP_32MB_RAM_MODE
+
     SetMemoryMode(1);
     _InitTLB();
-#endif
 
     while (!SifIopSync()) {};
 }

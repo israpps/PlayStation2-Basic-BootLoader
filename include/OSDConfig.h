@@ -1,13 +1,20 @@
-// Loads the OSD configuration from EEPROM
-// Returns 0 on success. Non-zero = configuration not initialized
+
+/**
+ * @brief Loads the OSD configuration from EEPROM
+ * @returns 0 on success. Non-zero = configuration not initialized
+ */
 int OSDConfigLoad(void);
 
-// Saves the OSD configuration to EEPROM
-// Set invalid=0 to indicate that the OSD settings are initialized (not invalid). Tells the browser to not display first boot screen.
-// Note: calling this function does not automatically apply the settings (call OSDConfigApply).
+/**
+ * @brief Saves the OSD configuration to EEPROM
+ * @param invalid Set invalid=0 to indicate that the OSD settings are initialized (not invalid). Tells the browser to not display first boot screen.
+ * @note calling this function does not automatically apply the settings (call OSDConfigApply).
+ */
 void OSDConfigSave(u8 invalid);
 
-// Applies OSD configuration (saves settings into the EE kernel)
+/**
+ * @brief Applies OSD configuration (saves settings into the EE kernel)
+ */
 void OSDConfigApply(void);
 
 // Getter/Setter functions
@@ -34,8 +41,16 @@ int OSDConfigSetLanguage(int language);
 int OSDConfigGetLanguageRaw(void);
 int OSDConfigSetLanguageRaw(int language);
 
-int OSDConfigGetRcGameFunction(void);      // Whether the Remote Control Game Function is enabled or not
-int OSDConfigSetRcGameFunction(int value); // 1 = enabled, 0 = disabled
+/**
+ * @returns Whether the Remote Control Game Function is enabled or not
+ */
+int OSDConfigGetRcGameFunction(void);
+
+/**
+ * @brief change the remote control game value
+ * @param value 1 = enabled, 0 = disabled
+ */
+int OSDConfigSetRcGameFunction(int value);
 
 /*  I am not entirely sure what this is.
     In ROM v2.20, it seems to have a relationship to a menu that is labeled "Console" and has the text "Remote Control,Off,On".
