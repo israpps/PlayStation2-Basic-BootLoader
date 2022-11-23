@@ -12,7 +12,7 @@ enum
 #define CNF_LEN_MAX 20480 // 20kb should be enough for massive CNF's
 
 /** default ammount of time this program will wait for a key press*/
-#define DEFDELAY    5000
+#define DEFDELAY 5000
 
 /** dualshock keys enumerator */
 enum
@@ -34,7 +34,8 @@ enum
     CIRCLE,
     CROSS,
     SQUARE
-};
+} KEYS;
+
 /** string alias of dualshock keys for config file */
 const char *KEYS_ID[17] = {
     "AUTO",
@@ -55,6 +56,7 @@ const char *KEYS_ID[17] = {
     "CROSS",    // 0x4000
     "SQUARE"    // 0x8000
 };
+
 /** default paths used if config file can't be loaded */
 char *DEFPATH[] = {
     "mc?:/BOOT/BOOT.ELF", // AUTO [0]

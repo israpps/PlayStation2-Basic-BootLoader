@@ -68,7 +68,7 @@ typedef struct
     u8 padding;
 } OSDConfig1_t;
 
-// Structure of OSD Configuration block within EEPROM
+/// Structure of OSD Configuration block within EEPROM
 typedef struct
 {
     union

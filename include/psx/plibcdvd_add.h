@@ -12,6 +12,7 @@ int custom_sceCdChgSys(int mode);
  * @param mode unknown
  * @param result when function succeeds 8th bit is set, aka: (result & 0x80) returns true
  * @return cero on success
+ * @note both return value and result parameter must be considered for checking the success, evaluate both with OR
  * @warning it needs PCDVDMAN and PCDVDFS to function
 */
 int custom_sceCdNoticeGameStart(int mode, u32 *result);

@@ -43,6 +43,7 @@ void TimerEnd(void);
 void delay(int delay);
 //________________ From uLaunchELF ______________________
 // Timer Define
+
 #define T0_COUNT ((volatile unsigned long *)0x10000000)
 #define T0_MODE  ((volatile unsigned long *)0x10000010)
 

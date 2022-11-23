@@ -65,7 +65,17 @@ int OSDConfigSetRcEnabled(int value);
 /*  This should not be adjusted, other than by the code shown in main().
     This field indicates whether the PlayStation 2 supports the remote control.
     If enabled, allow the user to enable/disable the remote control game function. */
+/**
+ * @brief check if the console supports remote control
+ * @returns 1: true, 0: false
+*/
 int OSDConfigGetRcSupported(void);
+
+/**
+ * @brief manipulate the osdconfig filed wich defines if the remote control is supported
+ * @param value the value to be assigned
+ * @returns the valueof the osdconfig field that this function manipulates
+*/
 int OSDConfigSetRcSupported(int value);
 
 /*  If the user chose to disable the DVD Player progressive scan setting,

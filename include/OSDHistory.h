@@ -28,6 +28,9 @@
 #define OSD_HISTORY_GET_DATE(datestamp)         ((datestamp)&0x1F)
 #define OSD_HISTORY_SET_DATE(year, month, date) (((u16)(year)) << 9 | ((u16)(month)&0xF) << 5 | ((date)&0x1F))
 
+/**
+ * the structure of a single entry of the OSD history file
+*/
 struct HistoryEntry
 {
     char name[16];
@@ -38,6 +41,11 @@ struct HistoryEntry
     u16 DateStamp;
 };
 
+/**
+ * @brief updates the history file with the specified ID on name
+ * @param name ELF ID to update history, should not be longer than 16 chars
+ * @see HistoryEntry.name
+*/
 void UpdatePlayHistory(const char *name);
 
 // Low-level functions. Use them for writing your own functions (i.e. writing your own boot animation).
