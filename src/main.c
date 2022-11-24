@@ -277,9 +277,6 @@ int main()
         free(RAM_p);
 
     // Stores last key during DELAY msec
-    u64 tstart;
-    TimerInit();
-    tstart = Timer();
     scr_clear();
     scr_printf("\n\n\n\n"BANNER);
     scr_printf("\n\n\tModel:\t\t%s\n"
@@ -289,6 +286,8 @@ int main()
                PS1DRVGetVersion(),
                DVDPlayerGetVersion());
 
+    TimerInit();
+    tstart = Timer();
     while (Timer() <= (tstart + GLOBCFG.DELAY)) {
         // while (1) {
         //  If key was detected
