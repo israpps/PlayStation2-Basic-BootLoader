@@ -173,12 +173,6 @@ int main()
 
     // Remember to set the video output option (RGB or Y Cb/Pb Cr/Pr) accordingly, before SetGsCrt() is called.
     SetGsVParam(OSDConfigGetVideoOutput() == VIDEO_OUTPUT_RGB ? VIDEO_OUTPUT_RGB : VIDEO_OUTPUT_COMPONENT); 
-    scr_printf("\n\tModel:\t\t%s\n"
-               "\tPlayStation Driver:\t%s\n"
-               "\tDVD Player:\t%s\n",
-               ModelNameGet(),
-               PS1DRVGetVersion(),
-               DVDPlayerGetVersion());
     PadInitPads();
 
     for (x = 0; x < 3; x++, sleep(1)) { // wait for him 3 secs
@@ -278,7 +272,14 @@ int main()
     TimerInit();
     tstart = Timer();
     scr_clear();
-    scr_printf("\n\n\n\n\n"BANNER);
+    scr_printf("\n\n\n\n"BANNER);
+    scr_printf("\n\n\tModel:\t\t%s\n"
+               "\tPlayStation Driver:\t%s\n"
+               "\tDVD Player:\t%s\n",
+               ModelNameGet(),
+               PS1DRVGetVersion(),
+               DVDPlayerGetVersion());
+
     while (Timer() <= (tstart + GLOBCFG.DELAY)) {
         // while (1) {
         //  If key was detected
