@@ -278,7 +278,7 @@ int main()
 
     // Stores last key during DELAY msec
     scr_clear();
-    scr_printf("\n\n\n\n"BANNER);
+    scr_printf("\n\n\n\n%s", BANNER);
     scr_printf("\n\n\tModel:\t\t%s\n"
                "\tPlayStation Driver:\t%s\n"
                "\tDVD Player:\t%s\n",
