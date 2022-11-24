@@ -11,5 +11,5 @@
     "\t\t\tv" VERSION "-" SUBVERSION "-" PATCHLEVEL " - " STATUS "\n"           \
     "\n"                                                                        \
     "\t\t		PlayStation2 Basic BootLoader - By Matias Israelson\n"               \
-    "\t\t                                             (AKA: El_isra)"
+    "\t\t                                             (AKA: El_isra)\n"
 #endif
