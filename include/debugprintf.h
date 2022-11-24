@@ -16,7 +16,7 @@
 
 #ifdef SCR_PRINT
     #include <debug.h>
-    #define DPRINTF(x...) scr_printf(x)
+    #define DPRINTF(x...) scr_printf("\t"x)
 #endif
 
 #else

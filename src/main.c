@@ -108,6 +108,7 @@ int main()
     SifLoadFileInit();
     fioInit(); // NO scr_printf BEFORE here
     init_scr();
+    scr_setCursor(0);
     DPRINTF("enabling LoadModuleBuffer\n");
     sbv_patch_enable_lmb(); // The old IOP kernel has no support for LoadModuleBuffer. Apply the patch to enable it.
 
@@ -172,9 +173,9 @@ int main()
 
     // Remember to set the video output option (RGB or Y Cb/Pb Cr/Pr) accordingly, before SetGsCrt() is called.
     SetGsVParam(OSDConfigGetVideoOutput() == VIDEO_OUTPUT_RGB ? VIDEO_OUTPUT_RGB : VIDEO_OUTPUT_COMPONENT); 
-    scr_printf("\nModel:\t\t%s\n"
-               "PlayStation Driver:\t%s\n"
-               "DVD Player:\t%s\n",
+    scr_printf("\n\tModel:\t\t%s\n"
+               "\tPlayStation Driver:\t%s\n"
+               "\tDVD Player:\t%s\n",
                ModelNameGet(),
                PS1DRVGetVersion(),
                DVDPlayerGetVersion());
@@ -251,13 +252,13 @@ int main()
             } else {
                 fclose(fp);
                 scr_setfontcolor(0x0000ff);
-                scr_printf("ERROR: could not read %d bytes of config file, only %d readed\n", cnf_size, temp);
+                scr_printf("\tERROR: could not read %d bytes of config file, only %d readed\n", cnf_size, temp);
                 scr_setfontcolor(0xffffff);
             }
         } else {
             scr_setbgcolor(0x0000ff);
             scr_clear();
-            scr_printf("Failed to allocate %d+1 bytes!\n", cnf_size);
+            scr_printf("\tFailed to allocate %d+1 bytes!\n", cnf_size);
             sleep(3);
             scr_setbgcolor(0x000000);
             scr_clear();
@@ -294,7 +295,7 @@ int main()
                     EXECPATHS[j] = CheckPath(EXECPATHS[j]);
                     if (exist(EXECPATHS[j])) {
                         scr_setfontcolor(0x00ff00);
-                        scr_printf("Loading %s\n", EXECPATHS[j]);
+                        scr_printf("\tLoading %s\n", EXECPATHS[j]);
                         if (!is_PCMCIA)
                             PadDeinitPads();
                         RunLoaderElf(EXECPATHS[j], NULL);
@@ -323,7 +324,7 @@ int main()
     }
     TimerEnd();
 
-    scr_printf("END OF EXECUTION REACHED\n");
+    scr_printf("\tEND OF EXECUTION REACHED\n");
     while (1) {
         ;
     }
@@ -400,24 +401,24 @@ int dischandler()
     u32 STAT;
 
     scr_clear();
-    scr_printf("%s: Activated\n", __func__);
+    scr_printf("\t%s: Activated\n", __func__);
     sceCdInit(SCECdINoD);
     cdInitAdd();
 
-    scr_printf("\tEnabling Diagnosis...\n");
+    scr_printf("\t\tEnabling Diagnosis...\n");
     do { // 0 = enable, 1 = disable.
         result = sceCdAutoAdjustCtrl(0, &STAT);
     } while ((STAT & 0x08) || (result == 0));
 
     // For this demo, wait for a valid disc to be inserted.
-    scr_printf("Waiting for disc to be inserted...\n");
+    scr_printf("\tWaiting for disc to be inserted...\n\n");
 
     ValidDiscInserted = 0;
     OldDiscType = -1;
     while (!ValidDiscInserted) {
         DiscType = sceCdGetDiskType();
         if (DiscType != OldDiscType) {
-            scr_printf("New Disc:\t");
+            scr_printf("\tNew Disc:\t");
             OldDiscType = DiscType;
 
             switch (DiscType) {
@@ -607,7 +608,7 @@ void CDVDBootCertify(u8 romver[16])
         sceCdBootCertify(RomName);
     } else {
         scr_setfontcolor(0x0000ff);
-        scr_printf("ERROR: Could not certify CDVD Boot. ROMVER was NULL\n");
+        scr_printf("\tERROR: Could not certify CDVD Boot. ROMVER was NULL\n");
         scr_setfontcolor(0xffffff);
     }
 
