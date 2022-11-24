@@ -34,6 +34,7 @@
 #include "ps1.h"
 #include "ps2.h"
 #include "modelname.h"
+#include "banner.h"
 
 #define IMPORT_BIN2C(_n)       \
     extern unsigned char _n[]; \
@@ -170,7 +171,7 @@ int main()
     } while ((STAT & 0x80) || (result == 0));
 
     // Remember to set the video output option (RGB or Y Cb/Pb Cr/Pr) accordingly, before SetGsCrt() is called.
-    SetGsVParam(OSDConfigGetVideoOutput() == VIDEO_OUTPUT_RGB ? 0 : 1);
+    SetGsVParam(OSDConfigGetVideoOutput() == VIDEO_OUTPUT_RGB ? VIDEO_OUTPUT_RGB : VIDEO_OUTPUT_COMPONENT); 
     scr_printf("\nModel:\t\t%s\n"
                "PlayStation Driver:\t%s\n"
                "DVD Player:\t%s\n",
@@ -250,13 +251,17 @@ int main()
             } else {
                 fclose(fp);
                 scr_setfontcolor(0x0000ff);
-                DPRINTF("ERROR: could not read %d bytes of config file, only %d readed\n", cnf_size, temp);
+                scr_printf("ERROR: could not read %d bytes of config file, only %d readed\n", cnf_size, temp);
                 scr_setfontcolor(0xffffff);
             }
         } else {
             scr_setbgcolor(0x0000ff);
-            scr_setfontcolor(0xffffff);
-            DPRINTF("Failed to allocate %d+1 bytes!\n", cnf_size);
+            scr_clear();
+            scr_printf("Failed to allocate %d+1 bytes!\n", cnf_size);
+            sleep(3);
+            scr_setbgcolor(0x000000);
+            scr_clear();
+
         }
     } else {
         DPRINTF("Invalid config, loading hardcoded shit\n");
@@ -272,7 +277,7 @@ int main()
     TimerInit();
     tstart = Timer();
     scr_clear();
-    DPRINTF("Reading PADs\n");
+    scr_printf("\n\n\n\n\n"BANNER);
     while (Timer() <= (tstart + GLOBCFG.DELAY)) {
         // while (1) {
         //  If key was detected
@@ -307,6 +312,7 @@ int main()
 
     tstart = Timer();
     if (Timer() <= (tstart + 4000)) {
+        scr_clear();
         for (j = 0; j < 3; j++) {
             if (exist(CheckPath(GLOBCFG.KEYPATHS[0][j]))) {
                 if (!is_PCMCIA)
@@ -629,13 +635,16 @@ void CleanUp(void)
 void credits(void)
 {
     scr_clear();
-    scr_printf("PLayStation2 Basic Bootloader\n"
-               "Made by Matias Israelson (AKA: El_isra)\n"
-               "This project is heavily based on SP193 OSD initialization libraries. all credits go to him\n"
-               "this build corresponds to the hash [" COMMIT_HASH "]\n"
-               "compiled on "__DATE__
-               " "__TIME__
-               "\n");
+    scr_printf("\n\n");
+    scr_printf(BANNER);
+    scr_printf("\n"
+               "\n"
+               "\tThis project is heavily based on SP193 OSD initialization libraries.\n"
+               "\t\tall credits go to him\n"
+               "\tThanks to: fjtrujy, uyjulian, asmblur and AKuHAK\n"
+               "\tthis build corresponds to the hash [" COMMIT_HASH "]\n"
+               "\t\tcompiled on "__DATE__" "__TIME__"\n"
+               );
     while (1) {};
 }
 

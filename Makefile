@@ -24,6 +24,13 @@ NEWLIB_NANO ?= 1
 DUMMY_TIMEZONE ?= 0
 DUMMY_LIBC_INIT ?= 1
 
+# ---{ VERSIONING }--- #
+
+VERSION = 1
+SUBVERSION = 0
+PATCHLEVEL = 0
+STATUS = Beta
+
 # ---{ EXECUTABLES }--- #
 
 BINDIR ?= bin/
@@ -55,6 +62,7 @@ EE_LDFLAGS += -s
 EE_LDFLAGS += -Wl,--gc-sections -Wno-sign-compare
 EE_LIBS = -ldebug -lc -lmc -lpadx -lpatches -lkernel
 EE_INCS += -Iinclude
+EE_CFLAGS += -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DPATCHLEVEL=\"$(PATCHLEVEL)\" -DSTATUS=\"$(STATUS)\"
 
 # ---{ CONDITIONS }--- #
 
