@@ -116,14 +116,14 @@ int main()
     sbv_patch_disable_prefix_check(); /* disable the MODLOAD module black/white list, allowing executables to be freely loaded from any device. */
     DPRINTF("Loading IRX:\n");
     j = SifExecModuleBuffer(sio2man_irx, size_sio2man_irx, 0, NULL, &x); /*  Load SDK modules to avoid different behavior across different models*/
-    DPRINTF(" [SIO2MAN.IRX]: %d\n", j);
+    DPRINTF(" [SIO2MAN.IRX]: ret=%d, ID=%d\n", j, x);
     j = SifExecModuleBuffer(mcman_irx, size_mcman_irx, 0, NULL, &x);
-    DPRINTF(" [MCMAN.IRX]: %d\n", j);
+    DPRINTF(" [MCMAN.IRX]: ret=%d, ID=%d\n", j, x);
     j = SifExecModuleBuffer(mcserv_irx, size_mcserv_irx, 0, NULL, &x);
-    DPRINTF(" [MCSERV.IRX]: %d\n", j);
+    DPRINTF(" [MCSERV.IRX]: ret=%d, ID=%d\n", j, x);
     mcInit(MC_TYPE_XMC);
     j = SifExecModuleBuffer(padman_irx, size_padman_irx, 0, NULL, &x);
-    DPRINTF(" [PADMAN.IRX]: %d\n", j);
+    DPRINTF(" [PADMAN.IRX]: ret=%d, ID=%d\n", j, x);
 
     LoadUSBIRX();
     if ((fd = open("rom0:ROMVER", O_RDONLY)) >= 0) {
@@ -133,15 +133,20 @@ int main()
     j = SifLoadModule("rom0:ADDDRV", 0, NULL); // Load ADDDRV. The OSD has it listed in rom0:OSDCNF/IOPBTCONF, but it is otherwise not loaded automatically.
     DPRINTF(" [ADDDRV.IRX]: %d\n", j);
 
-    DPRINTF("init OSD\n");
-    InitOsd(); // Initialize OSD so kernel patches can do their magic
     DPRINTF("init OSD system paths\n");
     OSDInitSystemPaths();
 
+    // Initialize libcdvd & supplement functions (which are not part of the ancient libcdvd library we use).
+    sceCdInit(SCECdINoD);
+    cdInitAdd();
+
 #ifndef PSX
-    DPRINTF("Certify CDVD Boot\n");
+    DPRINTF("Certifying CDVD Boot\n");
     CDVDBootCertify(ROMVER); /* This is not required for the PSX, as its OSDSYS will do it before booting the update. */
 #endif
+
+    DPRINTF("init OSD\n");
+    InitOsd(); // Initialize OSD so kernel patches can do their magic
 
     OSDInitROMVER(); // Initialize ROM version (must be done first).
     ModelNameInit(); // Initialize model name
@@ -156,6 +161,7 @@ int main()
     }
 
     // Applies OSD configuration (saves settings into the EE kernel)
+    DPRINTF("Saving OSD configuration to EE Kernel\n");
     OSDConfigApply();
 
     /*  Try to enable the remote control, if it is enabled.
@@ -403,8 +409,6 @@ int dischandler()
 
     scr_clear();
     scr_printf("\t%s: Activated\n", __func__);
-    sceCdInit(SCECdINoD);
-    cdInitAdd();
 
     scr_printf("\t\tEnabling Diagnosis...\n");
     do { // 0 = enable, 1 = disable.
@@ -519,25 +523,25 @@ void LoadUSBIRX(void)
     TMP = loadIRXFile("mc?:/PS2BBL/USBD.IRX", 0, NULL, &x);
 #endif
     delay(3);
-    DPRINTF(" [USBD.IRX]: %d\n", TMP);
+    DPRINTF(" [USBD.IRX]: ret=%d, ID=%d\n", TMP, x);
 #ifdef HAS_EMBEDDED_IRX
     TMP = SifExecModuleBuffer(bdm_irx, size_bdm_irx, 0, NULL, &x);
 #else
     TMP = loadIRXFile("mc?:/PS2BBL/BDM.IRX", 0, NULL, &x);
 #endif
-    DPRINTF(" [BDM.IRX]: %d\n", TMP);
+    DPRINTF(" [BDM.IRX]: ret=%d, ID=%d\n", TMP, x);
 #ifdef HAS_EMBEDDED_IRX
     TMP = SifExecModuleBuffer(bdmfs_fatfs_irx, size_bdmfs_fatfs_irx, 0, NULL, &x);
 #else
     TMP = loadIRXFile("mc?:/PS2BBL/BDMFS_FATFS.IRX", 0, NULL, &x);
 #endif
-    DPRINTF(" [BDMFS_FATFS.IRX]: %d\n", TMP);
+    DPRINTF(" [BDMFS_FATFS.IRX]: ret=%d, ID=%d\n", TMP, x);
 #ifdef HAS_EMBEDDED_IRX
     TMP = SifExecModuleBuffer(usbmass_bd_irx, size_usbmass_bd_irx, 0, NULL, &x);
 #else
     TMP = loadIRXFile("mc?:/PS2BBL/USBMASS_BD.IRX", 0, NULL, &x);
 #endif
-    DPRINTF(" [USBMASS_BD.IRX]: %d\n", TMP);
+    DPRINTF(" [USBMASS_BD.IRX]: ret=%d, ID=%d\n", TMP, x);
     delay(3);
 }
 
