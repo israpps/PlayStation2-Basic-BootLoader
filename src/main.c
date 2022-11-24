@@ -95,11 +95,11 @@ int PAD = 0;
 int main()
 {
     u32 STAT;
+    u64 tstart;
     int button, x, j, cnf_size, is_PCMCIA = 0, fd, result;
-    static int config_source = SOURCE_INVALID;
+    static int config_source = SOURCE_INVALID, num_buttons = 4, pad_button = 0x0100; // first pad button is L2
     unsigned char *RAM_p = NULL;
     char *CNFBUFF, *name, *value;
-    static int num_buttons = 4, pad_button = 0x0100; // first pad button is L2
     GLOBCFG.DELAY = DEFDELAY;
 
     SifInitRpc(0); // Initialize SIFCMD & SIFRPC
@@ -180,12 +180,15 @@ int main()
     // Remember to set the video output option (RGB or Y Cb/Pb Cr/Pr) accordingly, before SetGsCrt() is called.
     SetGsVParam(OSDConfigGetVideoOutput() == VIDEO_OUTPUT_RGB ? VIDEO_OUTPUT_RGB : VIDEO_OUTPUT_COMPONENT); 
     PadInitPads();
-
-    for (x = 0; x < 3; x++, sleep(1)) { // wait for him 3 secs
+    
+    TimerInit();
+    tstart = Timer();
+    while (Timer() <= (tstart + 2000)) {
         PAD = ReadCombinedPadStatus();
         if ((PAD & PAD_R1) && (PAD & PAD_START)) // if ONLY R1+START are pressed...
             EMERGENCY();
     }
+    TimerEnd();
 
     SetDefaultSettings();
     FILE *fp;
