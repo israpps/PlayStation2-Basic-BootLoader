@@ -68,42 +68,43 @@ EE_CFLAGS += -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DPATCHLEVE
 # ---{ CONDITIONS }--- #
 
 ifeq ($(PSX),1)
-	EE_CFLAGS += -DPSX=1
-	EE_OBJS += scmd_add.o ioprp.o
-	EE_LIBS += -lxcdvd -liopreboot
+  BASENAME = PSXBBL
+  EE_CFLAGS += -DPSX=1
+  EE_OBJS += scmd_add.o ioprp.o
+  EE_LIBS += -lxcdvd -liopreboot
 else
-	EE_LIBS += -lcdvd
+  EE_LIBS += -lcdvd
 endif
 
 ifeq ($(DEBUG), 1)
-   EE_CFLAGS += -DDEBUG
+  EE_CFLAGS += -DDEBUG
 endif
 
 ifeq ($(DUMMY_TIMEZONE), 1)
-   EE_CFLAGS += -DDUMMY_TIMEZONE
+  EE_CFLAGS += -DDUMMY_TIMEZONE
 endif
 
 ifeq ($(HAS_EMBEDDED_IRX),1)
-	IOP_OBJS += usbd.o bdm_irx.o bdmfs_fatfs_irx.o usbmass_bd_irx.o
-	EE_CFLAGS += -DHAS_EMBEDDED_IRX
+  IOP_OBJS += usbd.o bdm_irx.o bdmfs_fatfs_irx.o usbmass_bd_irx.o
+  EE_CFLAGS += -DHAS_EMBEDDED_IRX
 endif
 
 ifdef COMMIT_HASH
-    EE_CFLAGS += -DCOMMIT_HASH=\"$(COMMIT_HASH)\"
+  EE_CFLAGS += -DCOMMIT_HASH=\"$(COMMIT_HASH)\"
 else
-    EE_CFLAGS += -DCOMMIT_HASH=\"UNKNOWN\"
+  EE_CFLAGS += -DCOMMIT_HASH=\"UNKNOWN\"
 endif
 
 ifeq ($(DUMMY_LIBC_INIT), 1)
-   EE_CFLAGS += -DDUMMY_LIBC_INIT
+  EE_CFLAGS += -DDUMMY_LIBC_INIT
 endif
 
 ifeq ($(XCDVD_READKEY),1)
-	EE_CFLAGS += -DXCDVD_READKEY=1
+  EE_CFLAGS += -DXCDVD_READKEY=1
 endif
 
 ifeq ($(PROHBIT_DVD_0100),1)
-	EE_CFLAGS += -DPROHBIT_DVD_0100=1
+  EE_CFLAGS += -DPROHBIT_DVD_0100=1
 endif
 
 # ---{ RECIPES }--- #
