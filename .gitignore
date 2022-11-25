@@ -12,6 +12,7 @@
 
 #PS2 executables
 *.elf
+*.kelf
 !release/PS2BBL/*.elf
 
 # IOP Executable

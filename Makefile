@@ -38,6 +38,7 @@ BASENAME ?= PS2BBL
 EE_BIN = $(BINDIR)$(BASENAME).ELF
 EE_BIN_STRIPPED = $(BINDIR)stripped_$(BASENAME).ELF
 EE_BIN_PACKED = $(BINDIR)COMPRESSED_$(BASENAME).ELF
+EE_BIN_ENCRYPTED = $(BINDIR)$(BASENAME).KELF
 
 # ---{ OBJECTS & STUFF }--- #
 
@@ -143,6 +144,10 @@ $(EE_BIN_PACKED): $(EE_BIN_STRIPPED)
 	@echo " -- Compressing"
 	ps2-packer $< $@ > /dev/null
 
+$(EE_BIN_ENCRYPTED): $(EE_BIN_PACKED)
+	@echo " -- Encrypting..."
+	thirdparty/kelftool encrypt fmcb $< $@ 
+
 modules/ELF_LOADER/loader.elf: modules/ELF_LOADER/
 	@echo -- ELF Loader
 	$(MAKE) -C $<
@@ -169,8 +174,8 @@ $(EE_OBJS_DIR)%.o: $(EE_ASM_DIR)%.s | $(EE_OBJS_DIR)
 	@$(EE_AS) $(EE_ASFLAGS) $< -o $@
 #
 
-celan: clean #repetitive typo that i have when quicktyping
-
+celan: clean # repetitive typo that i have when quicktyping
+kelf: $(EE_BIN_ENCRYPTED) # alias of KELF creation
 # Include makefiles
 include $(PS2SDK)/samples/Makefile.pref
 include $(PS2SDK)/samples/Makefile.eeglobal
