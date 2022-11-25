@@ -22,6 +22,7 @@ const char* BANNER =
     "\t\t\tv" VERSION "-" SUBVERSION "-" PATCHLEVEL " - " STATUS "\n"
     "\n"
     "\t\t		PlayStation2 Basic BootLoader - By Matias Israelson\n"
-    "\t\t                                             (AKA: El_isra)\n";
+    "\t\t                                             (AKA: El_isra)\n"
+    "\t\tGet it Free on: github.com/israpps/PlayStation2-Basic-BootLoader\n";
 
 #endif
