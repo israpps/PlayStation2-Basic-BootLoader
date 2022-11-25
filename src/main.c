@@ -92,7 +92,7 @@ char *EXECPATHS[3];
 u8 ROMVER[16];
 int PAD = 0;
 
-int main()
+int main(char* argv[], int argc)
 {
     u32 STAT;
     u64 tstart;
@@ -102,7 +102,6 @@ int main()
     char *CNFBUFF, *name, *value;
     GLOBCFG.DELAY = DEFDELAY;
 
-    SifInitRpc(0); // Initialize SIFCMD & SIFRPC
     ResetIOP();
     SifInitIopHeap(); // Initialize SIF services for loading modules and files.
     SifLoadFileInit();
@@ -519,6 +518,22 @@ int dischandler()
 void LoadUSBIRX(void)
 {
     int TMP, x;
+
+// ------------------------------------------------------------------------------------ //
+#ifdef HAS_EMBEDDED_IRX
+    TMP = SifExecModuleBuffer(bdm_irx, size_bdm_irx, 0, NULL, &x);
+#else
+    TMP = loadIRXFile("mc?:/PS2BBL/BDM.IRX", 0, NULL, &x);
+#endif
+    DPRINTF(" [BDM.IRX]: ret=%d, ID=%d\n", TMP, x);
+// ------------------------------------------------------------------------------------ //
+#ifdef HAS_EMBEDDED_IRX
+    TMP = SifExecModuleBuffer(bdmfs_fatfs_irx, size_bdmfs_fatfs_irx, 0, NULL, &x);
+#else
+    TMP = loadIRXFile("mc?:/PS2BBL/BDMFS_FATFS.IRX", 0, NULL, &x);
+#endif
+    DPRINTF(" [BDMFS_FATFS.IRX]: ret=%d, ID=%d\n", TMP, x);
+// ------------------------------------------------------------------------------------ //
 #ifdef HAS_EMBEDDED_IRX
     TMP = SifExecModuleBuffer(usbd_irx, size_usbd_irx, 0, NULL, &x);
 #else
@@ -526,29 +541,20 @@ void LoadUSBIRX(void)
 #endif
     delay(3);
     DPRINTF(" [USBD.IRX]: ret=%d, ID=%d\n", TMP, x);
-#ifdef HAS_EMBEDDED_IRX
-    TMP = SifExecModuleBuffer(bdm_irx, size_bdm_irx, 0, NULL, &x);
-#else
-    TMP = loadIRXFile("mc?:/PS2BBL/BDM.IRX", 0, NULL, &x);
-#endif
-    DPRINTF(" [BDM.IRX]: ret=%d, ID=%d\n", TMP, x);
-#ifdef HAS_EMBEDDED_IRX
-    TMP = SifExecModuleBuffer(bdmfs_fatfs_irx, size_bdmfs_fatfs_irx, 0, NULL, &x);
-#else
-    TMP = loadIRXFile("mc?:/PS2BBL/BDMFS_FATFS.IRX", 0, NULL, &x);
-#endif
-    DPRINTF(" [BDMFS_FATFS.IRX]: ret=%d, ID=%d\n", TMP, x);
+// ------------------------------------------------------------------------------------ //
 #ifdef HAS_EMBEDDED_IRX
     TMP = SifExecModuleBuffer(usbmass_bd_irx, size_usbmass_bd_irx, 0, NULL, &x);
 #else
     TMP = loadIRXFile("mc?:/PS2BBL/USBMASS_BD.IRX", 0, NULL, &x);
 #endif
     DPRINTF(" [USBMASS_BD.IRX]: ret=%d, ID=%d\n", TMP, x);
+// ------------------------------------------------------------------------------------ //
     delay(3);
 }
 
 void ResetIOP(void)
 {
+    SifInitRpc(0); // Initialize SIFCMD & SIFRPC
 #ifndef PSX
     while (!SifIopReset("", 0)) {
     };
