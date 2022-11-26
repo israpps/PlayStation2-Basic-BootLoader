@@ -624,14 +624,17 @@ void credits(void)
 /* BELOW THIS POINT ALL MACROS and MISC STUFF MADE TO REDUCE BINARY SIZE WILL BE PLACED */
 
 #if defined(DUMMY_TIMEZONE)
-   void _ps2sdk_timezone_update() {}
+   void _libcglue_timezone_update() {}
 #endif
 
 #if defined(DUMMY_LIBC_INIT)
-   void _ps2sdk_libc_init() {}
-   void _ps2sdk_libc_deinit() {}
-   void _ps2sdk_args_parse(int argc, char ** argv) {}
+   void _libcglue_init() {}
+   void _libcglue_deinit() {}
+   void _libcglue_args_parse() {}
+#endif
+
+#if defined(KERNEL_NOPATCH)
+    DISABLE_PATCHED_FUNCTIONS();
 #endif
 
 PS2_DISABLE_AUTOSTART_PTHREAD();
-DISABLE_PATCHED_FUNCTIONS();
