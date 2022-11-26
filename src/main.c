@@ -1,14 +1,15 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <malloc.h>
+#include <fcntl.h>
+
 #include <tamtypes.h>
 #include <kernel.h>
 #include <sifrpc.h>
 #include <loadfile.h>
-#include <fileio.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <debug.h>
-#include <unistd.h>
-#include <malloc.h>
 #include <iopcontrol.h>
 #include <iopheap.h>
 #include <sbv_patches.h>
@@ -36,6 +37,14 @@
 #include "modelname.h"
 #include "banner.h"
 
+#include <ps2_sio2man_driver.h>
+#include <ps2_memcard_driver.h>
+#include <ps2_joystick_driver.h>
+#include <ps2_usb_driver.h>
+
+// For avoiding define NEWLIB_AWARE
+void fioInit();
+
 #define IMPORT_BIN2C(_n)       \
     extern unsigned char _n[]; \
     extern unsigned int size_##_n
@@ -45,22 +54,6 @@ IMPORT_BIN2C(psx_ioprp);
 #include <iopcontrol_special.h>
 #include "psx/plibcdvd_add.h"
 #endif
-
-IMPORT_BIN2C(sio2man_irx);
-IMPORT_BIN2C(mcman_irx);
-IMPORT_BIN2C(mcserv_irx);
-IMPORT_BIN2C(padman_irx);
-
-#ifdef HAS_EMBEDDED_IRX
-IMPORT_BIN2C(usbd_irx);
-#ifdef NO_BDM
-IMPORT_BIN2C(usb_mass_irx);
-#else
-IMPORT_BIN2C(bdm_irx);
-IMPORT_BIN2C(bdmfs_fatfs_irx);
-IMPORT_BIN2C(usbmass_bd_irx);
-#endif // NO_BDM
-#endif // HAS_EMBEDDED_IRX
 
 void RunLoaderElf(char *filename, char *party);
 void EMERGENCY(void);
@@ -72,7 +65,6 @@ void TimerEnd(void);
 char *CheckPath(char *path);
 static void AlarmCallback(s32 alarm_id, u16 time, void *common);
 int dischandler();
-void LoadUSBIRX();
 void CDVDBootCertify(u8 romver[16]);
 void credits(void);
 
@@ -92,7 +84,7 @@ char *EXECPATHS[3];
 u8 ROMVER[16];
 int PAD = 0;
 
-int main(char* argv[], int argc)
+int main(int argc, char *argv[])
 {
     u32 STAT;
     u64 tstart;
@@ -113,18 +105,22 @@ int main(char* argv[], int argc)
 
     DPRINTF("disabling MODLOAD device blacklist/whitelist\n");
     sbv_patch_disable_prefix_check(); /* disable the MODLOAD module black/white list, allowing executables to be freely loaded from any device. */
-    DPRINTF("Loading IRX:\n");
-    j = SifExecModuleBuffer(sio2man_irx, size_sio2man_irx, 0, NULL, &x); /*  Load SDK modules to avoid different behavior across different models*/
-    DPRINTF(" [SIO2MAN.IRX]: ret=%d, ID=%d\n", j, x);
-    j = SifExecModuleBuffer(mcman_irx, size_mcman_irx, 0, NULL, &x);
-    DPRINTF(" [MCMAN.IRX]: ret=%d, ID=%d\n", j, x);
-    j = SifExecModuleBuffer(mcserv_irx, size_mcserv_irx, 0, NULL, &x);
-    DPRINTF(" [MCSERV.IRX]: ret=%d, ID=%d\n", j, x);
-    mcInit(MC_TYPE_XMC);
-    j = SifExecModuleBuffer(padman_irx, size_padman_irx, 0, NULL, &x);
-    DPRINTF(" [PADMAN.IRX]: ret=%d, ID=%d\n", j, x);
+    DPRINTF("Loading SIO2MAN Drivers:\n");
+    j = (int) init_sio2man_driver();
+    DPRINTF(" SIO2MAN Drivers: %d\n", j);
 
-    LoadUSBIRX();
+    DPRINTF("Loading MemCard Drivers:\n");
+    j = (int) init_memcard_driver(0);
+    DPRINTF(" MemCard Drivers: %d\n", j);
+
+    DPRINTF("Loading Joystick Drivers:\n");
+    j = (int) init_joystick_driver(0);
+    DPRINTF(" Joystick Drivers: %d\n", j);
+
+    DPRINTF("Loading USB Drivers:\n");
+    j = (int) init_usb_driver();
+    DPRINTF(" USB Drivers: %d\n", j);
+
     if ((fd = open("rom0:ROMVER", O_RDONLY)) >= 0) {
         read(fd, ROMVER, sizeof(ROMVER));
         close(fd);
@@ -513,43 +509,6 @@ int dischandler()
             break;
     }
     return 0;
-}
-
-void LoadUSBIRX(void)
-{
-    int TMP, x;
-
-// ------------------------------------------------------------------------------------ //
-#ifdef HAS_EMBEDDED_IRX
-    TMP = SifExecModuleBuffer(bdm_irx, size_bdm_irx, 0, NULL, &x);
-#else
-    TMP = loadIRXFile("mc?:/PS2BBL/BDM.IRX", 0, NULL, &x);
-#endif
-    DPRINTF(" [BDM.IRX]: ret=%d, ID=%d\n", TMP, x);
-// ------------------------------------------------------------------------------------ //
-#ifdef HAS_EMBEDDED_IRX
-    TMP = SifExecModuleBuffer(bdmfs_fatfs_irx, size_bdmfs_fatfs_irx, 0, NULL, &x);
-#else
-    TMP = loadIRXFile("mc?:/PS2BBL/BDMFS_FATFS.IRX", 0, NULL, &x);
-#endif
-    DPRINTF(" [BDMFS_FATFS.IRX]: ret=%d, ID=%d\n", TMP, x);
-// ------------------------------------------------------------------------------------ //
-#ifdef HAS_EMBEDDED_IRX
-    TMP = SifExecModuleBuffer(usbd_irx, size_usbd_irx, 0, NULL, &x);
-#else
-    TMP = loadIRXFile("mc?:/PS2BBL/USBD.IRX", 0, NULL, &x);
-#endif
-    delay(3);
-    DPRINTF(" [USBD.IRX]: ret=%d, ID=%d\n", TMP, x);
-// ------------------------------------------------------------------------------------ //
-#ifdef HAS_EMBEDDED_IRX
-    TMP = SifExecModuleBuffer(usbmass_bd_irx, size_usbmass_bd_irx, 0, NULL, &x);
-#else
-    TMP = loadIRXFile("mc?:/PS2BBL/USBMASS_BD.IRX", 0, NULL, &x);
-#endif
-    DPRINTF(" [USBMASS_BD.IRX]: ret=%d, ID=%d\n", TMP, x);
-// ------------------------------------------------------------------------------------ //
-    delay(3);
 }
 
 void ResetIOP(void)

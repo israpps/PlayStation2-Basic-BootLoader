@@ -14,7 +14,6 @@ export HEADER
 # ---{BUILD CFG}--- #
 
 PSX ?= 0 # PSX DESR support
-HAS_EMBEDDED_IRX ?= 0 # whether to embed or not non vital IRX (wich will be loaded from memcard files)
 PROHBIT_DVD_0100 ?= 0 # prohibit the DVD Players v1.00 and v1.01 from being booted.
 XCDVD_READKEY ?= 0 # Enable the newer sceCdReadKey checks, which are only supported by a newer CDVDMAN module.
 
@@ -46,23 +45,20 @@ EE_OBJS_DIR = obj/
 EE_SRC_DIR = src/
 EE_ASM_DIR = asm/
 
-IOP_OBJS = sio2man_irx.o mcman_irx.o mcserv_irx.o padman_irx.o
 EE_OBJS = main.o \
           pad.o util.o elf.o timer.o ps2.o ps1.o dvdplayer.o \
           modelname.o libcdvd_add.o OSDHistory.o OSDInit.o OSDConfig.o \
           $(EMBEDDED_STUFF)
 
-EMBEDDED_STUFF = icon_sys_A.o icon_sys_J.o icon_sys_C.o \
-		loader_elf.o \
-		$(IOP_OBJS)
+EMBEDDED_STUFF = icon_sys_A.o icon_sys_J.o icon_sys_C.o
 
-EE_CFLAGS = -Os -DNEWLIB_PORT_AWARE -G0 -Wall -g
+EE_CFLAGS = -Wall
 EE_CFLAGS += -fdata-sections -ffunction-sections
 # EE_LDFLAGS += -nodefaultlibs -Wl,--start-group -lc_nano -lps2sdkc -lkernel-nopatch -Wl,--end-group
-EE_LDFLAGS += -s
+EE_LDFLAGS += -L$(PS2SDK)/ports/lib
 EE_LDFLAGS += -Wl,--gc-sections -Wno-sign-compare
-EE_LIBS = -ldebug -lc -lmc -lpadx -lpatches -lkernel
-EE_INCS += -Iinclude
+EE_LIBS = -ldebug -lmc -lelf-loader -lps2_drivers -lpatches
+EE_INCS += -Iinclude -I$(PS2SDK)/ports/include
 EE_CFLAGS += -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DPATCHLEVEL=\"$(PATCHLEVEL)\" -DSTATUS=\"$(STATUS)\"
 
 # ---{ CONDITIONS }--- #
@@ -77,16 +73,14 @@ else
 endif
 
 ifeq ($(DEBUG), 1)
-  EE_CFLAGS += -DDEBUG
+  EE_CFLAGS += -DDEBUG -O0 -g
+else 
+  EE_CFLAGS += -Os
+  EE_LDFLAGS += -s
 endif
 
 ifeq ($(DUMMY_TIMEZONE), 1)
   EE_CFLAGS += -DDUMMY_TIMEZONE
-endif
-
-ifeq ($(HAS_EMBEDDED_IRX),1)
-  IOP_OBJS += usbd.o bdm_irx.o bdmfs_fatfs_irx.o usbmass_bd_irx.o
-  EE_CFLAGS += -DHAS_EMBEDDED_IRX
 endif
 
 ifdef COMMIT_HASH
@@ -108,12 +102,11 @@ ifeq ($(PROHBIT_DVD_0100),1)
 endif
 
 # ---{ RECIPES }--- #
-
 all:
 	$(MAKE) $(EE_BIN)
 
 greeting:
-	@echo built PS2BBL PSX=$(PSX), EMBEDDED_IRX=$(HAS_EMBEDDED_IRX)
+	@echo built PS2BBL PSX=$(PSX)
 	@echo PROHBIT_DVD_0100=$(PROHBIT_DVD_0100), XCDVD_READKEY=$(XCDVD_READKEY)
 	@echo KERNEL_NOPATCH=$(KERNEL_NOPATCH), NEWLIB_NANO=$(NEWLIB_NANO)
 	@echo binaries dispatched to $(BINDIR)
@@ -129,13 +122,7 @@ clean:
 	@rm -rf $(EE_OBJS)
 	@echo - Objects folders 
 	@rm -rf $(EE_OBJS_DIR) $(EE_ASM_DIR) $(BINDIR)
-	@echo -- ELF loader
-	$(MAKE) -C modules/ELF_LOADER/ clean
 	@echo  "\n\n\n"
-
-cleaniop:
-	@echo cleaning only embedded IOP binaries
-	rm -rf $(IOP_OBJS)
 
 $(EE_BIN_STRIPPED): $(EE_BIN)
 	@echo " -- Stripping"
@@ -148,10 +135,6 @@ $(EE_BIN_PACKED): $(EE_BIN_STRIPPED)
 $(EE_BIN_ENCRYPTED): $(EE_BIN_PACKED)
 	@echo " -- Encrypting..."
 	thirdparty/kelftool encrypt fmcb $< $@ 
-
-modules/ELF_LOADER/loader.elf: modules/ELF_LOADER/
-	@echo -- ELF Loader
-	$(MAKE) -C $<
 
 # move OBJ to folder and search source on src/, borrowed from OPL makefile
 
