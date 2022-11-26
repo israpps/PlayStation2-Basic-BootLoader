@@ -1,6 +1,3 @@
-$(EE_ASM_DIR)loader_elf.s: modules/ELF_LOADER/loader.elf | $(EE_ASM_DIR)
-	@bin2s $< $@ loader_elf
-
 $(EE_ASM_DIR)ioprp.s: embed/ioprp.img | $(EE_ASM_DIR)
 	@bin2s $< $@ psx_ioprp
 

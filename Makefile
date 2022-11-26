@@ -50,15 +50,14 @@ EE_OBJS = main.o \
           modelname.o libcdvd_add.o OSDHistory.o OSDInit.o OSDConfig.o \
           $(EMBEDDED_STUFF)
 
-EMBEDDED_STUFF = icon_sys_A.o icon_sys_J.o icon_sys_C.o \
-		loader_elf.o 
+EMBEDDED_STUFF = icon_sys_A.o icon_sys_J.o icon_sys_C.o
 
 EE_CFLAGS = -Wall
 EE_CFLAGS += -fdata-sections -ffunction-sections
 # EE_LDFLAGS += -nodefaultlibs -Wl,--start-group -lc_nano -lps2sdkc -lkernel-nopatch -Wl,--end-group
 EE_LDFLAGS += -L$(PS2SDK)/ports/lib
 EE_LDFLAGS += -Wl,--gc-sections -Wno-sign-compare
-EE_LIBS = -ldebug -lmc -lps2_drivers -lpatches
+EE_LIBS = -ldebug -lmc -lelf-loader -lps2_drivers -lpatches
 EE_INCS += -Iinclude -I$(PS2SDK)/ports/include
 EE_CFLAGS += -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DPATCHLEVEL=\"$(PATCHLEVEL)\" -DSTATUS=\"$(STATUS)\"
 
@@ -103,7 +102,6 @@ ifeq ($(PROHBIT_DVD_0100),1)
 endif
 
 # ---{ RECIPES }--- #
-
 all:
 	$(MAKE) $(EE_BIN)
 
@@ -124,8 +122,6 @@ clean:
 	@rm -rf $(EE_OBJS)
 	@echo - Objects folders 
 	@rm -rf $(EE_OBJS_DIR) $(EE_ASM_DIR) $(BINDIR)
-	@echo -- ELF loader
-	$(MAKE) -C modules/ELF_LOADER/ clean
 	@echo  "\n\n\n"
 
 $(EE_BIN_STRIPPED): $(EE_BIN)
@@ -139,10 +135,6 @@ $(EE_BIN_PACKED): $(EE_BIN_STRIPPED)
 $(EE_BIN_ENCRYPTED): $(EE_BIN_PACKED)
 	@echo " -- Encrypting..."
 	thirdparty/kelftool encrypt fmcb $< $@ 
-
-modules/ELF_LOADER/loader.elf: modules/ELF_LOADER/
-	@echo -- ELF Loader
-	$(MAKE) -C $<
 
 # move OBJ to folder and search source on src/, borrowed from OPL makefile
 
