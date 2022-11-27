@@ -157,11 +157,11 @@ $(BINDIR):
 
 $(EE_OBJS_DIR)%.o: $(EE_SRC_DIR)%.c | $(EE_OBJS_DIR)
 	@echo "  - $@"
-	@$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
+	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
 
 $(EE_OBJS_DIR)%.o: $(EE_ASM_DIR)%.s | $(EE_OBJS_DIR)
 	@echo "  - $@"
-	@$(EE_AS) $(EE_ASFLAGS) $< -o $@
+	$(EE_AS) $(EE_ASFLAGS) $< -o $@
 #
 
 celan: clean # repetitive typo that i have when quicktyping
