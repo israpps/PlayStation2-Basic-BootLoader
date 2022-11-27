@@ -1,7 +1,6 @@
 #ifndef DEBUG_PRINTF
 #define DEBUG_PRINTF
 
-#define DEBUG
 #define SCR_PRINT
 
 #ifdef DEBUG
@@ -20,7 +19,7 @@
 #endif
 
 #else
-    #define DPRINTF() do {} while (0)
+    #define DPRINTF(x...) do {} while (0)
 #endif //DEBUG
 
 #endif //DEBUG_PRINTF

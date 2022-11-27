@@ -57,7 +57,7 @@ EE_CFLAGS += -fdata-sections -ffunction-sections
 # EE_LDFLAGS += -nodefaultlibs -Wl,--start-group -lc_nano -lps2sdkc -lkernel-nopatch -Wl,--end-group
 EE_LDFLAGS += -L$(PS2SDK)/ports/lib
 EE_LDFLAGS += -Wl,--gc-sections -Wno-sign-compare
-EE_LIBS = -ldebug -lmc -lelf-loader -lps2_drivers -lpatches
+EE_LIBS += -ldebug -lmc -lps2_drivers -lpatches
 EE_INCS += -Iinclude -I$(PS2SDK)/ports/include
 EE_CFLAGS += -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DPATCHLEVEL=\"$(PATCHLEVEL)\" -DSTATUS=\"$(STATUS)\"
 
@@ -74,9 +74,11 @@ endif
 
 ifeq ($(DEBUG), 1)
   EE_CFLAGS += -DDEBUG -O0 -g
+  EE_LIBS += -lelf-loader
 else 
   EE_CFLAGS += -Os
   EE_LDFLAGS += -s
+  EE_LIBS += -lelf-loader-nocolour
 endif
 
 ifeq ($(DUMMY_TIMEZONE), 1)
@@ -91,6 +93,10 @@ endif
 
 ifeq ($(DUMMY_LIBC_INIT), 1)
   EE_CFLAGS += -DDUMMY_LIBC_INIT
+endif
+
+ifeq ($(KERNEL_NOPATCH), 1)
+  EE_CFLAGS += -DKERNEL_NOPATCH
 endif
 
 ifeq ($(XCDVD_READKEY),1)
