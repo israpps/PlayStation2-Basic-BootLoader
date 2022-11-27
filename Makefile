@@ -17,6 +17,11 @@ PSX ?= 0 # PSX DESR support
 PROHBIT_DVD_0100 ?= 0 # prohibit the DVD Players v1.00 and v1.01 from being booted.
 XCDVD_READKEY ?= 0 # Enable the newer sceCdReadKey checks, which are only supported by a newer CDVDMAN module.
 
+# Just one print should be enabled
+SCR_PRINT ?= 1
+EE_SIO ?= 0
+PCSX2 ?= 0
+
 # Related to binary size reduction
 KERNEL_NOPATCH ?= 1 
 NEWLIB_NANO ?= 1
@@ -54,7 +59,6 @@ EMBEDDED_STUFF = icon_sys_A.o icon_sys_J.o icon_sys_C.o
 
 EE_CFLAGS = -Wall
 EE_CFLAGS += -fdata-sections -ffunction-sections
-# EE_LDFLAGS += -nodefaultlibs -Wl,--start-group -lc_nano -lps2sdkc -lkernel-nopatch -Wl,--end-group
 EE_LDFLAGS += -L$(PS2SDK)/ports/lib
 EE_LDFLAGS += -Wl,--gc-sections -Wno-sign-compare
 EE_LIBS += -ldebug -lmc -lps2_drivers -lpatches
@@ -97,6 +101,18 @@ endif
 
 ifeq ($(KERNEL_NOPATCH), 1)
   EE_CFLAGS += -DKERNEL_NOPATCH
+endif
+
+ifeq ($(SCR_PRINT), 1)
+  EE_CFLAGS += -DSCR_PRINT
+endif
+
+ifeq ($(EE_SIO), 1)
+  EE_CFLAGS += -DEE_SIO
+endif
+
+ifeq ($(PCSX2), 1)
+  EE_CFLAGS += -DPCSX2
 endif
 
 ifeq ($(XCDVD_READKEY),1)
