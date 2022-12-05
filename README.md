@@ -16,13 +16,7 @@ it's totally up to you
 the only thing the program needs is their config files and a bunch of IRX drivers
 
 all of them loaded from `mc?:/PS2BBL/` 
-
-config file should be named `CONFIG.INI` and the neede IRX files are:
-
-- `USBD.IRX`
-- `BDM.IRX`
-- `BDMFS_FATFS.IRX`
-- `USBMASS_BD.IRX`
+config file should be named `CONFIG.INI`
 
 ### Configuration
 
