@@ -1,0 +1,207 @@
+$head-font: "Kimberley", Kimberley;
+$theme-code-inline: #121212;
+$theme-blue: #2980b9;
+$theme-red: #e74c3c;
+$theme-green: #1abc9c;
+$theme-orange: #e67e22;
+
+$font-white:  lighten(#000000, 99%);
+$theme-white: lighten(#000000, 5%);
+$theme-black: lighten(#000000, 10%);
+
+
+$theme-menu-background: darken($theme-black, 5%);
+
+$bg-gray: lighten(#000000, 35%);
+.content-wrap {
+  background: $theme-black
+}
+
+$theme-mask-white: transparentize($theme-white, 0.9);
+$theme-mask-white2: transparentize($theme-white, 0.7);
+
+$theme-mask-black: transparentize($theme-black, 0.9);
+$fontcol:lighten(#404040, 60%);
+
+$theme-menu-width-sm: 100%;
+
+.markdown-body {
+  .d-lang {
+    position: relative;
+
+    &:after {
+
+      color: $fontcol;
+    }
+  }
+}
+body {
+  color: $fontcol;
+  background-color: $theme-black;
+}
+:root {
+  body {
+    background-color: $theme-black;
+    color: $fontcol;
+  }
+}
+
+$theme-code: lighten($fontcol, 4%);
+$theme-code-background: $theme-black;
+$theme-code-inline: lighten($fontcol, 4%);
+$theme-code-inline-background: lighten($theme-black, 6%);
+
+.markdown-body {
+  .highlight pre,
+  pre {
+    background-color: $theme-code-background;
+  }  // improved
+  code,
+  tt {
+    color: $theme-code-inline;
+    border-color: transparent;
+    background-color: $theme-code-inline-background;
+  }
+
+  pre {
+    > code {
+      color: darken($theme-code, 50%);
+    }
+  }
+  
+
+  // Tables
+  table {
+    display: block;
+    width: 100%; // keep for backwards compatibility
+    width: max-content;
+    max-width: 100%;
+    overflow: auto;
+
+    //th {
+    //  font-weight: $font-weight-bold;
+    //}
+
+    th,
+    td {
+      // stylelint-disable-next-line primer/spacing
+      //padding: 6px 13px;
+      // stylelint-disable-next-line primer/borders
+      //border: $border-width $border-style lighten($gray-300, 5%);
+    }
+
+    tr {
+      background-color: darken($theme-black, 5%);
+      // stylelint-disable-next-line primer/borders
+     // border-top: $border-width $border-style darken($gray-300, 4%);
+
+      &:nth-child(2n) {
+        background-color: $theme-black;
+      }
+    }
+
+    img {
+      background-color: transparent;
+    }
+  }
+  
+}
+
+// TOASTS
+.toasts {
+  // fixed note
+  //font-size: $h4-size;
+  // mdl
+  //@include shadow-2dp();
+
+  .title {
+   // box-shadow: 0 0 1px 1px rgba(0, 0, 0, 0.14);
+  }
+
+  // fixed
+  .content {
+    :first-child {
+      margin-top: 0;
+    }
+
+    :last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  &.note {
+    background-color: darken($theme-blue, 30%);
+
+    .title {
+      background: darken($theme-blue, 20%);
+    }
+  }
+
+  &.tip {
+    background-color: darken($theme-green, 30%);
+
+    .title {
+      background: darken($theme-green, 10%);
+    }
+  }
+
+  &.warning {
+    background-color: darken($theme-orange, 40%);
+
+    .title {
+      background: darken($theme-orange, 20%);
+    }
+  }
+
+  &.danger {
+    background-color: darken($theme-red, 40%);
+
+    .title {
+      background: darken($theme-red, 20%);
+    }
+  }
+}
+// TOASTS
+
+:root {
+  @for $level from 1 through 12 {
+    @if $level % 4 == 0 {
+      color: lighten($font-white, 4%);
+      --toc-#{$level}: #{darken($theme-blue, 4 * 8.8%)};
+    } @else {
+      color: lighten($font-white, 4%);
+      --toc-#{$level}: #{darken($theme-blue, $level % 4 * 8.8%)};
+    }
+  }
+}
+.toctree {
+  a {
+    color: lighten($font-white, 4%);
+  }
+
+  > ul {
+    
+    // the first level links not current
+    > .toc:not(.current) > a {
+      &:hover {
+        background: $theme-mask-white;
+      }
+      &:active {
+        background: $theme-mask-white2;
+      }
+    }
+    
+    .toc.current {
+    // all expanded links
+      a {
+         color: lighten($font-white, 4%);
+       
+         &.current {
+           color: #404040;
+         }
+      }
+    }
+  }
+  
+}
+
