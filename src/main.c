@@ -92,7 +92,6 @@ int main(int argc, char *argv[])
     static int config_source = SOURCE_INVALID, num_buttons = 4, pad_button = 0x0100; // first pad button is L2
     unsigned char *RAM_p = NULL;
     char *CNFBUFF, *name, *value;
-    GLOBCFG.DELAY = DEFDELAY;
 
     ResetIOP();
     SifInitIopHeap(); // Initialize SIF services for loading modules and files.
@@ -397,6 +396,7 @@ void SetDefaultSettings(void)
         for (j = 0; j < 3; j++)
             GLOBCFG.KEYPATHS[i][j] = NULL;
     GLOBCFG.SKIPLOGO = 0;
+    GLOBCFG.DELAY = DEFDELAY;
 }
 
 int dischandler()
