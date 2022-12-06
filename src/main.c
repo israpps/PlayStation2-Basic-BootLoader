@@ -328,7 +328,7 @@ int main(int argc, char *argv[])
     }
     TimerEnd();
 
-    scr_printf("\tEND OF EXECUTION REACHED\n");
+    scr_printf("\n\n\tEND OF EXECUTION REACHED\nCould not find any of the default applications\nCheck your config file for the LK_AUTO_E# entries\nOr press a key while logo displays to run the bound application");
     while (1) {
         ;
     }
