@@ -59,9 +59,9 @@ const char *KEYS_ID[17] = {
 
 /** default paths used if config file can't be loaded */
 char *DEFPATH[] = {
-    "mc?:/BOOT/BOOT.ELF", // AUTO [0]
+    "mc?:/BOOT/ULE.ELF", // AUTO [0]
     "mc?:/APPS/ULE/ELF",
-    "mass:/PS2BBL/BOOT.ELF",
+    "mass:/BOOT/BOOT.ELF",
     "mass:/PS2BBL/L2[1].ELF", // L2 [3]
     "mass:/PS2BBL/L2[2].ELF",
     "mass:/PS2BBL/L2[3].ELF",
