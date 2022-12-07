@@ -23,17 +23,17 @@ where PS2BBL will try to boot `RESCUE.ELF` from USB device Root.
 
 ### For PS2
 
-OSD, OSD settings and some extra facilities are loaded.
-All modules listed on default IOP Boot configuration are loaded on startup.
-CDVD boot certification is properly performed
-Remote control will be enabled if possible
-OSD Initialization is done in a way the Kernel Patches for `SCPH-10000` and `SCPH-15000` take effect
+- OSD, OSD settings and some extra facilities are loaded.
+- All modules listed on default IOP Boot configuration are loaded on startup.
+- CDVD boot certification is properly performed
+- Remote control will be enabled if possible
+- OSD Initialization is done in a way the Kernel Patches for `SCPH-10000` and `SCPH-15000` take effect
 
 ### For PSX
 
-Memory mode is set to 32mb limit, as it's described to be the best method for running homebrew (IOP remains using it's juicy 8mb)
+- Memory mode is set to 32mb limit, as it's described to be the best method for running homebrew (IOP remains using it's juicy 8mb)
 
-Special PSX disc drive modules are loaded (`PCDVDMAN` & `PCDVDFS`) so the bootloader can set the disc reader to PS2 mode
+- Special PSX disc drive modules are loaded (`PCDVDMAN` & `PCDVDFS`) so the bootloader can set the disc reader to PS2 mode
 
 ## Running homebrew
 
