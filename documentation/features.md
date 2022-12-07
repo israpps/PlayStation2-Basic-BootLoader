@@ -2,9 +2,9 @@
 sort: 2
 ---
 
-# features
+# Features
 
-All that PS2BBL can do
+All that PS2BBL has to offer
 
 ```
   ~ WORK IN PROGRESS ON THIS PAGE ~
@@ -46,3 +46,15 @@ PS2BBL can run PS1, PS2 and DVD Discs
 ### PS2 discs
 
 PS2 discs can be loaded with or without PS2LOGO via configuration or special commands _(Insert happy moment for mechaPWN users)_
+
+## Space usage
+
+PS2BBL has an aproximated size of 112kb
+Wich means a system update setup that covers all models compatbible with system updates will take aproximately 1mb
+
+## Embedded USB drivers
+
+Unlike FreeMcBoot, PS2BBL has USB drivers embedded in binary, lowering your chances of loosing access to homebrew in case of data loss.
+
+and to make things better...
+the impact on program size was just ~`3kb`!
