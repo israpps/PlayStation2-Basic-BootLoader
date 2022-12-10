@@ -83,6 +83,9 @@ else
   EE_CFLAGS += -Os
   EE_LDFLAGS += -s
   EE_LIBS += -lelf-loader-nocolour
+  SCR_PRINT = 0 # not q debug build? Make sure DPRINTF is disabled 
+  EE_SIO = 0
+  PCSX2 = 0
 endif
 
 ifeq ($(DUMMY_TIMEZONE), 1)
