@@ -16,7 +16,7 @@ All that PS2BBL has to offer
 If something breaks on your setup but PS2BBL still boots, just hold R1+START.
 It will trigger emergency mode
 
-where PS2BBL will try to boot `RESCUE.ELF` from USB device Root.
+where PS2BBL will try to boot `RESCUE.ELF` from USB device Root on an endless loop.
 
 
 ## Properly sistem initialization
@@ -33,11 +33,11 @@ where PS2BBL will try to boot `RESCUE.ELF` from USB device Root.
 
 - Memory mode is set to 32mb limit, as it's described to be the best method for running homebrew (IOP remains using it's juicy 8mb)
 
-- Special PSX disc drive modules are loaded (`PCDVDMAN` & `PCDVDFS`) so the bootloader can set the disc reader to PS2 mode
+- Special PSX disc drive modules are loaded (`PCDVDMAN` & `PCDVDFS`) so the bootloader can set the disc reader to PS2 mode (allows running discs even if disc burner is broken)
 
 ## Running homebrew
 
-Unsigned executables can be freely loaded from memory card, USB (both FAT32 and EXFAT) and even on-board software can be loaded (`rom0`)
+Unsigned executables can be freely loaded from memory card and USB (both FAT32 and EXFAT). even on-board software can be loaded (`rom0`)
 
 ## Running Discs
 
@@ -50,7 +50,7 @@ PS2 discs can be loaded with or without PS2LOGO via configuration or special com
 ## Space usage
 
 PS2BBL has an aproximated size of 112kb
-Wich means a system update setup that covers all models compatbible with system updates will take aproximately 1mb
+Wich means a system update setup that covers all models compatbible with system updates will take aproximately a little bit less than 1mb
 
 ## Embedded USB drivers
 
