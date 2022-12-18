@@ -5,7 +5,15 @@ enum
     SOURCE_INVALID = 0,
     SOURCE_MC0,
     SOURCE_MC1,
-    SOURCE_MASS
+    SOURCE_MASS,
+#ifdef HDD_SUPPORT
+    SOURCE_HDD,
+#endif
+#ifdef XFROM_SUPPORT
+    SOURCE_XFROM,
+#endif
+
+    SOURCE_COUNT
 } CONFIG_SOURCES_ID;
 
 #define MAX_LEN     64

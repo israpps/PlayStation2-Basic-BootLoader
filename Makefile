@@ -18,9 +18,9 @@ PROHBIT_DVD_0100 ?= 0 # prohibit the DVD Players v1.00 and v1.01 from being boot
 XCDVD_READKEY ?= 0 # Enable the newer sceCdReadKey checks, which are only supported by a newer CDVDMAN module.
 
 # Just one print should be enabled
-SCR_PRINT ?= 1
+SCR_PRINT ?= 0
 EE_SIO ?= 0
-PCSX2 ?= 0
+PCSX2 ?= 1
 
 # Related to binary size reduction
 KERNEL_NOPATCH ?= 1 
@@ -135,6 +135,15 @@ greeting:
 	@echo PROHBIT_DVD_0100=$(PROHBIT_DVD_0100), XCDVD_READKEY=$(XCDVD_READKEY)
 	@echo KERNEL_NOPATCH=$(KERNEL_NOPATCH), NEWLIB_NANO=$(NEWLIB_NANO)
 	@echo binaries dispatched to $(BINDIR)
+ifeq ($(PCSX2), 1)
+	@echo with printf()
+endif
+ifeq ($(EE_SIO), 1)
+	@echo with EE SIO
+endif
+ifeq ($(SCR_PRINT), 1)
+	@echo with scr_printf()
+endif
 
 release: clean
 	$(MAKE) $(EE_BIN_PACKED)

@@ -111,6 +111,7 @@ int main(int argc, char *argv[])
     DPRINTF("Loading MemCard Drivers:\n");
     j = (int) init_memcard_driver(0);
     DPRINTF(" MemCard Drivers: %d\n", j);
+    mcInit(MC_TYPE_XMC);
 
     DPRINTF("Loading Joystick Drivers:\n");
     j = (int) init_joystick_driver(0);
@@ -208,7 +209,7 @@ int main(int argc, char *argv[])
     }
 
     if (config_source != SOURCE_INVALID) {
-        DPRINTF("valid config, reading now\n");
+        DPRINTF("valid config on device %d, reading now\n", config_source);
         pad_button = 0x0001;
         num_buttons = 16;
         fseek(fp, 0, SEEK_END);
@@ -262,10 +263,11 @@ int main(int argc, char *argv[])
 
         }
     } else {
-        DPRINTF("Invalid config, loading hardcoded shit\n");
+        scr_printf("Can't find config, loading hardcoded paths\n");
         for (x = 0; x < 5; x++)
             for (j = 0; j < 3; j++)
                 GLOBCFG.KEYPATHS[x][j] = CheckPath(DEFPATH[3 * x + j]);
+        sleep(1);
     }
     if (RAM_p != NULL)
         free(RAM_p);
