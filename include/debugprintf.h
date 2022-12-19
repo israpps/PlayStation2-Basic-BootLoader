@@ -9,7 +9,7 @@
     #include <debug.h>
     #define DPRINTF(x...) scr_printf("\t"x)
 #else
-    #define DPRINTF(x...) do {} while (0)
+    #define DPRINTF(x...)
 #endif
 
 #endif //DEBUG_PRINTF

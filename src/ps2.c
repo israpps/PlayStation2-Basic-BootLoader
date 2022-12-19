@@ -275,18 +275,21 @@ int PS2DiscBoot(int skip_PS2LOGO)
     }
 
     CNFGetKey(pChar, line);
+    DPRINTF("line: [%s]\n", line);
+    DPRINTF("ELF: [%s]\n", ps2disc_boot);
     if (CNFCheckBootFile(ps2disc_boot, line) == 0) { // Parse error
         BootError();
     }
 
     args[0] = ps2disc_boot;
 
+
     CleanUp();
     UpdatePlayHistory(ps2disc_boot);
 
     SifExitCmd();
     if (skip_PS2LOGO) {
-        LoadExecPS2(ps2disc_boot, 0, NULL);
+        LoadExecPS2(line, 0, NULL);
     } else {
         LoadExecPS2("rom0:PS2LOGO", 1, args);
     }
