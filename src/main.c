@@ -296,15 +296,15 @@ int main(int argc, char *argv[])
             for (j=0; j < MAX_HISTORY_ENTRIES; j++)
             {
                 if (j>=14)
-                    R += HistoryEntries[j].LaunchCount;
+                    R += (HistoryEntries[j].LaunchCount*2);
                 if (j>=7 && j<14)
-                    G += HistoryEntries[j].LaunchCount;
+                    G += (HistoryEntries[j].LaunchCount*2);
                 if (j<7)
-                    B += HistoryEntries[j].LaunchCount;
+                    B += (HistoryEntries[j].LaunchCount*2);
 
             }
             scr_setfontcolor(RBG2INT(B,G,R));
-            DPRINTF("New banner color is: #%6x\n",RBG2INT(B,G,R));
+            DPRINTF("New banner color is: #%8x\n",RBG2INT(B,G,R));
         } else
             DPRINTF("can't find any osd history for banner color\n");
     }
@@ -314,10 +314,12 @@ int main(int argc, char *argv[])
     scr_setfontcolor(0xffffff);
     scr_printf(BANNER_FOOTER"\n\n\tModel:\t\t%s\n"
                "\tPlayStation Driver:\t%s\n"
-               "\tDVD Player:\t%s\n",
+               "\tDVD Player:\t%s\n"
+			   "\tConfig source %d\n",
                ModelNameGet(),
                PS1DRVGetVersion(),
-               DVDPlayerGetVersion());
+               DVDPlayerGetVersion(),
+			   config_source);
 
     TimerInit();
     tstart = Timer();
