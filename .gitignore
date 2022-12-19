@@ -25,3 +25,4 @@ asm/
 
 #other non desired files
 *.7z
+*.XLF
