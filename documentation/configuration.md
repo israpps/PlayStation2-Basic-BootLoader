@@ -42,7 +42,7 @@ the program supports the following config entries
 
 - `SKIP_PS2LOGO`: wether to run ps2 games via `rom0:PS2LOGO` or by running the game executable itself
 - `KEY_READ_WAIT_TIME`: time (in miliseconds) that the program should wait for a key press before arbitrarly loading the `AUTO` launch keys
-
+- `OSDHISTORY_READ`: wether to change or not the program logo color (color is calculated with OSD play history record from memory card)
 ## supported commands
 
 - `$CDVD`: execute disc respecting the value passed to `SKIP_PS2LOGO` on config
