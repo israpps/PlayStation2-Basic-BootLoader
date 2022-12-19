@@ -45,7 +45,7 @@
 // For avoiding define NEWLIB_AWARE
 void fioInit();
 
-#define RBG2INT(R,G,B) ((R<<24) + (G<<16) + (B<<8) + 0)
+#define RBG2INT(R,G,B) ((0<<24) + (R<<16) + (G<<8) + B)
 #define IMPORT_BIN2C(_n)       \
     extern unsigned char _n[]; \
     extern unsigned int size_##_n
@@ -278,7 +278,7 @@ int main(int argc, char *argv[])
     }
     if (RAM_p != NULL)
         free(RAM_p);
-    int R = 128, G = 128, B = 128;
+    int R = 0x80, G = 0x80, B = 0x80;
     if (GLOBCFG.OSDHISTORY_READ)
     {
         j = 1;
@@ -303,8 +303,8 @@ int main(int argc, char *argv[])
                     B += HistoryEntries[j].LaunchCount;
 
             }
-            scr_setfontcolor(RBG2INT(R,G,B));
-            DPRINTF("New banner color is: #%6x\n",RBG2INT(R,G,B));
+            scr_setfontcolor(RBG2INT(B,G,R));
+            DPRINTF("New banner color is: #%6x\n",RBG2INT(B,G,R));
         } else
             DPRINTF("can't find any osd history for banner color\n");
     }

@@ -145,7 +145,7 @@ int SaveHistoryFile(int port)
     mcGetInfo(port, 0, &mctype, &mem, &format);
     mcSync(0, NULL, NULL);
     if ((mctype != sceMcTypePS2) || (format != MC_FORMATTED) || (mem < HISTORY_SIZE)) { // don't even waste time if there are no PS2 MC's
-        DPRINTF("\tmemcard on slot %d is not a formatted PS2 Card!\n");
+        DPRINTF("\tmemcard on port %d is not a formatted PS2 Card!\n", port);
         return -1;
     }
     // init paths

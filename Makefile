@@ -127,23 +127,16 @@ ifeq ($(PROHBIT_DVD_0100),1)
 endif
 
 # ---{ RECIPES }--- #
-all:
-	$(MAKE) $(EE_BIN)
+.PHONY: greeting debug all clean kelf
+
+all: $(EE_BIN)
 
 greeting:
 	@echo built PS2BBL PSX=$(PSX)
 	@echo PROHBIT_DVD_0100=$(PROHBIT_DVD_0100), XCDVD_READKEY=$(XCDVD_READKEY)
 	@echo KERNEL_NOPATCH=$(KERNEL_NOPATCH), NEWLIB_NANO=$(NEWLIB_NANO)
 	@echo binaries dispatched to $(BINDIR)
-ifeq ($(PCSX2), 1)
-	@echo with printf()
-endif
-ifeq ($(EE_SIO), 1)
-	@echo with EE SIO
-endif
-ifeq ($(SCR_PRINT), 1)
-	@echo with scr_printf()
-endif
+	@echo printf: printf=$(PCSX2), eesio=$(EE_SIO), scr_printf=$(SCR_PRINT)
 
 release: clean
 	$(MAKE) $(EE_BIN_PACKED)
