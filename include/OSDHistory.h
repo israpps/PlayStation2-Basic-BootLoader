@@ -1,3 +1,5 @@
+#ifndef OSDHISTORY_H
+#define OSDHISTORY_H
 #define MAX_HISTORY_ENTRIES 21
 
 /*  If the record is valid, the launch count will be >0.
@@ -30,7 +32,7 @@
 
 /**
  * the structure of a single entry of the OSD history file
-*/
+ */
 struct HistoryEntry
 {
     char name[16];
@@ -41,13 +43,20 @@ struct HistoryEntry
     u16 DateStamp;
 };
 
+/// size of "B?DATA-SYSTEM/history" file
+#define HISTORY_SIZE (22 * MAX_HISTORY_ENTRIES)
+
+extern struct HistoryEntry HistoryEntries[MAX_HISTORY_ENTRIES];
+
 /**
  * @brief updates the history file with the specified ID on name
  * @param name ELF ID to update history, should not be longer than 16 chars
  * @see HistoryEntry.name
-*/
+ */
 void UpdatePlayHistory(const char *name);
 
 // Low-level functions. Use them for writing your own functions (i.e. writing your own boot animation).
 int LoadHistoryFile(int port);
 int SaveHistoryFile(int port);
+
+#endif

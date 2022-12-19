@@ -1,5 +1,6 @@
 #include <errno.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include <kernel.h>
 #include <libmc.h>
 #include <libcdvd.h>
@@ -7,7 +8,9 @@
 #include <string.h>
 #include <stdio.h>
 #include "OSDInit.h"
+#include "util.h"
 #include "OSDHistory.h"
+#include "debugprintf.h"
 #include <stdlib.h>
 
 /*  The OSDs have this weird bug whereby the size of the icon file is hardcoded to 1776 bytes... even though that is way too long!
@@ -16,6 +19,7 @@
 
 #define NUM_TABLES       1024
 #define HISTORY_PATH_LEN 1024
+
 
 extern unsigned char icon_sys_A[];
 extern unsigned char icon_sys_J[];
@@ -34,8 +38,10 @@ extern int currentSecond;
 extern int currentMinute; */
 
 static int HasTooManyHistoryRecords;
-static struct HistoryEntry HistoryEntries[MAX_HISTORY_ENTRIES], OldHistoryEntry;
+static struct HistoryEntry OldHistoryEntry;
+struct HistoryEntry HistoryEntries[MAX_HISTORY_ENTRIES];
 
+#ifdef F_WriteHistoryFile
 static int WriteHistoryFile(int port, const char *path, const void *buffer, int len, int append)
 {
     int fd, result, size;
@@ -84,7 +90,9 @@ static int WriteHistoryFile(int port, const char *path, const void *buffer, int 
     } else
         return fd;
 }
+#endif
 
+#ifdef F_McCheckFileExists
 static int McCheckFileExists(int port, const char *path)
 {
     int fd, result;
@@ -101,31 +109,28 @@ static int McCheckFileExists(int port, const char *path)
     } else
         return 0;
 }
+#endif
 
 int LoadHistoryFile(int port)
 {
     char fullpath[64];
-    int fd, result, result2, type, format;
+    int fd, result, type, format;
 
-    sceMcGetInfo(port, 0, &type, NULL, &format);
-    sceMcSync(0, NULL, &result);
+    mcGetInfo(port, 0, &type, NULL, &format);
+    mcSync(0, NULL, &result);
 
     if (result < sceMcResChangedCard || type != sceMcTypePS2 || format == 0)
         return -1;
 
-    sprintf(fullpath, "%s/%s", OSDGetHistoryDataFolder(), "history");
-    fd = sceMcOpen(port, 0, fullpath, O_RDONLY);
-    sceMcSync(0, NULL, &fd);
-
+    sprintf(fullpath, "mc%d:/%s/%s", port,  OSDGetHistoryDataFolder(), "history");
+    fd = open(fullpath, O_RDONLY);
+    result = 0;
     if (fd >= 0) {
-        sceMcRead(fd, HistoryEntries, MAX_HISTORY_ENTRIES * sizeof(struct HistoryEntry));
-        sceMcSync(0, NULL, &result);
+        if (read(fd, HistoryEntries, MAX_HISTORY_ENTRIES * sizeof(struct HistoryEntry)) != (MAX_HISTORY_ENTRIES * sizeof(struct HistoryEntry)))
+            result = -EIO;
 
-        // Original had duplicated this block.
-        sceMcClose(fd);
-        sceMcSync(0, NULL, &result2);
-
-        return ((result >= 0) ? (result2 >= 0 ? 0 : -1) : result);
+        close(fd);
+        return result;
     } else
         result = fd;
 
@@ -134,7 +139,67 @@ int LoadHistoryFile(int port)
 
 int SaveHistoryFile(int port)
 {
-    /// TODO: Rewrite me please!
+    char DATAPATH[32], ICONSYS[32];
+    int fd, format, mctype, mem;
+    //dont write to anything that is not a formatted ps2 card
+    mcGetInfo(port, 0, &mctype, &mem, &format);
+    mcSync(0, NULL, NULL);
+    if ((mctype != sceMcTypePS2) || (format != MC_FORMATTED) || (mem < HISTORY_SIZE)) { // don't even waste time if there are no PS2 MC's
+        DPRINTF("\tmemcard on slot %d is not a formatted PS2 Card!\n");
+        return -1;
+    }
+    // init paths
+    sprintf(DATAPATH, "mc%d:/%s/history", port, OSDGetSystemDataFolder());
+    sprintf(ICONSYS , "mc%d:/%s/icon.sys", port, OSDGetSystemDataFolder());
+
+    if ((fd = open(DATAPATH, O_CREAT | O_TRUNC | O_WRONLY)) < 0)
+    { // huh? try to make folder
+        mcMkDir(port, 0, OSDGetSystemDataFolder());
+        mcSync(0, NULL, NULL);
+
+        if ((fd = open(DATAPATH, O_CREAT | O_TRUNC | O_WRONLY)) < 0) // again? leave the fucker alone
+            return -1;
+    }
+
+    if (write(fd, HistoryEntries, HISTORY_SIZE) != HISTORY_SIZE)
+    {
+        close(fd); // here we quit, if we can't write 462 miserable bytes don't even waste time with the rest
+        return -1;
+    }
+    close(fd);
+
+    if (HasTooManyHistoryRecords) { // history is full and the entry is a new one
+        strcat(DATAPATH, ".old");
+        if ((fd = open(DATAPATH, O_CREAT | O_WRONLY | O_APPEND)) < 0) // the least used entry will be taken out to make space
+        {
+            //what now?
+        } else {
+            write(fd, &OldHistoryEntry, sizeof(struct HistoryEntry)); // exile the entry to history.old
+            close(fd);
+        }
+    }
+
+    if (!exist(ICONSYS)) // leave this one for the end, so if writing failed and folder was created it remains without icon (OSD deems it as corrupted data)
+    {
+        if ((fd = open(ICONSYS, O_CREAT | O_TRUNC | O_WRONLY)) < 0)
+        {
+            //what now?
+        } else {
+            switch (OSDGetConsoleRegion()) { // The original may have used simple if/else blocks, as it called OSDGetConsoleRegion() multiple times.
+                case CONSOLE_REGION_JAPAN:
+                    write(fd, icon_sys_J, SYSDATA_ICON_SYS_SIZE);
+                    break;
+                case CONSOLE_REGION_CHINA:
+                    write(fd, icon_sys_C, SYSDATA_ICON_SYS_SIZE);
+                    break;
+                default: // Others (US, Europe & Asia)
+                    write(fd, icon_sys_A, SYSDATA_ICON_SYS_SIZE);
+            }
+            close(fd);
+        }
+    }
+    /// TODO: Check if i work on real HW please!
+    return 0;
 }
 
 static u16 GetTimestamp(void)

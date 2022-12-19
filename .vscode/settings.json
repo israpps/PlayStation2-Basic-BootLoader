@@ -1,5 +1,6 @@
 {
     "files.associations": {
+        "*.make": "makefile",
         "stdlib.h": "c",
         "unistd.h": "c",
         "libpad.h": "c",
@@ -8,6 +9,8 @@
         "debugprintf.h": "c",
         "libcdvd_add.h": "c",
         "iopcontrol_special.h": "c",
-        "osdconfig.h": "c"
+        "osdconfig.h": "c",
+        "osdhistory.h": "c",
+        "ps2_sio2man_driver.h": "c"
     }
 }

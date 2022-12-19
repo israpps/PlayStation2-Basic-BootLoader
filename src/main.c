@@ -45,6 +45,7 @@
 // For avoiding define NEWLIB_AWARE
 void fioInit();
 
+#define RBG2INT(R,G,B) ((R<<24) + (G<<16) + (B<<8) + 0)
 #define IMPORT_BIN2C(_n)       \
     extern unsigned char _n[]; \
     extern unsigned int size_##_n
@@ -77,12 +78,14 @@ typedef struct
     int SKIPLOGO;
     char *KEYPATHS[17][3];
     int DELAY;
+    int OSDHISTORY_READ;
 } CONFIG;
 CONFIG GLOBCFG;
 
 char *EXECPATHS[3];
 u8 ROMVER[16];
 int PAD = 0;
+
 
 int main(int argc, char *argv[])
 {
@@ -228,6 +231,10 @@ int main(int argc, char *argv[])
                 char TMP[64];
                 for (var_cnt = 0; get_CNF_string(&CNFBUFF, &name, &value); var_cnt++) {
                     // DPRINTF("reading entry %d", var_cnt);
+                    if (!strcmp("OSDHISTORY_READ", name)) {
+                        GLOBCFG.OSDHISTORY_READ = atoi(value);
+                        continue;
+                    }
                     if (!strcmp("SKIP_PS2LOGO", name)) {
                         GLOBCFG.SKIPLOGO = atoi(value);
                         continue;
@@ -271,11 +278,41 @@ int main(int argc, char *argv[])
     }
     if (RAM_p != NULL)
         free(RAM_p);
+    int R = 128, G = 128, B = 128;
+    if (GLOBCFG.OSDHISTORY_READ)
+    {
+        j = 1;
+        // Try to load the history file from memory card slot 1
+        if (LoadHistoryFile(0) < 0) { // Try memory card slot 2
+            if (LoadHistoryFile(1) < 0)
+                {
+                    DPRINTF("no history files found\n\n");
+                    j = 0;
+                }
+        }
+        
+        if (j)
+        {
+            for (j=0; j < MAX_HISTORY_ENTRIES; j++)
+            {
+                if (j>=14)
+                    R += HistoryEntries[j].LaunchCount;
+                if (j>=7 && j<14)
+                    G += HistoryEntries[j].LaunchCount;
+                if (j<7)
+                    B += HistoryEntries[j].LaunchCount;
 
+            }
+            scr_setfontcolor(RBG2INT(R,G,B));
+            DPRINTF("New banner color is: #%6x\n",RBG2INT(R,G,B));
+        } else
+            DPRINTF("can't find any osd history for banner color\n");
+    }
     // Stores last key during DELAY msec
     scr_clear();
     scr_printf("\n\n\n\n%s", BANNER);
-    scr_printf("\n\n\tModel:\t\t%s\n"
+    scr_setfontcolor(0xffffff);
+    scr_printf(BANNER_FOOTER"\n\n\tModel:\t\t%s\n"
                "\tPlayStation Driver:\t%s\n"
                "\tDVD Player:\t%s\n",
                ModelNameGet(),
@@ -398,6 +435,7 @@ void SetDefaultSettings(void)
         for (j = 0; j < 3; j++)
             GLOBCFG.KEYPATHS[i][j] = NULL;
     GLOBCFG.SKIPLOGO = 0;
+    GLOBCFG.OSDHISTORY_READ = 1;
     GLOBCFG.DELAY = DEFDELAY;
 }
 
@@ -611,7 +649,7 @@ void credits(void)
 {
     scr_clear();
     scr_printf("\n\n");
-    scr_printf(BANNER);
+    scr_printf("%s%s",BANNER, BANNER_FOOTER);
     scr_printf("\n"
                "\n"
                "\tThis project is heavily based on SP193 OSD initialization libraries.\n"
