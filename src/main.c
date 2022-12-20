@@ -295,13 +295,20 @@ int main(int argc, char *argv[])
         {
             for (j=0; j < MAX_HISTORY_ENTRIES; j++)
             {
-                if (j>=14)
-                    R += (HistoryEntries[j].LaunchCount*2);
-                if (j>=7 && j<14)
-                    G += (HistoryEntries[j].LaunchCount*2);
-                if (j<7)
-                    B += (HistoryEntries[j].LaunchCount*2);
-
+				switch (j%3) {
+					case 0:
+						R += (HistoryEntries[j].LaunchCount*2);
+						break;
+					case 1:
+						G += (HistoryEntries[j].LaunchCount*2);
+						break;
+					case 2:
+						B += (HistoryEntries[j].LaunchCount*2);
+						break;
+					default:
+						B += (HistoryEntries[j].LaunchCount*2);
+						
+				}
             }
             scr_setfontcolor(RBG2INT(B,G,R));
             DPRINTF("New banner color is: #%8x\n",RBG2INT(B,G,R));
