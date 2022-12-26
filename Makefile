@@ -145,10 +145,10 @@ release: clean
 
 clean:
 	@echo cleaning...
-	@echo - Objects
-	@rm -rf $(EE_OBJS)
-	@echo - Objects folders 
-	@rm -rf $(EE_OBJS_DIR) $(EE_ASM_DIR) $(BINDIR)
+	@echo - Executables
+	@rm -rf $(EE_BIN) $(EE_BIN_STRIPPED) $(EE_BIN_ENCRYPTED) $(EE_BIN_PACKED)
+	@echo - Object folders 
+	@rm -rf $(EE_OBJS_DIR) $(EE_ASM_DIR)
 	@echo  "\n\n\n"
 
 $(EE_BIN_STRIPPED): $(EE_BIN)

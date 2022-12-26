@@ -68,6 +68,7 @@ static void AlarmCallback(s32 alarm_id, u16 time, void *common);
 int dischandler();
 void CDVDBootCertify(u8 romver[16]);
 void credits(void);
+void CleanUp(void);
 
 #ifdef PSX
 static void InitPSX();
