@@ -323,7 +323,7 @@ int main(int argc, char *argv[])
     scr_printf(BANNER_FOOTER"\n\n\tModel:\t\t%s\n"
                "\tPlayStation Driver:\t%s\n"
                "\tDVD Player:\t%s\n"
-			   "\tConfig source %d\n",
+			   "\tConfig source:\t%d\n",
                ModelNameGet(),
                PS1DRVGetVersion(),
                DVDPlayerGetVersion(),
