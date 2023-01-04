@@ -41,7 +41,11 @@ Unsigned executables can be freely loaded from memory card and USB (both FAT32 a
 
 ## Running Discs
 
-PS2BBL can run PS1, PS2 and DVD Discs
+PS2BBL can run PS1, PS2 and DVD Discs.
+
+simply execute the `$CDVD` (or `$CDVD_NO_PS2LOGO`) commands to run a disc.
+
+It does not matter if you insert the disc before or after the command is executed
 
 ### PS2 discs
 
@@ -58,3 +62,14 @@ Unlike FreeMcBoot, PS2BBL has USB drivers embedded in binary, lowering your chan
 
 and to make things better...
 the impact on program size was just ~`3kb`!
+
+## Applications Execution
+
+Unsigned ELF files can be executed from memory card (any port), USB devices (fat32 or exfat) and board software (ROM)
+
+The device names are:
+- `mc0:/`: Memory Card 1
+- `mc1:/`: Memory Card 2
+- `mc?:/`: Pseudo-device used to search on both Memory Cards ports
+- `mass:/`: first compatible usb device that was mapped by the USBMASS driver
+- `rom0:`: console main ROM memory. holds software (such as `OSDSYS` and `TESTMODE`), system information, configurations and lots of IRX modules.
