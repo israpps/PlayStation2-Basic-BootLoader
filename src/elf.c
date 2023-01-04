@@ -8,6 +8,7 @@
 #include <tamtypes.h>
 #include <sifrpc.h>
 #include <kernel.h>
+#include <elf-loader.h>
 #define MAX_PATH 1025
 
 extern unsigned char loader_elf[];
@@ -17,7 +18,7 @@ extern int size_loader_elf;
 #define ELF_MAGIC   0x464c457f
 #define ELF_PT_LOAD 1
 
-//------------------------------
+/*
 typedef struct
 {
     u8 ident[16]; // struct definition for ELF object header
@@ -47,6 +48,7 @@ typedef struct
     u32 flags;
     u32 align;
 } elf_pheader_t;
+*/
 //--------------------------------------------------------------
 // End of data declarations
 //--------------------------------------------------------------
@@ -56,7 +58,7 @@ typedef struct
 // Modified version of loader from Independence
 //	(C) 2003 Marcus R. Brown <mrbrown@0xd6.org>
 //--------------------------------------------------------------
-int checkELFheader(char *path)
+/*int checkELFheader(char *path)
 {
     elf_header_t elf_head;
     u8 *boot_elf = (u8 *)&elf_head;
@@ -127,7 +129,7 @@ int checkELFheader(char *path)
     return 1; // return 1 for successful check
 error:
     return -1; // return -1 for failed check
-}
+}*/
 //------------------------------
 // End of func:  int checkELFheader(const char *path)
 //--------------------------------------------------------------
@@ -139,12 +141,12 @@ error:
 void RunLoaderElf(char *filename, char *party)
 {
     printf("--------------------------\nLOADING [%s]\n--------------------------", filename);
-    u8 *boot_elf;
-    elf_header_t *eh;
-    elf_pheader_t *eph;
-    void *pdata;
+    // u8 *boot_elf;
+    // elf_header_t *eh;
+    // elf_pheader_t *eph;
+    // void *pdata;
     int i;
-    char *argv[2];
+    char *argv[1];
 #ifdef HDD_SUPPORT
     char *bootpath[256];
     if ((!strncmp(party, "hdd0:", 5)) && (!strncmp(filename, "pfs0:", 5))) {
@@ -162,8 +164,7 @@ void RunLoaderElf(char *filename, char *party)
             sprintf(bootpath, "%s:%s", party, filename);
         }
 
-        argv[0] = filename;
-        argv[1] = bootpath;
+        argv[0] = bootpath;
 #endif
 #ifdef DVRHDD_SUPPORT
     } else if ((!strncmp(party, "dvr_hdd0:", 9)) && (!strncmp(filename, "dvr_pfs0:", 9))) {
@@ -182,45 +183,15 @@ void RunLoaderElf(char *filename, char *party)
             sprintf(bootpath, "%s:%s", party, filename);
         }
 
-        argv[0] = filename;
-        argv[1] = bootpath;
+        argv[0] = bootpath;
     } else {
         argv[0] = filename;
-        argv[1] = filename;
     }
 #else
     argv[0] = filename;
-    argv[1] = filename;
 #endif
 
-    /* NB: LOADER.ELF is embedded  */
-    boot_elf = (u8 *)loader_elf;
-    eh = (elf_header_t *)boot_elf;
-    if (_lw((u32)&eh->ident) != ELF_MAGIC)
-        asm volatile("break\n");
-
-    eph = (elf_pheader_t *)(boot_elf + eh->phoff);
-
-    /* Scan through the ELF's program headers and copy them into RAM, then
-                                    zero out any non-loaded regions.  */
-    for (i = 0; i < eh->phnum; i++) {
-        if (eph[i].type != ELF_PT_LOAD)
-            continue;
-
-        pdata = (void *)(boot_elf + eph[i].offset);
-        memcpy(eph[i].vaddr, pdata, eph[i].filesz);
-
-        if (eph[i].memsz > eph[i].filesz)
-            memset((void *)(((u8 *)(eph[i].vaddr)) + eph[i].filesz), 0,
-                   eph[i].memsz - eph[i].filesz);
-    }
-
-    /* Let's go.  */
-    SifExitRpc();
-    FlushCache(0);
-    FlushCache(2);
-
-    ExecPS2((void *)eh->entry, NULL, 2, argv);
+    LoadELFFromFile(filename, 1, argv);
 }
 //------------------------------
 // End of func:  void RunLoaderElf(char *filename, char *party)
