@@ -43,6 +43,8 @@ the program supports the following config entries
 - `SKIP_PS2LOGO`: wether to run ps2 games via `rom0:PS2LOGO` or by running the game executable itself
 - `KEY_READ_WAIT_TIME`: time (in miliseconds) that the program should wait for a key press before arbitrarly loading the `AUTO` launch keys
 - `OSDHISTORY_READ`: wether to change or not the program logo color (color is calculated with OSD play history record from memory card)
+- `EJECT_TRAY`: wether to eject the console tray or not the first time the disc handler detects the tray is empty
+
 ## supported commands
 
 - `$CDVD`: execute disc respecting the value passed to `SKIP_PS2LOGO` on config
@@ -56,6 +58,7 @@ the program supports the following config entries
 ```ini
 #PlayStation2 Basic Bootloader config file
 SKIP_PS2LOGO = 0
+EJECT_TRAY = 1
 KEY_READ_WAIT_TIME = 3000
 LK_AUTO_E1 = mc?:/APPS/OPNPS2LD.ELF
 LK_AUTO_E2 = mc?:/OPL/OPNPS2LD.ELF
