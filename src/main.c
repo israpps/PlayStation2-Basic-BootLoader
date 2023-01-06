@@ -80,6 +80,7 @@ typedef struct
     char *KEYPATHS[17][3];
     int DELAY;
     int OSDHISTORY_READ;
+    int TRAYEJECT;
 } CONFIG;
 CONFIG GLOBCFG;
 
@@ -242,6 +243,10 @@ int main(int argc, char *argv[])
                     }
                     if (!strcmp("KEY_READ_WAIT_TIME", name)) {
                         GLOBCFG.DELAY = atoi(value);
+                        continue;
+                    }
+                    if (!strcmp("EJECT_TRAY", name)) {
+                        GLOBCFG.TRAYEJECT = atoi(value);
                         continue;
                     }
                     for (x = 0; x < 17; x++) {
@@ -447,11 +452,12 @@ void SetDefaultSettings(void)
     GLOBCFG.SKIPLOGO = 0;
     GLOBCFG.OSDHISTORY_READ = 1;
     GLOBCFG.DELAY = DEFDELAY;
+    GLOBCFG.TRAYEJECT = 0;
 }
 
 int dischandler()
 {
-    int OldDiscType, DiscType, ValidDiscInserted, result;
+    int OldDiscType, DiscType, ValidDiscInserted, result, first_run = 1;
     u32 STAT;
 
     scr_clear();
@@ -475,6 +481,12 @@ int dischandler()
 
             switch (DiscType) {
                 case SCECdNODISC:
+                    if (first_run)
+                    {
+                        if (GLOBCFG.TRAYEJECT) // if tray eject is allowed on empty tray...
+                            sceCdTrayReq(0, NULL);
+                        first_run = 0;
+                    }
                     scr_setfontcolor(0x0000ff);
                     scr_printf("No Disc\n");
                     scr_setfontcolor(0xffffff);
