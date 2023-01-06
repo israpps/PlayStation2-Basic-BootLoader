@@ -10,6 +10,7 @@
     #define DPRINTF(x...) scr_printf("\t"x)
 #else
     #define DPRINTF(x...)
+    #define NO_DPRINTF
 #endif
 
 #endif //DEBUG_PRINTF

@@ -1,4 +1,3 @@
-.SILENT:
 define HEADER
 __________  _________________   ____________________.____     
 \______   \/   _____/\_____  \  \______   \______   \    |    
@@ -12,11 +11,14 @@ export HEADER
 
 
 # ---{BUILD CFG}--- #
-
+HAS_LOCAL_IRX = 1 # whether to embed or not non vital IRX (wich will be loaded from memcard files)
+DEBUG ?= 0
 PSX ?= 0 # PSX DESR support
 PROHBIT_DVD_0100 ?= 0 # prohibit the DVD Players v1.00 and v1.01 from being booted.
 XCDVD_READKEY ?= 0 # Enable the newer sceCdReadKey checks, which are only supported by a newer CDVDMAN module.
-
+USE_ROM_PADMAN ?= 1
+USE_ROM_MCMAN ?= 1
+USE_ROM_SIO2MAN ?= 1
 # Just one print should be enabled
 SCR_PRINT ?= 0
 EE_SIO ?= 0
@@ -51,9 +53,10 @@ EE_SRC_DIR = src/
 EE_ASM_DIR = asm/
 
 EE_OBJS = main.o \
-          pad.o util.o elf.o timer.o ps2.o ps1.o dvdplayer.o \
+          util.o elf.o timer.o ps2.o ps1.o dvdplayer.o \
           modelname.o libcdvd_add.o OSDHistory.o OSDInit.o OSDConfig.o \
-          $(EMBEDDED_STUFF)
+          $(EMBEDDED_STUFF) \
+		      $(IOP_OBJS)
 
 EMBEDDED_STUFF = icon_sys_A.o icon_sys_J.o icon_sys_C.o
 
@@ -61,11 +64,15 @@ EE_CFLAGS = -Wall
 EE_CFLAGS += -fdata-sections -ffunction-sections
 EE_LDFLAGS += -L$(PS2SDK)/ports/lib
 EE_LDFLAGS += -Wl,--gc-sections -Wno-sign-compare
-EE_LIBS += -ldebug -lmc -lps2_drivers -lpatches
+EE_LIBS += -ldebug -lmc -lpatches
 EE_INCS += -Iinclude -I$(PS2SDK)/ports/include
 EE_CFLAGS += -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DPATCHLEVEL=\"$(PATCHLEVEL)\" -DSTATUS=\"$(STATUS)\"
 
 # ---{ CONDITIONS }--- #
+
+ifneq ($(DEBUG),1)
+   .SILENT:
+endif
 
 ifeq ($(PSX),1)
   BASENAME = PSXBBL
@@ -86,6 +93,32 @@ else
   SCR_PRINT = 0 # not a debug build? Make sure DPRINTF is disabled 
   EE_SIO = 0
   PCSX2 = 0
+endif
+
+ifeq ($(USE_ROM_PADMAN), 1)
+  EE_CFLAGS += -DUSE_ROM_PADMAN
+  EE_LIBS += -lpad
+  EE_OBJS += pad.o
+else
+  EE_OBJS += pad.o padman_irx.o
+  EE_LIBS += -lpadx
+endif
+
+ifeq ($(USE_ROM_MCMAN), 1)
+  EE_CFLAGS += -DUSE_ROM_MCMAN
+else
+  EE_OBJS ?= mcman_irx.o mcserv_irx.o
+endif
+
+ifeq ($(USE_ROM_SIO2MAN), 1)
+  EE_CFLAGS += -DUSE_ROM_SIO2MAN
+else
+  EE_OBJS ?= sio2man_irx.o
+endif
+
+ifneq ($(HAS_LOCAL_IRX), 1)
+  EE_OBJS += usbd_irx.o bdm_irx.o bdmfs_fatfs_irx.o usbmass_bd_irx.o
+  EE_CFLAGS += -DHAS_EMBEDDED_IRX
 endif
 
 ifeq ($(DUMMY_TIMEZONE), 1)
@@ -127,19 +160,22 @@ ifeq ($(PROHBIT_DVD_0100),1)
 endif
 
 # ---{ RECIPES }--- #
-.PHONY: greeting debug all clean kelf
+.PHONY: greeting debug all clean kelf packed release
 
+rebuild: clean packed
 all: $(EE_BIN)
+packed: $(EE_BIN_PACKED)
 
 greeting:
-	@echo built PS2BBL PSX=$(PSX)
+	@echo built PS2BBL PSX=$(PSX), LOCAL_IRX=$(HAS_LOCAL_IRX), DEBUG=$(DEBUG)
 	@echo PROHBIT_DVD_0100=$(PROHBIT_DVD_0100), XCDVD_READKEY=$(XCDVD_READKEY)
 	@echo KERNEL_NOPATCH=$(KERNEL_NOPATCH), NEWLIB_NANO=$(NEWLIB_NANO)
 	@echo binaries dispatched to $(BINDIR)
 	@echo printf: printf=$(PCSX2), eesio=$(EE_SIO), scr_printf=$(SCR_PRINT)
+	@echo $(EE_OBJS)
 
-release: clean
-	$(MAKE) $(EE_BIN_PACKED)
+
+release: clean $(EE_BIN_PACKED)
 	$(MAKE) greeting
 	@echo "$$HEADER"
 
@@ -177,11 +213,15 @@ $(BINDIR):
 	@mkdir -p $@
 
 $(EE_OBJS_DIR)%.o: $(EE_SRC_DIR)%.c | $(EE_OBJS_DIR)
+ifneq ($(DEBUG),1)
 	@echo "  - $@"
+endif
 	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
 
 $(EE_OBJS_DIR)%.o: $(EE_ASM_DIR)%.s | $(EE_OBJS_DIR)
+ifneq ($(DEBUG),1)
 	@echo "  - $@"
+endif
 	$(EE_AS) $(EE_ASFLAGS) $< -o $@
 #
 

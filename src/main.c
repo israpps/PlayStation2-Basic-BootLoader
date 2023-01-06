@@ -37,10 +37,10 @@
 #include "modelname.h"
 #include "banner.h"
 
-#include <ps2_sio2man_driver.h>
-#include <ps2_memcard_driver.h>
-#include <ps2_joystick_driver.h>
-#include <ps2_usb_driver.h>
+#ifdef PSX
+#include <iopcontrol_special.h>
+#include "psx/plibcdvd_add.h"
+#endif
 
 // For avoiding define NEWLIB_AWARE
 void fioInit();
@@ -50,12 +50,26 @@ void fioInit();
     extern unsigned char _n[]; \
     extern unsigned int size_##_n
 
+// --------------- IRX/IOPRP extern --------------- //
 #ifdef PSX
 IMPORT_BIN2C(psx_ioprp);
-#include <iopcontrol_special.h>
-#include "psx/plibcdvd_add.h"
 #endif
+IMPORT_BIN2C(sio2man_irx);
+IMPORT_BIN2C(mcman_irx);
+IMPORT_BIN2C(mcserv_irx);
+IMPORT_BIN2C(padman_irx);
 
+#ifdef HAS_EMBEDDED_IRX
+IMPORT_BIN2C(usbd_irx);
+#ifdef NO_BDM
+IMPORT_BIN2C(usb_mass_irx);
+#else
+IMPORT_BIN2C(bdm_irx);
+IMPORT_BIN2C(bdmfs_fatfs_irx);
+IMPORT_BIN2C(usbmass_bd_irx);
+#endif // NO_BDM
+#endif // HAS_EMBEDDED_IRX
+// --------------- func defs --------------- //
 void RunLoaderElf(char *filename, char *party);
 void EMERGENCY(void);
 void ResetIOP(void);
@@ -69,11 +83,13 @@ int dischandler();
 void CDVDBootCertify(u8 romver[16]);
 void credits(void);
 void CleanUp(void);
-
+void LoadUSBIRX(void);
 #ifdef PSX
 static void InitPSX();
 #endif
 
+
+// --------------- glob stuff --------------- //
 typedef struct
 {
     int SKIPLOGO;
@@ -103,28 +119,42 @@ int main(int argc, char *argv[])
     SifLoadFileInit();
     fioInit(); // NO scr_printf BEFORE here
     init_scr();
+    scr_printf(".\n"); // GBS control does not detect image output with scr debug till the first char is printed
+    // print a simple dot here to represent the program start, and to allow gbs control to display image before banner and pad timeout begins to run
     scr_setCursor(0);
     DPRINTF("enabling LoadModuleBuffer\n");
     sbv_patch_enable_lmb(); // The old IOP kernel has no support for LoadModuleBuffer. Apply the patch to enable it.
 
     DPRINTF("disabling MODLOAD device blacklist/whitelist\n");
     sbv_patch_disable_prefix_check(); /* disable the MODLOAD module black/white list, allowing executables to be freely loaded from any device. */
-    DPRINTF("Loading SIO2MAN Drivers:\n");
-    j = (int) init_sio2man_driver();
-    DPRINTF(" SIO2MAN Drivers: %d\n", j);
-
-    DPRINTF("Loading MemCard Drivers:\n");
-    j = (int) init_memcard_driver(0);
-    DPRINTF(" MemCard Drivers: %d\n", j);
+#ifdef USE_ROM_SIO2MAN
+    j = SifLoadModule("rom0:SIO2MAN", 0, NULL);
+    DPRINTF(" [SIO2MAN.IRX]: %d\n", j);
+#else
+    j = SifExecModuleBuffer(sio2man_irx, size_sio2man_irx, 0, NULL, &x);
+    DPRINTF(" [SIO2MAN.IRX]: ret=%d, ID=%d\n", j, x);
+#endif
+#ifdef USE_ROM_MCMAN
+    j = SifLoadModule("rom0:MCMAN", 0, NULL);
+    DPRINTF(" [MCMAN.IRX]: %d\n", j);
+    j = SifLoadModule("rom0:MCSERV", 0, NULL);
+    DPRINTF(" [MCSERV.IRX]: %d\n", j);
+    mcInit(MC_TYPE_MC);
+#else
+    j = SifExecModuleBuffer(mcman_irx, size_mcman_irx, 0, NULL, &x);
+    DPRINTF(" [MCMAN.IRX]: ret=%d, ID=%d\n", j, x);
+    j = SifExecModuleBuffer(mcserv_irx, size_mcserv_irx, 0, NULL, &x);
+    DPRINTF(" [MCSERV.IRX]: ret=%d, ID=%d\n", j, x);
     mcInit(MC_TYPE_XMC);
-
-    DPRINTF("Loading Joystick Drivers:\n");
-    j = (int) init_joystick_driver(0);
-    DPRINTF(" Joystick Drivers: %d\n", j);
-
-    DPRINTF("Loading USB Drivers:\n");
-    j = (int) init_usb_driver();
-    DPRINTF(" USB Drivers: %d\n", j);
+#endif
+#ifdef USE_ROM_PADMAN
+    j = SifLoadModule("rom0:PADMAN", 0, NULL);
+    DPRINTF(" [PADMAN.IRX]: %d\n", j);
+#else
+    j = SifExecModuleBuffer(padman_irx, size_padman_irx, 0, NULL, &x);
+    DPRINTF(" [PADMAN.IRX]: ret=%d, ID=%d\n", j, x);
+#endif
+    LoadUSBIRX();
 
     if ((fd = open("rom0:ROMVER", O_RDONLY)) >= 0) {
         read(fd, ROMVER, sizeof(ROMVER));
@@ -148,6 +178,7 @@ int main(int argc, char *argv[])
     DPRINTF("init OSD\n");
     InitOsd(); // Initialize OSD so kernel patches can do their magic
 
+    DPRINTF("init ROMVER, model name ps1dvr and dvdplayer ver\n");
     OSDInitROMVER(); // Initialize ROM version (must be done first).
     ModelNameInit(); // Initialize model name
     PS1DRVInit();    // Initialize PlayStation Driver (PS1DRV)
@@ -166,21 +197,25 @@ int main(int argc, char *argv[])
 
     /*  Try to enable the remote control, if it is enabled.
         Indicate no hardware support for it, if it cannot be enabled. */
-    DPRINTF("trying to enable remote control...\n");
+    DPRINTF("trying to enable remote control");
     do {
+        DPRINTF(".");
         result = sceCdRcBypassCtl(OSDConfigGetRcGameFunction() ^ 1, &STAT);
         if (STAT & 0x100) { // Not supported by the PlayStation 2.
             // Note: it does not seem like the browser updates the NVRAM here to change this status.
             OSDConfigSetRcEnabled(0);
             OSDConfigSetRcSupported(0);
+            DPRINTF("\n");
             break;
         }
     } while ((STAT & 0x80) || (result == 0));
 
     // Remember to set the video output option (RGB or Y Cb/Pb Cr/Pr) accordingly, before SetGsCrt() is called.
+    DPRINTF("Setting vmode\n");
     SetGsVParam(OSDConfigGetVideoOutput() == VIDEO_OUTPUT_RGB ? VIDEO_OUTPUT_RGB : VIDEO_OUTPUT_COMPONENT); 
+    DPRINTF("Init pads\n");
     PadInitPads();
-    
+    DPRINTF("Init timer and wait for rescue mode key\n");
     TimerInit();
     tstart = Timer();
     while (Timer() <= (tstart + 2000)) {
@@ -189,7 +224,7 @@ int main(int argc, char *argv[])
             EMERGENCY();
     }
     TimerEnd();
-
+    DPRINTF("load default settings\n");
     SetDefaultSettings();
     FILE *fp;
     DPRINTF("Reading settings...\n");
@@ -333,7 +368,7 @@ int main(int argc, char *argv[])
                PS1DRVGetVersion(),
                DVDPlayerGetVersion(),
 			   config_source);
-
+    DPRINTF("Setting vmode\n");
     TimerInit();
     tstart = Timer();
     while (Timer() <= (tstart + GLOBCFG.DELAY)) {
@@ -454,6 +489,62 @@ void SetDefaultSettings(void)
     GLOBCFG.DELAY = DEFDELAY;
     GLOBCFG.TRAYEJECT = 0;
 }
+
+void LoadUSBIRX(void)
+{
+
+#ifndef NO_DPRINTF
+    int TMP;
+    #define ATMP TMP = 
+#else
+    #define ATMP
+#endif
+    int x;
+
+// ------------------------------------------------------------------------------------ //
+#ifdef HAS_EMBEDDED_IRX
+    ATMP SifExecModuleBuffer(bdm_irx, size_bdm_irx, 0, NULL, &x);
+#else
+    ATMP loadIRXFile("mc?:/PS2BBL/BDM.IRX", 0, NULL, &x);
+#endif
+    DPRINTF(" [BDM.IRX]: ret=%d, ID=%d\n", TMP, x);
+// ------------------------------------------------------------------------------------ //
+#ifdef HAS_EMBEDDED_IRX
+    ATMP SifExecModuleBuffer(bdmfs_fatfs_irx, size_bdmfs_fatfs_irx, 0, NULL, &x);
+#else
+    ATMP loadIRXFile("mc?:/PS2BBL/BDMFS_FATFS.IRX", 0, NULL, &x);
+#endif
+    DPRINTF(" [BDMFS_FATFS.IRX]: ret=%d, ID=%d\n", TMP, x);
+// ------------------------------------------------------------------------------------ //
+#ifdef HAS_EMBEDDED_IRX
+    ATMP SifExecModuleBuffer(usbd_irx, size_usbd_irx, 0, NULL, &x);
+#else
+    ATMP loadIRXFile("mc?:/PS2BBL/USBD.IRX", 0, NULL, &x);
+#endif
+    delay(3);
+    DPRINTF(" [USBD.IRX]: ret=%d, ID=%d\n", TMP, x);
+// ------------------------------------------------------------------------------------ //
+#ifdef HAS_EMBEDDED_IRX
+    ATMP SifExecModuleBuffer(usbmass_bd_irx, size_usbmass_bd_irx, 0, NULL, &x);
+#else
+    ATMP loadIRXFile("mc?:/PS2BBL/USBMASS_BD.IRX", 0, NULL, &x);
+#endif
+    DPRINTF(" [USBMASS_BD.IRX]: ret=%d, ID=%d\n", TMP, x);
+// ------------------------------------------------------------------------------------ //
+    struct stat buffer;
+    int ret = -1;
+    int retries = 50;
+
+    while(ret != 0 && retries > 0)
+    {
+        ret = stat("mass:/", &buffer);
+        /* Wait until the device is ready */
+        nopdelay();
+
+        retries--;
+    }
+}
+
 
 int dischandler()
 {

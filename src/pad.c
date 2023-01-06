@@ -4,6 +4,7 @@
 #include <string.h>
 #include <tamtypes.h>
 
+#include "debugprintf.h"
 #include "pad.h"
 
 static unsigned char padArea[2][256] ALIGNED(64);
@@ -12,8 +13,11 @@ int pad_inited = 0;
 
 void PadInitPads(void)
 {
+    DPRINTF("%s: padinit\n", __FUNCTION__);
     padInit(0);
+    DPRINTF("%s: padPortOpen(0, 0, padArea[0])\n", __FUNCTION__);
     padPortOpen(0, 0, padArea[0]);
+    DPRINTF("%s: padPortOpen(1, 0, padArea[1])\n", __FUNCTION__);
     padPortOpen(1, 0, padArea[1]);
 
     old_pad[0] = 0;
