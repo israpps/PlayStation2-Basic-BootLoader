@@ -119,9 +119,9 @@ int main(int argc, char *argv[])
     SifLoadFileInit();
     fioInit(); // NO scr_printf BEFORE here
     init_scr();
+    scr_setCursor(0);//get rid of that cursor.
     scr_printf(".\n"); // GBS control does not detect image output with scr debug till the first char is printed
-    // print a simple dot here to represent the program start, and to allow gbs control to display image before banner and pad timeout begins to run
-    scr_setCursor(0);
+    // print a simple dot here to represent the program start, and to allow gbs control to start displaying video before banner and pad timeout begins to run.
     DPRINTF("enabling LoadModuleBuffer\n");
     sbv_patch_enable_lmb(); // The old IOP kernel has no support for LoadModuleBuffer. Apply the patch to enable it.
 
