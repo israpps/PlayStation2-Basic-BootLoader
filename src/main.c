@@ -377,9 +377,8 @@ int main(int argc, char *argv[])
             if (PAD & button) {
                 DPRINTF("PAD detected\n");
                 // if button detected , copy path to corresponding index
-                for (j = 0; j < 3; j++)
-                    EXECPATHS[j] = CheckPath(GLOBCFG.KEYPATHS[x + 1][j]);
                 for (j = 0; j < 3; j++) {
+                    EXECPATHS[j] = CheckPath(GLOBCFG.KEYPATHS[x + 1][j]);
                     if (exist(EXECPATHS[j])) {
                         scr_setfontcolor(0x00ff00);
                         scr_printf("\tLoading %s\n", EXECPATHS[j]);
