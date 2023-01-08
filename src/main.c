@@ -119,9 +119,10 @@ int main(int argc, char *argv[])
     SifLoadFileInit();
     fioInit(); // NO scr_printf BEFORE here
     init_scr();
-    scr_setCursor(0);//get rid of that cursor.
+    scr_setCursor(0);//get rid of annoying that cursor.
+    DPRINTF_INIT()
     scr_printf(".\n"); // GBS control does not detect image output with scr debug till the first char is printed
-    // print a simple dot here to represent the program start, and to allow gbs control to start displaying video before banner and pad timeout begins to run.
+    // print a simple dot to allow gbs control to start displaying video before banner and pad timeout begins to run. othersiwe, users with timeout lower than 4000 will have issues to respond in time
     DPRINTF("enabling LoadModuleBuffer\n");
     sbv_patch_enable_lmb(); // The old IOP kernel has no support for LoadModuleBuffer. Apply the patch to enable it.
 
@@ -197,15 +198,13 @@ int main(int argc, char *argv[])
 
     /*  Try to enable the remote control, if it is enabled.
         Indicate no hardware support for it, if it cannot be enabled. */
-    DPRINTF("trying to enable remote control");
+    DPRINTF("trying to enable remote control\n");
     do {
-        DPRINTF(".");
         result = sceCdRcBypassCtl(OSDConfigGetRcGameFunction() ^ 1, &STAT);
         if (STAT & 0x100) { // Not supported by the PlayStation 2.
             // Note: it does not seem like the browser updates the NVRAM here to change this status.
             OSDConfigSetRcEnabled(0);
             OSDConfigSetRcSupported(0);
-            DPRINTF("\n");
             break;
         }
     } while ((STAT & 0x80) || (result == 0));

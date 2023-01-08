@@ -145,6 +145,8 @@ endif
 
 ifeq ($(EE_SIO), 1)
   EE_CFLAGS += -DEE_SIO
+  EE_OBJS += ee_sio.o
+  #EE_LIBS += -lsior # only if we add SIOR.IRX
 endif
 
 ifeq ($(PCSX2), 1)
