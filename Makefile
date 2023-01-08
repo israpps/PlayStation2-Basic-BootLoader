@@ -164,8 +164,10 @@ endif
 # ---{ RECIPES }--- #
 .PHONY: greeting debug all clean kelf packed release
 
-rebuild: clean packed
 all: $(EE_BIN)
+
+rebuild: clean packed
+
 packed: $(EE_BIN_PACKED)
 
 greeting:
@@ -226,6 +228,9 @@ ifneq ($(DEBUG),1)
 endif
 	$(EE_AS) $(EE_ASFLAGS) $< -o $@
 #
+analize:
+	$(MAKE) rebuild DEBUG=1 PCSX2=0 EE_SIO=0 SCR_PRINT=0
+	python3 thirdparty/elf-size-analize.py $(EE_BIN) -R -t mips64r5900el-ps2-elf-
 
 celan: clean # repetitive typo that i have when quicktyping
 kelf: $(EE_BIN_ENCRYPTED) # alias of KELF creation
