@@ -481,7 +481,7 @@ void SetDefaultSettings(void)
     int i, j;
     for (i = 0; i < 17; i++)
         for (j = 0; j < 3; j++)
-            GLOBCFG.KEYPATHS[i][j] = NULL;
+            GLOBCFG.KEYPATHS[i][j] = "isra:/";
     GLOBCFG.SKIPLOGO = 0;
     GLOBCFG.OSDHISTORY_READ = 1;
     GLOBCFG.DELAY = DEFDELAY;
