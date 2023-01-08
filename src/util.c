@@ -9,6 +9,8 @@
 
 int exist(char *filepath)
 {
+    if (filepath == NULL)
+        return 0;
     int fdn;
 
     fdn = open(filepath, O_RDONLY);
