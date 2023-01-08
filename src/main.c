@@ -249,7 +249,7 @@ int main(int argc, char *argv[])
 
     if (config_source != SOURCE_INVALID) {
         DPRINTF("valid config on device %d, reading now\n", config_source);
-        pad_button = 0x0001;
+        pad_button = 0x0001; // on valid config, change the value of `pad_button` so the pad detection loop iterates all the buttons instead of only those configured on default paths
         num_buttons = 16;
         fseek(fp, 0, SEEK_END);
         cnf_size = ftell(fp);
@@ -367,23 +367,19 @@ int main(int argc, char *argv[])
                PS1DRVGetVersion(),
                DVDPlayerGetVersion(),
 			   config_source);
-    DPRINTF("Setting vmode\n");
+    DPRINTF("Timer starts!\n");
     TimerInit();
     tstart = Timer();
     while (Timer() <= (tstart + GLOBCFG.DELAY)) {
-        // while (1) {
-        //  If key was detected
-        //  DPRINTF("Trying to read PADs\n");
+        button = pad_button; // reset the value so we can iterate (bit-shift) again
         PAD = ReadCombinedPadStatus();
-        button = pad_button;
         for (x = 0; x < num_buttons; x++) { // check all pad buttons
             if (PAD & button) {
                 DPRINTF("PAD detected\n");
                 // if button detected , copy path to corresponding index
                 for (j = 0; j < 3; j++)
-                    EXECPATHS[j] = GLOBCFG.KEYPATHS[x + 1][j];
+                    EXECPATHS[j] = CheckPath(GLOBCFG.KEYPATHS[x + 1][j]);
                 for (j = 0; j < 3; j++) {
-                    EXECPATHS[j] = CheckPath(EXECPATHS[j]);
                     if (exist(EXECPATHS[j])) {
                         scr_setfontcolor(0x00ff00);
                         scr_printf("\tLoading %s\n", EXECPATHS[j]);
@@ -410,6 +406,10 @@ int main(int argc, char *argv[])
                 if (!is_PCMCIA)
                     PadDeinitPads();
                 RunLoaderElf(CheckPath(GLOBCFG.KEYPATHS[0][j]), NULL);
+            } else {
+                scr_setfontcolor(0x00ffff);
+                DPRINTF("%s not found\n", GLOBCFG.KEYPATHS[0][j]);
+                scr_setfontcolor(0xffffff);
             }
         }
     }
