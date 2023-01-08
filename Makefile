@@ -197,7 +197,11 @@ $(EE_BIN_STRIPPED): $(EE_BIN)
 
 $(EE_BIN_PACKED): $(EE_BIN_STRIPPED)
 	@echo " -- Compressing"
+ifneq ($(DEBUG),1)
 	ps2-packer $< $@ > /dev/null
+else
+	ps2-packer -v $< $@
+endif
 
 $(EE_BIN_ENCRYPTED): $(EE_BIN_PACKED)
 	@echo " -- Encrypting..."

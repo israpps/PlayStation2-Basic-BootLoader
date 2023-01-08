@@ -396,7 +396,7 @@ int main(int argc, char *argv[])
             button = button << 1; // sll of 1 cleared bit to move to next pad button
         }
     }
-
+    DPRINTF("Wait time consummed. running AUTO entry\n");
     tstart = Timer();
     if (Timer() <= (tstart + 4000)) {
         scr_clear();
@@ -414,9 +414,14 @@ int main(int argc, char *argv[])
     }
     TimerEnd();
 
-    scr_printf("\n\n\tEND OF EXECUTION REACHED\nCould not find any of the default applications\nCheck your config file for the LK_AUTO_E# entries\nOr press a key while logo displays to run the bound application");
+    scr_setfontcolor(0x00ffff);
+    scr_printf("\n\n\tEND OF EXECUTION REACHED\nCould not find any of the default applications\nCheck your config file for the LK_AUTO_E# entries\nOr press a key while logo displays to run the bound application\npress R1+START to enter emergency mode");
+    scr_setfontcolor(0xffffff);
     while (1) {
-        ;
+        sleep(1);
+        PAD = ReadCombinedPadStatus();
+        if ((PAD & PAD_R1) && (PAD & PAD_START)) // if ONLY R1+START are pressed...
+            EMERGENCY();
     }
 
     return 0;
