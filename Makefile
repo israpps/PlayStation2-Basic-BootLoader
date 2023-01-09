@@ -144,8 +144,9 @@ ifeq ($(SCR_PRINT), 1)
 endif
 
 ifeq ($(EE_SIO), 1)
-  EE_CFLAGS += -DEE_SIO
-  EE_OBJS += ee_sio.o
+  EE_CFLAGS += -DEE_SIO_DEBUG
+  EE_OBJS += SIOCookie.a
+  EE_INCS += -Iexternal/PS2-SIOCookie/include
   #EE_LIBS += -lsior # only if we add SIOR.IRX
 endif
 
@@ -178,7 +179,6 @@ greeting:
 	@echo printf: printf=$(PCSX2), eesio=$(EE_SIO), scr_printf=$(SCR_PRINT)
 	@echo $(EE_OBJS)
 
-
 release: clean $(EE_BIN_PACKED)
 	$(MAKE) greeting
 	@echo "$$HEADER"
@@ -206,6 +206,12 @@ endif
 $(EE_BIN_ENCRYPTED): $(EE_BIN_PACKED)
 	@echo " -- Encrypting..."
 	thirdparty/kelftool encrypt fmcb $< $@ 
+
+external/PS2-SIOCookie/SIOCookie.a: external/PS2-SIOCookie/
+	$(MAKE) -C $<
+
+$(EE_OBJS_DIR)SIOCookie.a: external/PS2-SIOCookie/SIOCookie.a
+	cp $< $@
 
 # move OBJ to folder and search source on src/, borrowed from OPL makefile
 

@@ -1,11 +1,10 @@
 #ifndef DEBUG_PRINTF
 #define DEBUG_PRINTF
 
-#ifdef EE_SIO
-    #include "EEsio.h"
-    #include <sio.h>
-    #define DPRINTF_INIT() sio_init(38400, 0, 0, 0, 0);
-    #define DPRINTF(x...) sio_printf(x)
+#ifdef EE_SIO_DEBUG
+    #include "SIOCookie.h"
+    #define DPRINTF_INIT() ee_sio_start(38400, 0, 0, 0, 0, _IONBF);
+    #define DPRINTF(x...) fprintf(EE_SIO, x)
 #elif PCSX2
     #define DPRINTF(x...) printf(x)
 #elif SCR_PRINT
