@@ -5,6 +5,7 @@
 *.o
 *.ko
 *.obj
+*.a
 
 # embedded stuff
 *_irx.c
