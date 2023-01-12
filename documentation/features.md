@@ -53,15 +53,15 @@ PS2 discs can be loaded with or without PS2LOGO via configuration or special com
 
 ## Space usage
 
-PS2BBL has an aproximated size of 112kb
-Wich means a system update setup that covers all models compatbible with system updates will take aproximately a little bit less than 1mb
+PS2BBL has an aproximated size of `80 kb`
+Wich means a system update setup that covers all common PS2 models compatbible with system updates will take aproximately a little bit more than `650 kb` (add `80 kb` to the count if you want to add PSX-DESR system update)
 
 ## Embedded USB drivers
 
 Unlike FreeMcBoot, PS2BBL has USB drivers embedded in binary, lowering your chances of loosing access to homebrew in case of data loss.
 
 and to make things better...
-the impact on program size was just ~`3kb`!
+the impact on program size was just ~`3 kb`!
 
 ## Applications Execution
 
