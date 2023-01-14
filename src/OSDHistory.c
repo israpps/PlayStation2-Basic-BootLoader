@@ -44,6 +44,7 @@ struct HistoryEntry HistoryEntries[MAX_HISTORY_ENTRIES];
 #ifdef F_WriteHistoryFile
 static int WriteHistoryFile(int port, const char *path, const void *buffer, int len, int append)
 {
+	DPRINTF("%s: start\n", __func__);
     int fd, result, size;
 
     if (append) {
@@ -113,6 +114,7 @@ static int McCheckFileExists(int port, const char *path)
 
 int LoadHistoryFile(int port)
 {
+	DPRINTF("%s: start\n", __func__);
     char fullpath[64];
     int fd, result, type, format;
 
@@ -139,13 +141,14 @@ int LoadHistoryFile(int port)
 
 int SaveHistoryFile(int port)
 {
+	DPRINTF("%s: start\n", __func__);
     char DATAPATH[32], ICONSYS[32];
     int fd, format, mctype, mem;
     //dont write to anything that is not a formatted ps2 card
     mcGetInfo(port, 0, &mctype, &mem, &format);
     mcSync(0, NULL, NULL);
     if ((mctype != sceMcTypePS2) || (format != MC_FORMATTED) || (mem < HISTORY_SIZE)) { // don't even waste time if there are no PS2 MC's
-        DPRINTF("\tmemcard on port %d is not a formatted PS2 Card!\n", port);
+        DPRINTF("%s: memcard on port %d is not a formatted PS2 Card!\n\ttype=%d\n\tformat=%d\n\tmem=%d\n", __func__,  port, mctype, format, mem);
         return -1;
     }
     // init paths
@@ -154,26 +157,34 @@ int SaveHistoryFile(int port)
 
     if ((fd = open(DATAPATH, O_CREAT | O_TRUNC | O_WRONLY)) < 0)
     { // huh? try to make folder
+		DPRINTF("%s: could not open file, trying to mkdir...\n", __func__);
         mcMkDir(port, 0, OSDGetSystemDataFolder());
         mcSync(0, NULL, NULL);
 
         if ((fd = open(DATAPATH, O_CREAT | O_TRUNC | O_WRONLY)) < 0) // again? leave the fucker alone
+		{
+			DPRINTF("%s: failed again to open the file, quitting...\n", __func__);
             return -1;
+		}
     }
 
     if (write(fd, HistoryEntries, HISTORY_SIZE) != HISTORY_SIZE)
     {
+		DPRINTF("%s: failed to write history, quitting...\n", __func__);
         close(fd); // here we quit, if we can't write 462 miserable bytes don't even waste time with the rest
         return -1;
     }
     close(fd);
 
     if (HasTooManyHistoryRecords) { // history is full and the entry is a new one
+		DPRINTF("%s: too many records, updating history.old...\n", __func__);
         strcat(DATAPATH, ".old");
         if ((fd = open(DATAPATH, O_CREAT | O_WRONLY | O_APPEND)) < 0) // the least used entry will be taken out to make space
         {
+			DPRINTF("%s: opening history.old failed...\n", __func__);
             //what now?
         } else {
+			DPRINTF("%s: writing to history.old...\n", __func__);
             write(fd, &OldHistoryEntry, sizeof(struct HistoryEntry)); // exile the entry to history.old
             close(fd);
         }
@@ -181,18 +192,22 @@ int SaveHistoryFile(int port)
 
     if (!exist(ICONSYS)) // leave this one for the end, so if writing failed and folder was created it remains without icon (OSD deems it as corrupted data)
     {
+		DPRINTF("%s: writing icon.sys for [%s]...\n", __func__, OSDGetSystemDataFolder());
         if ((fd = open(ICONSYS, O_CREAT | O_TRUNC | O_WRONLY)) < 0)
         {
             //what now?
         } else {
             switch (OSDGetConsoleRegion()) { // The original may have used simple if/else blocks, as it called OSDGetConsoleRegion() multiple times.
                 case CONSOLE_REGION_JAPAN:
+					DPRINTF("%s: writing japanese icon.sys\n", __func__);
                     write(fd, icon_sys_J, SYSDATA_ICON_SYS_SIZE);
                     break;
                 case CONSOLE_REGION_CHINA:
+					DPRINTF("%s: writing chinese icon.sys\n", __func__);
                     write(fd, icon_sys_C, SYSDATA_ICON_SYS_SIZE);
                     break;
                 default: // Others (US, Europe & Asia)
+					DPRINTF("%s: writing common icon.sys\n", __func__);
                     write(fd, icon_sys_A, SYSDATA_ICON_SYS_SIZE);
             }
             close(fd);
@@ -213,6 +228,7 @@ static u16 GetTimestamp(void)
 
 static void AddHistoryRecord(const char *name)
 {
+    DPRINTF("%s: start\n", __func__);
     int i, value, LeastUsedRecord, LeastUsedRecordLaunchCount, LeastUsedRecordTimestamp, NewLaunchCount;
     u8 BlankSlotList[MAX_HISTORY_ENTRIES];
     int IsNewRecord;
@@ -310,6 +326,7 @@ void UpdatePlayHistory(const char *name)
     // Try to load the history file from memory card slot 1
     if (LoadHistoryFile(0) < 0) { // Try memory card slot 2
         if (LoadHistoryFile(1) < 0)
+            DPRINTF("%s: no history files on both ports. wiping structs...\n", __func__);
             memset(HistoryEntries, 0, sizeof(HistoryEntries));
     }
 
