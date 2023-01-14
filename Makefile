@@ -12,7 +12,7 @@ export HEADER
 
 # ---{BUILD CFG}--- #
 HAS_LOCAL_IRX = 1 # whether to embed or not non vital IRX (wich will be loaded from memcard files)
-DEBUG ?= 0
+DEBUG ?= 1
 PSX ?= 0 # PSX DESR support
 PROHBIT_DVD_0100 ?= 0 # prohibit the DVD Players v1.00 and v1.01 from being booted.
 XCDVD_READKEY ?= 0 # Enable the newer sceCdReadKey checks, which are only supported by a newer CDVDMAN module.
