@@ -20,9 +20,9 @@ USE_ROM_PADMAN ?= 1
 USE_ROM_MCMAN ?= 1
 USE_ROM_SIO2MAN ?= 1
 # Just one print should be enabled
-SCR_PRINT ?= 0
-EE_SIO ?= 0
-PCSX2 ?= 1
+SCR_PRINT ?= 0 #scr_printf
+EE_SIO ?= 0 #serial port
+PCSX2 ?= 0 #common printf. for PCSX2 or PS2LINK
 
 # Related to binary size reduction
 KERNEL_NOPATCH ?= 1 
@@ -90,9 +90,6 @@ else
   EE_CFLAGS += -Os
   EE_LDFLAGS += -s
   EE_LIBS += -lelf-loader-nocolour
-  SCR_PRINT = 0 # not a debug build? Make sure DPRINTF is disabled 
-  EE_SIO = 0
-  PCSX2 = 0
 endif
 
 ifeq ($(USE_ROM_PADMAN), 1)
