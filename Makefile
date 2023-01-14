@@ -56,7 +56,7 @@ EE_OBJS = main.o \
           util.o elf.o timer.o ps2.o ps1.o dvdplayer.o \
           modelname.o libcdvd_add.o OSDHistory.o OSDInit.o OSDConfig.o \
           $(EMBEDDED_STUFF) \
-		      $(IOP_OBJS)
+		  $(IOP_OBJS)
 
 EMBEDDED_STUFF = icon_sys_A.o icon_sys_J.o icon_sys_C.o
 
@@ -70,7 +70,7 @@ EE_CFLAGS += -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DPATCHLEVE
 
 # ---{ CONDITIONS }--- #
 
-ifneq ($(DEBUG),1)
+ifneq ($(VERBOSE),1)
    .SILENT:
 endif
 
@@ -145,8 +145,7 @@ endif
 
 ifeq ($(EE_SIO), 1)
   EE_CFLAGS += -DEE_SIO_DEBUG
-  EE_OBJS += SIOCookie.a
-  EE_INCS += -Iexternal/PS2-SIOCookie/include
+  EE_OBJS += libsiocookie.a
   #EE_LIBS += -lsior # only if we add SIOR.IRX
 endif
 
