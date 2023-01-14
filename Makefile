@@ -146,7 +146,6 @@ endif
 ifeq ($(EE_SIO), 1)
   EE_CFLAGS += -DEE_SIO_DEBUG
   EE_LIBS += -lsiocookie
-  #EE_LIBS += -lsior # only if we add SIOR.IRX
 endif
 
 ifeq ($(PCSX2), 1)
