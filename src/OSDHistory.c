@@ -326,8 +326,10 @@ void UpdatePlayHistory(const char *name)
     // Try to load the history file from memory card slot 1
     if (LoadHistoryFile(0) < 0) { // Try memory card slot 2
         if (LoadHistoryFile(1) < 0)
-            DPRINTF("%s: no history files on both ports. wiping structs...\n", __func__);
-            memset(HistoryEntries, 0, sizeof(HistoryEntries));
+            {
+                DPRINTF("%s: no history files on both ports. wiping structs...\n", __func__);
+                memset(HistoryEntries, 0, sizeof(HistoryEntries));
+            }
     }
 
     AddHistoryRecord(name);
