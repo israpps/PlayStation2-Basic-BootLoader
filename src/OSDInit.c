@@ -452,7 +452,8 @@ static void WriteOSDConfigPS2(OSDConfigStore_t *OSDConfigBuffer, const OSDConfig
 
     // 0x13
     OSDConfigBuffer->PS2.timezoneHi = config->timezone >> 8;
-    OSDConfigBuffer->PS2.unknownB13_01 = OSDConfigBuffer->PS2.unknownB13_01; // Carry over
+    /// ISRA: the following line is here because this is done on sony code. commented here cause it's senseless
+    //OSDConfigBuffer->PS2.unknownB13_01 = OSDConfigBuffer->PS2.unknownB13_01; // Carry over
     OSDConfigBuffer->PS2.rcEnabled = config->rcEnabled;
     OSDConfigBuffer->PS2.rcGameFunction = config->rcGameFunction;
     OSDConfigBuffer->PS2.rcSupported = config->rcSupported;
