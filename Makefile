@@ -104,13 +104,13 @@ endif
 ifeq ($(USE_ROM_MCMAN), 1)
   EE_CFLAGS += -DUSE_ROM_MCMAN
 else
-  EE_OBJS ?= mcman_irx.o mcserv_irx.o
+  EE_OBJS += mcman_irx.o mcserv_irx.o
 endif
 
 ifeq ($(USE_ROM_SIO2MAN), 1)
   EE_CFLAGS += -DUSE_ROM_SIO2MAN
 else
-  EE_OBJS ?= sio2man_irx.o
+  EE_OBJS += sio2man_irx.o
 endif
 
 ifneq ($(HAS_LOCAL_IRX), 1)
@@ -161,7 +161,9 @@ endif
 .PHONY: greeting debug all clean kelf packed release
 
 all: $(EE_BIN)
-
+ifeq (DEBUG, 1)
+	$(MAKE) greeting
+endif
 rebuild: clean packed
 
 packed: $(EE_BIN_PACKED)
@@ -199,8 +201,8 @@ else
 endif
 
 $(EE_BIN_ENCRYPTED): $(EE_BIN_PACKED)
-	@echo " -- Encrypting..."
-	thirdparty/kelftool encrypt fmcb $< $@
+	@echo " -- Encrypting"
+	thirdparty/kelftool_dnasload.exe encrypt dnasload $< $@
 
 # move OBJ to folder and search source on src/, borrowed from OPL makefile
 
@@ -216,13 +218,13 @@ $(BINDIR):
 	@mkdir -p $@
 
 $(EE_OBJS_DIR)%.o: $(EE_SRC_DIR)%.c | $(EE_OBJS_DIR)
-ifneq ($(DEBUG),1)
+ifneq ($(VERBOSE),1)
 	@echo "  - $@"
 endif
 	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
 
 $(EE_OBJS_DIR)%.o: $(EE_ASM_DIR)%.s | $(EE_OBJS_DIR)
-ifneq ($(DEBUG),1)
+ifneq ($(VERBOSE),1)
 	@echo "  - $@"
 endif
 	$(EE_AS) $(EE_ASFLAGS) $< -o $@
@@ -231,7 +233,7 @@ analize:
 	$(MAKE) rebuild DEBUG=1 PCSX2=0 EE_SIO=0 SCR_PRINT=0
 	python3 thirdparty/elf-size-analize.py $(EE_BIN) -R -t mips64r5900el-ps2-elf-
 
-celan: clean # repetitive typo that i have when quicktyping
+celan: clean # a repetitive typo when quicktyping
 kelf: $(EE_BIN_ENCRYPTED) # alias of KELF creation
 # Include makefiles
 include $(PS2SDK)/samples/Makefile.pref

@@ -45,7 +45,7 @@
 // For avoiding define NEWLIB_AWARE
 void fioInit();
 
-#define RBG2INT(R,G,B) ((0<<24) + (R<<16) + (G<<8) + B)
+#define RBG2INT(R, G, B) ((0 << 24) + (R << 16) + (G << 8) + B)
 #define IMPORT_BIN2C(_n)       \
     extern unsigned char _n[]; \
     extern unsigned int size_##_n
@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
     SifLoadFileInit();
     fioInit(); // NO scr_printf BEFORE here
     init_scr();
-    scr_setCursor(0);//get rid of annoying that cursor.
+    scr_setCursor(0); // get rid of annoying that cursor.
     DPRINTF_INIT()
     scr_printf(".\n"); // GBS control does not detect image output with scr debug till the first char is printed
     // print a simple dot to allow gbs control to start displaying video before banner and pad timeout begins to run. othersiwe, users with timeout lower than 4000 will have issues to respond in time
@@ -211,7 +211,7 @@ int main(int argc, char *argv[])
 
     // Remember to set the video output option (RGB or Y Cb/Pb Cr/Pr) accordingly, before SetGsCrt() is called.
     DPRINTF("Setting vmode\n");
-    SetGsVParam(OSDConfigGetVideoOutput() == VIDEO_OUTPUT_RGB ? VIDEO_OUTPUT_RGB : VIDEO_OUTPUT_COMPONENT); 
+    SetGsVParam(OSDConfigGetVideoOutput() == VIDEO_OUTPUT_RGB ? VIDEO_OUTPUT_RGB : VIDEO_OUTPUT_COMPONENT);
     DPRINTF("Init pads\n");
     PadInitPads();
     DPRINTF("Init timer and wait for rescue mode key\n");
@@ -307,7 +307,6 @@ int main(int argc, char *argv[])
             sleep(3);
             scr_setbgcolor(0x000000);
             scr_clear();
-
         }
     } else {
         scr_printf("Can't find config, loading hardcoded paths\n");
@@ -319,39 +318,34 @@ int main(int argc, char *argv[])
     if (RAM_p != NULL)
         free(RAM_p);
     int R = 0x80, G = 0x80, B = 0x80;
-    if (GLOBCFG.OSDHISTORY_READ)
-    {
+    if (GLOBCFG.OSDHISTORY_READ) {
         j = 1;
         // Try to load the history file from memory card slot 1
         if (LoadHistoryFile(0) < 0) { // Try memory card slot 2
-            if (LoadHistoryFile(1) < 0)
-                {
-                    DPRINTF("no history files found\n\n");
-                    j = 0;
-                }
-        }
-        
-        if (j)
-        {
-            for (j=0; j < MAX_HISTORY_ENTRIES; j++)
-            {
-				switch (j%3) {
-					case 0:
-						R += (HistoryEntries[j].LaunchCount*2);
-						break;
-					case 1:
-						G += (HistoryEntries[j].LaunchCount*2);
-						break;
-					case 2:
-						B += (HistoryEntries[j].LaunchCount*2);
-						break;
-					default:
-						B += (HistoryEntries[j].LaunchCount*2);
-						
-				}
+            if (LoadHistoryFile(1) < 0) {
+                DPRINTF("no history files found\n\n");
+                j = 0;
             }
-            scr_setfontcolor(RBG2INT(B,G,R));
-            DPRINTF("New banner color is: #%8x\n",RBG2INT(B,G,R));
+        }
+
+        if (j) {
+            for (j = 0; j < MAX_HISTORY_ENTRIES; j++) {
+                switch (j % 3) {
+                    case 0:
+                        R += (HistoryEntries[j].LaunchCount * 2);
+                        break;
+                    case 1:
+                        G += (HistoryEntries[j].LaunchCount * 2);
+                        break;
+                    case 2:
+                        B += (HistoryEntries[j].LaunchCount * 2);
+                        break;
+                    default:
+                        B += (HistoryEntries[j].LaunchCount * 2);
+                }
+            }
+            scr_setfontcolor(RBG2INT(B, G, R));
+            DPRINTF("New banner color is: #%8x\n", RBG2INT(B, G, R));
         } else
             DPRINTF("can't find any osd history for banner color\n");
     }
@@ -359,14 +353,14 @@ int main(int argc, char *argv[])
     scr_clear();
     scr_printf("\n\n\n\n%s", BANNER);
     scr_setfontcolor(0xffffff);
-    scr_printf(BANNER_FOOTER"\n\n\tModel:\t\t%s\n"
-               "\tPlayStation Driver:\t%s\n"
-               "\tDVD Player:\t%s\n"
-			   "\tConfig source:\t%d\n",
+    scr_printf(BANNER_FOOTER "\n\n\tModel:\t\t%s\n"
+                             "\tPlayStation Driver:\t%s\n"
+                             "\tDVD Player:\t%s\n"
+                             "\tConfig source:\t%d\n",
                ModelNameGet(),
                PS1DRVGetVersion(),
                DVDPlayerGetVersion(),
-			   config_source);
+               config_source);
     DPRINTF("Timer starts!\n");
     TimerInit();
     tstart = Timer();
@@ -498,9 +492,9 @@ void LoadUSBIRX(void)
 
 #ifndef NO_DPRINTF
     int TMP;
-    #define ATMP TMP = 
+#define ATMP TMP =
 #else
-    #define ATMP
+#define ATMP
 #endif
     int x;
 
@@ -533,13 +527,12 @@ void LoadUSBIRX(void)
     ATMP loadIRXFile("mc?:/PS2BBL/USBMASS_BD.IRX", 0, NULL, &x);
 #endif
     DPRINTF(" [USBMASS_BD.IRX]: ret=%d, ID=%d\n", TMP, x);
-// ------------------------------------------------------------------------------------ //
+    // ------------------------------------------------------------------------------------ //
     struct stat buffer;
     int ret = -1;
     int retries = 50;
 
-    while(ret != 0 && retries > 0)
-    {
+    while (ret != 0 && retries > 0) {
         ret = stat("mass:/", &buffer);
         /* Wait until the device is ready */
         nopdelay();
@@ -575,8 +568,7 @@ int dischandler()
 
             switch (DiscType) {
                 case SCECdNODISC:
-                    if (first_run)
-                    {
+                    if (first_run) {
                         if (GLOBCFG.TRAYEJECT) // if tray eject is allowed on empty tray...
                             sceCdTrayReq(0, NULL);
                         first_run = 0;
@@ -624,7 +616,7 @@ int dischandler()
                     break;
                 default:
                     scr_setfontcolor(0x0000ff);
-                    scr_printf("Unknown\n");
+                    scr_printf("Unknown (%d)\n", DiscType);
                     scr_setfontcolor(0xffffff);
             }
         }
@@ -671,8 +663,7 @@ void ResetIOP(void)
 {
     SifInitRpc(0); // Initialize SIFCMD & SIFRPC
 #ifndef PSX
-    while (!SifIopReset("", 0)) {
-    };
+    while (!SifIopReset("", 0)) {};
 #else
     /* sp193: We need some of the PSX's CDVDMAN facilities, but we do not want to use its (too-)new FILEIO module.
        This special IOPRP image contains a IOPBTCONF list that lists PCDVDMAN instead of CDVDMAN.
@@ -680,8 +671,7 @@ void ResetIOP(void)
        Usually, I would discourage people from using board-specific modules, but I do not have a proper replacement for this. */
     while (!SifIopRebootBuffer(psx_ioprp, size_psx_ioprp)) {};
 #endif
-    while (!SifIopSync()) {
-    };
+    while (!SifIopSync()) {};
 
 #ifdef PSX
     InitPSX();
@@ -765,7 +755,7 @@ void credits(void)
 {
     scr_clear();
     scr_printf("\n\n");
-    scr_printf("%s%s",BANNER, BANNER_FOOTER);
+    scr_printf("%s%s", BANNER, BANNER_FOOTER);
     scr_printf("\n"
                "\n"
                "\tThis project is heavily based on SP193 OSD initialization libraries.\n"

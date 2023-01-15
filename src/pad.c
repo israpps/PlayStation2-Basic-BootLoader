@@ -13,7 +13,7 @@ int pad_inited = 0;
 
 void PadInitPads(void)
 {
-    DPRINTF("%s: padinit\n", __FUNCTION__);
+    DPRINTF("%s: start\n", __FUNCTION__);
     padInit(0);
     DPRINTF("%s: padPortOpen(0, 0, padArea[0])\n", __FUNCTION__);
     padPortOpen(0, 0, padArea[0]);
@@ -27,12 +27,14 @@ void PadInitPads(void)
 
 void PadDeinitPads(void)
 {
+    DPRINTF("%s: ", __func__);
     if (pad_inited) {
         padPortClose(0, 0);
         padPortClose(1, 0);
         padEnd();
         pad_inited = 0;
     }
+    DPRINTF("done\n");
 }
 
 int ReadPadStatus_raw(int port, int slot)
