@@ -702,8 +702,9 @@ static void InitPSX()
         WARNING! If the stack pointer resides above the 32MB offset at the point of remap, a TLB exception will occur.
         This example has the stack pointer configured to be within the 32MB limit. */
 
-    SetMemoryMode(1);
-    _InitTLB();
+    /// WARNING: untill further investigation, the memory mode should remain on 64mb. changing it to 32 breaks SDK ELF Loader
+    /// SetMemoryMode(1);
+    ///_InitTLB();
 
     while (!SifIopSync()) {};
 }
