@@ -84,6 +84,7 @@ void CDVDBootCertify(u8 romver[16]);
 void credits(void);
 void CleanUp(void);
 void LoadUSBIRX(void);
+void runOSDNoUpdate(void);
 #ifdef PSX
 static void InitPSX();
 #endif
@@ -458,6 +459,8 @@ char *CheckPath(char *path)
         }
         if (!strcmp("$CREDITS", path))
             credits();
+        if (!strcmp("$OSDSYS", path))
+            runOSDNoUpdate();
         if (!strncmp("$RUNKELF:", path, strlen("$RUNKELF:"))) {
             runKELF(CheckPath(path + strlen("$RUNKELF:"))); // pass to runKELF the path without the command token, digested again by CheckPath()
         }
@@ -766,6 +769,14 @@ void credits(void)
                "\t\tcompiled on "__DATE__" "__TIME__"\n"
                );
     while (1) {};
+}
+
+void runOSDNoUpdate(void)
+{
+    char *args[3] = {"SkipHdd", "BootBrowser", "SkipMc"};
+    CleanUp();
+    SifExitCmd();
+    ExecOSD(3, args);
 }
 
 /* BELOW THIS POINT ALL MACROS and MISC STUFF MADE TO REDUCE BINARY SIZE WILL BE PLACED */
