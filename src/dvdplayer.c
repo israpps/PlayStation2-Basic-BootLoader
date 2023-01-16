@@ -219,7 +219,8 @@ static int DVDPlayerGetUpdateVersion(const char *file, int *pPort, int *pSlot)
 
 static int CheckDVDPlayerUpdate(void)
 {
-    char path[1024];
+    /// ISRA:original code has a 1024bytes buffer for path. wich is ridiculous for a string that will ALWAYS have 31 chars ("B?EXEC-DVDPLAYER/dvdplayer.elf")
+    char path[33];
     int port, slot, fd;
 
     sprintf(path, "%s/%s", OSDGetDVDPLExecFolder(), "dvdplayer.elf");
