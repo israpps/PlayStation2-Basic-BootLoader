@@ -12,6 +12,7 @@
         "osdconfig.h": "c",
         "osdhistory.h": "c",
         "ps2_sio2man_driver.h": "c",
-        "fcntl.h": "c"
+        "fcntl.h": "c",
+        "siocookie.h": "c"
     }
 }

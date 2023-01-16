@@ -122,6 +122,11 @@ int main(int argc, char *argv[])
     init_scr();
     scr_setCursor(0); // get rid of annoying that cursor.
     DPRINTF_INIT()
+#ifndef NO_DPRINTF
+    DPRINTF("PS2BBL: starting with the following argumments:\n");
+    for (x = 0; x < argc; x++)
+        DPRINTF("\targv[%d] = [%s]\n", x, argv[x]);
+#endif
     scr_printf(".\n"); // GBS control does not detect image output with scr debug till the first char is printed
     // print a simple dot to allow gbs control to start displaying video before banner and pad timeout begins to run. othersiwe, users with timeout lower than 4000 will have issues to respond in time
     DPRINTF("enabling LoadModuleBuffer\n");
