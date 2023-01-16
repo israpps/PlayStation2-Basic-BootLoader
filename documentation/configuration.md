@@ -40,11 +40,11 @@ is the first path to look for if `SELECT` is pressed
 
 the program supports the following config entries
 
-- `SKIP_PS2LOGO`: wether to run ps2 games via `rom0:PS2LOGO` or by running the game executable itself
-- `KEY_READ_WAIT_TIME`: time (in miliseconds) that the program should wait for a key press before arbitrarly loading the `AUTO` launch keys
-- `OSDHISTORY_READ`: wether to change or not the program logo color (color is calculated with OSD play history record from memory card)
-- `EJECT_TRAY`: wether to eject the console tray or not the first time the disc handler detects the tray is empty
-
+- `$SKIP_PS2LOGO`: wether to run ps2 games via `rom0:PS2LOGO` or by running the game executable itself
+- `$KEY_READ_WAIT_TIME`: time (in miliseconds) that the program should wait for a key press before arbitrarly loading the `AUTO` launch keys
+- `$OSDHISTORY_READ`: wether to change or not the program logo color (color is calculated with OSD play history record from memory card)
+- `$EJECT_TRAY`: wether to eject the console tray or not the first time the disc handler detects the tray is empty
+- `$OSDSYS`: Executes the OSDSYS program with special argumments to skip Memory card & HDD updates, and goes straight to mc browser. this is very usefull for users wich install PS2BBL as system update and wants to access the memory card browser of OSDSYS (__WARNING__: USELESS ON PSX-DESR Because it's OSDSYS has no menu)
 ## supported commands
 
 - `$CDVD`: execute disc respecting the value passed to `SKIP_PS2LOGO` on config
