@@ -242,7 +242,8 @@ int DVDPlayerBoot(void)
 {
     char *args[4];
     int port;
-    char dvdplayerCMD[1024]; // This was originally static/global.
+    /// ISRA: this buffer used to be 1024 bytes. reduced it because it was too much for a simple 38 chars string ("-x mc?:B?EXEC-DVDPLAYER/dvdplayer.elf")
+    char dvdplayerCMD[48]; // This was originally static/global.
 
     UpdatePlayHistory("DVDVIDEO");
     port = CheckDVDPlayerUpdate();
