@@ -1,6 +1,8 @@
 name: CI
 
 on:
+  repository_dispatch:
+    types: [Component_update]
   push:
     branches:
       - '*'
