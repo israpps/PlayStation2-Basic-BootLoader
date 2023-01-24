@@ -74,3 +74,66 @@ LK_START_E1 = $OSDSYS
 LK_CROSS_E1 = $CDVD
 LK_TRIANGLE_E1 = $CDVD_NO_PS2LOGO
 ```
+
+## largest config file
+The following example file shows all the possible entries that the program can use:
+
+```ini
+# PlayStation2 Basic Bootloader config file
+# configurations:
+EJECT_TRAY = 1
+OSDHISTORY_READ = 1
+KEY_READ_WAIT_TIME = 4000
+SKIP_PS2LOGO = 1
+LK_AUTO_E1 = 
+LK_AUTO_E2 = 
+LK_AUTO_E3 = 
+LK_SELECT_E1 = 
+LK_SELECT_E2 = 
+LK_SELECT_E3 = 
+LK_L3_E1 = 
+LK_L3_E2 = 
+LK_L3_E3 = 
+LK_R3_E1 = 
+LK_R3_E2 = 
+LK_R3_E3 = 
+LK_START_E1 = 
+LK_START_E2 = 
+LK_START_E3 = 
+LK_UP_E1 = 
+LK_UP_E2 = 
+LK_UP_E3 = 
+LK_RIGHT_E1 = 
+LK_RIGHT_E2 = 
+LK_RIGHT_E3 = 
+LK_DOWN_E1 = 
+LK_DOWN_E2 = 
+LK_DOWN_E3 = 
+LK_LEFT_E1 = 
+LK_LEFT_E2 = 
+LK_LEFT_E3 = 
+LK_L2_E1 = 
+LK_L2_E2 = 
+LK_L2_E3 = 
+LK_R2_E1 = 
+LK_R2_E2 = 
+LK_R2_E3 = 
+LK_L1_E1 = 
+LK_L1_E2 = 
+LK_L1_E3 = 
+LK_R1_E1 = 
+LK_R1_E2 = 
+LK_R1_E3 = 
+LK_TRIANGLE_E1 = 
+LK_TRIANGLE_E2 = 
+LK_TRIANGLE_E3 = 
+LK_CIRCLE_E1 = 
+LK_CIRCLE_E2 = 
+LK_CIRCLE_E3 = 
+LK_CROSS_E1 = 
+LK_CROSS_E2 = 
+LK_CROSS_E3 = 
+LK_SQUARE_E1 = 
+LK_SQUARE_E2 = 
+LK_SQUARE_E3 = 
+```
