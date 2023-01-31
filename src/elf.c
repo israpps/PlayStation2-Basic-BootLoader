@@ -15,8 +15,6 @@
 
 void RunLoaderElf(char *filename, char *party)
 {
-    char *argv[1];
-    argv[0] = filename;
     DPRINTF("\tLOADING [%s]\n", filename);
 #ifndef NO_DPRINTF
     if (party != NULL)
@@ -26,5 +24,5 @@ void RunLoaderElf(char *filename, char *party)
     sleep(5);
     DPRINTF(".\n");
 #endif
-    LoadELFFromFile(filename, 1, argv);
+    LoadELFFromFile(filename, 0, NULL);
 }
