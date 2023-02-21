@@ -22,6 +22,15 @@
 #include <libmc.h>
 #include <libcdvd.h>
 
+#ifdef HDD
+#define NEWLIB_PORT_AWARE
+#include <fileXio_rpc.h>
+#include <hdd-ioctl.h>
+#include <io_common.h>
+int LoadHDDIRX(void);
+int LoadFIO(void);
+#endif
+
 #include "debugprintf.h"
 #include "pad.h"
 #include "util.h"
@@ -58,6 +67,16 @@ IMPORT_BIN2C(sio2man_irx);
 IMPORT_BIN2C(mcman_irx);
 IMPORT_BIN2C(mcserv_irx);
 IMPORT_BIN2C(padman_irx);
+
+#ifdef HDD
+IMPORT_BIN2C(poweroff_irx);
+IMPORT_BIN2C(iomanX_irx);
+IMPORT_BIN2C(fileXio_irx);
+IMPORT_BIN2C(ps2dev9_irx);
+IMPORT_BIN2C(ps2atad_irx);
+IMPORT_BIN2C(ps2hdd_irx);
+IMPORT_BIN2C(ps2fs_irx);
+#endif
 
 #ifdef HAS_EMBEDDED_IRX
 IMPORT_BIN2C(usbd_irx);
@@ -104,7 +123,7 @@ CONFIG GLOBCFG;
 char *EXECPATHS[3];
 u8 ROMVER[16];
 int PAD = 0;
-
+int HDD_USABLE = 0;
 
 int main(int argc, char *argv[])
 {
@@ -162,7 +181,12 @@ int main(int argc, char *argv[])
     DPRINTF(" [PADMAN.IRX]: ret=%d, ID=%d\n", j, x);
 #endif
     LoadUSBIRX();
-
+#ifdef HDD
+    if (LoadFIO() < 0)
+        	{scr_setbgcolor(0xff0000); scr_clear(); sleep(8);}
+    else if (LoadHDDIRX() < 0) // only load HDD crap if filexio and iomanx are up and running
+        	{scr_setbgcolor(0x0000ff); scr_clear(); sleep(8);}
+#endif
     if ((fd = open("rom0:ROMVER", O_RDONLY)) >= 0) {
         read(fd, ROMVER, sizeof(ROMVER));
         close(fd);
@@ -236,19 +260,29 @@ int main(int argc, char *argv[])
     fp = fopen("mass:/PS2BBL/CONFIG.INI", "r");
     if (fp == NULL) {
         DPRINTF("Cant load config from mass\n");
-        fp = fopen("mc0:/PS2BBL/CONFIG.INI", "r");
-        if (fp == NULL) {
-            DPRINTF("Cant load config from mc0\n");
-            fp = fopen("mc1:/PS2BBL/CONFIG.INI", "r");
-            if (fp == NULL) {
-                DPRINTF("Cant load config from mc1\n");
-                config_source = SOURCE_INVALID;
+#ifdef HDD
+        if (MountParty("hdd0:__sysconf") >= 0)
+            if ((x = fileXioOpen("pfs:/PS2BBL/CONFIG.INI", FIO_O_RDONLY )) < 0)
+            {
+#endif
+                fp = fopen("mc0:/PS2BBL/CONFIG.INI", "r");
+                if (fp == NULL) {
+                    DPRINTF("Cant load config from mc0\n");
+                    fp = fopen("mc1:/PS2BBL/CONFIG.INI", "r");
+                    if (fp == NULL) {
+                        DPRINTF("Cant load config from mc1\n");
+                        config_source = SOURCE_INVALID;
+                    } else {
+                        config_source = SOURCE_MC1;
+                    }
+                } else {
+                    config_source = SOURCE_MC0;
+                }
+#ifdef HDD
             } else {
-                config_source = SOURCE_MC1;
+                config_source = SOURCE_HDD;
             }
-        } else {
-            config_source = SOURCE_MC0;
-        }
+#endif
     } else {
         config_source = SOURCE_MASS;
     }
@@ -479,6 +513,11 @@ char *CheckPath(char *path)
             if (exist(path))
                 return path;
         }
+    } else if (!strncmp("hdd", path, 3)) {
+        if (MountParty(path) < 0)
+            return path;
+        else
+            return strstr(path, "pfs:"); // leave path as pfs:/blabla
     }
     return path;
 }
@@ -549,6 +588,92 @@ void LoadUSBIRX(void)
     }
 }
 
+#ifdef HDD
+static int CheckHDD(void) {
+    int ret = fileXioDevctl("hdd0:", HDIOC_STATUS, NULL, 0, NULL, 0);
+    /* 0 = HDD connected and formatted, 1 = not formatted, 2 = HDD not usable, 3 = HDD not connected. */
+    DPRINTF("%s: HDD status is %d\n", __func__, ret);
+    if ((ret >= 3) || (ret < 0))
+        return -1;
+    return ret;
+}
+
+int LoadFIO(void)
+{
+    int ID, RET;
+    ID = SifExecModuleBuffer(&iomanX_irx, size_iomanX_irx, 0, NULL, &RET);
+    DPRINTF(" [IOMANX.IRX]: ret=%d, ID=%d\n", RET, ID);
+    if (ID < 0)
+        return -1;
+
+    /* FILEXIO.IRX */
+    ID = SifExecModuleBuffer(&fileXio_irx, size_fileXio_irx, 0, NULL, &RET);
+    DPRINTF(" [FILEXIO.IRX]: ret=%d, ID=%d\n", RET, ID);
+    if (ID < 0)
+        return -2;
+    
+    fileXioInit();
+    return 0;
+}
+
+int LoadHDDIRX(void)
+{
+    int ID, RET, HDDSTAT;
+    char hddarg[] = "-o" "\0" "4" "\0" "-n" "\0" "20";
+
+    /* PS2DEV9.IRX */
+    ID = SifExecModuleBuffer(&ps2dev9_irx, size_ps2dev9_irx, 0, NULL, &RET);
+    DPRINTF(" [DEV9.IRX]: ret=%d, ID=%d\n", RET, ID);
+    if (ID < 0)
+        return -1;
+    
+    /* PS2ATAD.IRX */
+    ID = SifExecModuleBuffer(&ps2atad_irx, size_ps2atad_irx, 0, NULL, &RET);
+    DPRINTF(" [ATAD.IRX]: ret=%d, ID=%d\n", RET, ID);
+    if (ID < 0)
+        return -2;
+
+    /* PS2HDD.IRX */
+    ID = SifExecModuleBuffer(&ps2hdd_irx, size_ps2hdd_irx, sizeof(hddarg), hddarg, &RET);
+    DPRINTF(" [PS2HDD.IRX]: ret=%d, ID=%d\n", RET, ID);
+    if (ID < 0)
+        return -3;
+
+    /* Check if HDD is formatted and ready to be used */
+    HDDSTAT = CheckHDD();
+    HDD_USABLE = (HDDSTAT < 0);
+    
+    /* PS2FS.IRX */
+    if (HDD_USABLE)
+    {
+        ID = SifExecModuleBuffer(&ps2fs_irx, size_ps2fs_irx, 0, NULL, &RET);
+        DPRINTF(" [PS2FS.IRX]: ret=%d, ID=%d\n", RET, ID);
+        if (ID < 0)
+            return -5;
+    }
+    
+    return 0;
+}
+
+int MountParty(const char* path)
+{
+    char *del;
+    del = strtok(path, "@pfs");
+    if (del != NULL) // if string has valid pfs token
+    {
+        if (fileXioMount("pfs0", path, FIO_MT_RDWR) < 0) // mount
+        {
+            if (fileXioUmount("pfs0") < 0) //try to unmount then mount again in case it got mounted by something else
+                return -3;
+            if (fileXioMount("pfs0", path, FIO_MT_RDWR) < 0)
+                return -4;
+        }
+            return -2;
+    } else return -1;
+    return 0;
+}
+
+#endif
 
 int dischandler()
 {

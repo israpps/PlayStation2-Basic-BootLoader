@@ -14,6 +14,7 @@ export HEADER
 HAS_LOCAL_IRX = 1 # whether to embed or not non vital IRX (wich will be loaded from memcard files)
 DEBUG ?= 0
 PSX ?= 0 # PSX DESR support
+HDD ?= 0 #wether to add internal HDD support
 PROHBIT_DVD_0100 ?= 0 # prohibit the DVD Players v1.00 and v1.01 from being booted.
 XCDVD_READKEY ?= 0 # Enable the newer sceCdReadKey checks, which are only supported by a newer CDVDMAN module.
 USE_ROM_PADMAN ?= 1
@@ -116,6 +117,12 @@ endif
 ifneq ($(HAS_LOCAL_IRX), 1)
   EE_OBJS += usbd_irx.o bdm_irx.o bdmfs_fatfs_irx.o usbmass_bd_irx.o
   EE_CFLAGS += -DHAS_EMBEDDED_IRX
+endif
+
+ifeq ($(HDD), 1)
+  EE_LIBS += -lfileXio -lpoweroff
+  EE_OBJS += ps2fs_irx.o ps2hdd_irx.o ps2atad_irx.o ps2dev9_irx.o filexio_irx.o iomanx_irx.o poweroff_irx.o
+  EE_CFLAGS += -DHDD
 endif
 
 ifeq ($(DUMMY_TIMEZONE), 1)

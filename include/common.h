@@ -6,10 +6,10 @@ enum
     SOURCE_MC0,
     SOURCE_MC1,
     SOURCE_MASS,
-#ifdef HDD_SUPPORT
+#ifdef HDD
     SOURCE_HDD,
 #endif
-#ifdef XFROM_SUPPORT
+#ifdef XFROM
     SOURCE_XFROM,
 #endif
 
