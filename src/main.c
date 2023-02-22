@@ -29,6 +29,7 @@
 #include <io_common.h>
 int LoadHDDIRX(void);
 int LoadFIO(void);
+int MountParty(const char* path);
 #endif
 
 #include "debugprintf.h"
@@ -262,8 +263,10 @@ int main(int argc, char *argv[])
         DPRINTF("Cant load config from mass\n");
 #ifdef HDD
         if (MountParty("hdd0:__sysconf") >= 0)
-            if ((x = fileXioOpen("pfs:/PS2BBL/CONFIG.INI", FIO_O_RDONLY )) < 0)
+            fp = fopen("pfs0:/PS2BBL/CONFIG.INI", "r" );
+            if (fp == NULL) 
             {
+                DPRINTF("Cant load config from hdd0:__sysconf\n");
 #endif
                 fp = fopen("mc0:/PS2BBL/CONFIG.INI", "r");
                 if (fp == NULL) {
@@ -348,6 +351,10 @@ int main(int argc, char *argv[])
             scr_setbgcolor(0x000000);
             scr_clear();
         }
+#ifdef HDD
+        if (config_source == SOURCE_HDD)
+            fileXioUmount("pfs0");
+#endif
     } else {
         scr_printf("Can't find config, loading hardcoded paths\n");
         for (x = 0; x < 5; x++)
@@ -513,12 +520,14 @@ char *CheckPath(char *path)
             if (exist(path))
                 return path;
         }
+#ifdef HDD
     } else if (!strncmp("hdd", path, 3)) {
         if (MountParty(path) < 0)
             return path;
         else
             return strstr(path, "pfs:"); // leave path as pfs:/blabla
     }
+#endif
     return path;
 }
 
@@ -619,7 +628,8 @@ int LoadFIO(void)
 int LoadHDDIRX(void)
 {
     int ID, RET, HDDSTAT;
-    char hddarg[] = "-o" "\0" "4" "\0" "-n" "\0" "20";
+    static const char hddarg[] = "-o" "\0" "4" "\0" "-n" "\0" "20";
+	static const char pfsarg[] = "-n\0" "24\0" "-o\0" "8";
 
     /* PS2DEV9.IRX */
     ID = SifExecModuleBuffer(&ps2dev9_irx, size_ps2dev9_irx, 0, NULL, &RET);
@@ -641,12 +651,12 @@ int LoadHDDIRX(void)
 
     /* Check if HDD is formatted and ready to be used */
     HDDSTAT = CheckHDD();
-    HDD_USABLE = (HDDSTAT < 0);
+    HDD_USABLE = !(HDDSTAT < 0);
     
     /* PS2FS.IRX */
     if (HDD_USABLE)
     {
-        ID = SifExecModuleBuffer(&ps2fs_irx, size_ps2fs_irx, 0, NULL, &RET);
+        ID = SifExecModuleBuffer(&ps2fs_irx, size_ps2fs_irx, sizeof(pfsarg), pfsarg, &RET);
         DPRINTF(" [PS2FS.IRX]: ret=%d, ID=%d\n", RET, ID);
         if (ID < 0)
             return -5;
@@ -657,19 +667,30 @@ int LoadHDDIRX(void)
 
 int MountParty(const char* path)
 {
+    DPRINTF("%s: %s\n", __func__, path);
     char *del;
     del = strtok(path, "@pfs");
+    DPRINTF("strtok pushed %s\n",del);
     if (del != NULL) // if string has valid pfs token
     {
-        if (fileXioMount("pfs0", path, FIO_MT_RDWR) < 0) // mount
+        if (fileXioMount("pfs0:", path, FIO_MT_RDONLY ) < 0) // mount
         {
-            if (fileXioUmount("pfs0") < 0) //try to unmount then mount again in case it got mounted by something else
+            DPRINTF("Mount failed. unmounting pfs0 and trying again...\n");
+            if (fileXioUmount("pfs0:") < 0) //try to unmount then mount again in case it got mounted by something else
+            {
+                DPRINTF("Unmount failed!!!\n");
                 return -3;
-            if (fileXioMount("pfs0", path, FIO_MT_RDWR) < 0)
+            }
+            if (fileXioMount("pfs0:", path, FIO_MT_RDONLY ) < 0)
+            {
+                DPRINTF("mount failed again!\n");
                 return -4;
-        }
-            return -2;
-    } else return -1;
+            }
+        } else DPRINTF("mount successfull on first attemp\n");
+    } else {
+        DPRINTF("path has no valid pfs token\n");
+        return -1;
+    }
     return 0;
 }
 
