@@ -18,7 +18,7 @@ void RunLoaderElf(char *filename, char *party)
     DPRINTF("\tLOADING [%s]\n", filename);
 #ifndef NO_DPRINTF
     if (party != NULL)
-        DPRINTF("\tparty is %s\n", __func__, party);
+        DPRINTF("\t%s: party is %s\n", __func__, party);
 #endif
 #ifdef SCR_PRINT
     sleep(5);

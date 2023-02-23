@@ -21,6 +21,8 @@
 #include <libpad.h>
 #include <libmc.h>
 #include <libcdvd.h>
+#define NEWLIB_PORT_AWARE
+#include <fileXio_rpc.h>
 
 #include "debugprintf.h"
 #include "pad.h"
@@ -85,6 +87,9 @@ void credits(void);
 void CleanUp(void);
 void LoadUSBIRX(void);
 void runOSDNoUpdate(void);
+int HDDLoad();
+
+
 #ifdef PSX
 static void InitPSX();
 #endif
@@ -134,6 +139,7 @@ int main(int argc, char *argv[])
 
     DPRINTF("disabling MODLOAD device blacklist/whitelist\n");
     sbv_patch_disable_prefix_check(); /* disable the MODLOAD module black/white list, allowing executables to be freely loaded from any device. */
+
 #ifdef USE_ROM_SIO2MAN
     j = SifLoadModule("rom0:SIO2MAN", 0, NULL);
     DPRINTF(" [SIO2MAN.IRX]: %d\n", j);
@@ -228,6 +234,9 @@ int main(int argc, char *argv[])
         if ((PAD & PAD_R1) && (PAD & PAD_START)) // if ONLY R1+START are pressed...
             EMERGENCY();
     }
+    
+    HDDLoad();
+
     TimerEnd();
     DPRINTF("load default settings\n");
     SetDefaultSettings();
@@ -549,6 +558,46 @@ void LoadUSBIRX(void)
     }
 }
 
+int HDDLoad()
+{
+    const static char HDDLOAD_ARGS[] = "-stat\0" "0x100000\0";
+    int ID, RET;
+    DPRINTF("%s: starts\n", __func__);
+    /*
+    if ((!exist("mc0:/PS2BBL/HDDLOAD.IRX")) && (!exist("mc1:/PS2BBL/HDDLOAD.IRX"))) // if HDDLOAD does not exist. quit
+    {
+        DPRINTF("HDDLOAD.IRX not found\n");
+        return -10;
+    }*/
+    ID = loadIRXFile("mc?:/PS2BBL/IOMANX.IRX", 0, NULL, &RET);
+    DPRINTF(" [IOMANX.IRX]: ret=%d, ID=%d\n", RET, ID);
+    if (ID < 0)
+        return -1;
+
+    ID = loadIRXFile("mc?:/PS2BBL/FILEXIO.IRX", 0, NULL, &RET);
+    DPRINTF(" [FILEXIO.IRX]: ret=%d, ID=%d\n", RET, ID);
+    if (ID < 0)
+        return -2;
+
+    fileXioInit();
+
+    ID = loadIRXFile("mc?:/PS2BBL/DEV9.IRX", 0, NULL, &RET);
+    DPRINTF(" [DEV9.IRX]: ret=%d, ID=%d\n", RET, ID);
+    if (ID < 0)
+        return -3;
+
+    ID = loadIRXFile("mc?:/PS2BBL/ATAD.IRX", 0, NULL, &RET);
+    DPRINTF(" [ATAD.IRX]: ret=%d, ID=%d\n", RET, ID);
+    if (ID < 0)
+        return -4;
+
+    ID = loadIRXFile("mc?:/PS2BBL/HDDLOAD.IRX", sizeof(HDDLOAD_ARGS), HDDLOAD_ARGS, &RET);
+    DPRINTF(" [HDDLOAD.IRX]: ret=%d, ID=%d\n", RET, ID);
+    if (ID < 0)
+        return -5;
+
+    return 0;
+}
 
 int dischandler()
 {

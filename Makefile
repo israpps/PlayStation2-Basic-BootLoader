@@ -64,7 +64,7 @@ EE_CFLAGS = -Wall
 EE_CFLAGS += -fdata-sections -ffunction-sections
 EE_LDFLAGS += -L$(PS2SDK)/ports/lib
 EE_LDFLAGS += -Wl,--gc-sections -Wno-sign-compare
-EE_LIBS += -ldebug -lmc -lpatches
+EE_LIBS += -ldebug -lmc -lpatches -lfileXio
 EE_INCS += -Iinclude -I$(PS2SDK)/ports/include
 EE_CFLAGS += -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DPATCHLEVEL=\"$(PATCHLEVEL)\" -DSTATUS=\"$(STATUS)\"
 

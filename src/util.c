@@ -3,10 +3,11 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <tamtypes.h>
-#include "util.h"
 #include <loadfile.h>
 #include <malloc.h>
-
+#include <errno.h>
+#include "util.h"
+#include "debugprintf.h"
 int exist(char *filepath)
 {
     if (filepath == NULL)
@@ -41,14 +42,15 @@ int loadIRXFile(char *path, u32 arg_len, const char *args, int *mod_res)
     int IRX_SIZE, RET = -1;
     if (!strncmp(path, "mc?", 3)) {
         path[2] = '0';
-        if (!exist(path)) {
-            path[2] = '1';
-            if (!exist(path))
-                return -1;
-        }
-    } else {
         if (!exist(path))
-            return -1;
+            path[2] = '1';
+    }
+    if (!exist(path))
+    {
+        DPRINTF("%s: %s NOT found\n", __func__, path);
+        return -ENOENT;
+    } else {
+        DPRINTF("%s: %s found\n", __func__, path);
     }
     fp = fopen(path, "r");
     fseek(fp, 0, SEEK_END);
@@ -57,13 +59,13 @@ int loadIRXFile(char *path, u32 arg_len, const char *args, int *mod_res)
     IRX = (unsigned char *)malloc(IRX_SIZE);
     if (IRX == NULL) {
         fclose(fp);
-        return -2;
+        return -ENOMEM;
     }
 
     if (fread(IRX, 1, IRX_SIZE, fp) == IRX_SIZE) {
         RET = SifExecModuleBuffer(IRX, IRX_SIZE, arg_len, args, mod_res);
     } else {
-        RET = -3;
+        RET = -EIO;
     }
     fclose(fp);
     if (IRX != NULL)
