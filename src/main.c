@@ -60,7 +60,8 @@ IMPORT_BIN2C(sio2man_irx);
 IMPORT_BIN2C(mcman_irx);
 IMPORT_BIN2C(mcserv_irx);
 IMPORT_BIN2C(padman_irx);
-
+IMPORT_BIN2C(iomanx_irx);
+IMPORT_BIN2C(filexio_irx);
 #ifdef HAS_EMBEDDED_IRX
 IMPORT_BIN2C(usbd_irx);
 #ifdef NO_BDM
@@ -88,6 +89,7 @@ void CleanUp(void);
 void LoadUSBIRX(void);
 void runOSDNoUpdate(void);
 int HDDLoad();
+int LoadFIO(void);
 
 
 #ifdef PSX
@@ -558,28 +560,36 @@ void LoadUSBIRX(void)
     }
 }
 
+int LoadFIO(void)
+{
+    int ID, RET;
+    ID = SifExecModuleBuffer(&iomanX_irx, size_iomanX_irx, 0, NULL, &RET);
+    DPRINTF(" [IOMANX.IRX]: ret=%d, ID=%d\n", RET, ID);
+    if (ID < 0)
+        return -1;
+
+    /* FILEXIO.IRX */
+    ID = SifExecModuleBuffer(&fileXio_irx, size_fileXio_irx, 0, NULL, &RET);
+    DPRINTF(" [FILEXIO.IRX]: ret=%d, ID=%d\n", RET, ID);
+    if (ID < 0)
+        return -2;
+    
+    fileXioInit();
+    return 0;
+}
+
 int HDDLoad()
 {
     const static char HDDLOAD_ARGS[] = "-stat\0" "0x100000\0";
     int ID, RET;
     DPRINTF("%s: starts\n", __func__);
+    LoadFIO();
     /*
     if ((!exist("mc0:/PS2BBL/HDDLOAD.IRX")) && (!exist("mc1:/PS2BBL/HDDLOAD.IRX"))) // if HDDLOAD does not exist. quit
     {
         DPRINTF("HDDLOAD.IRX not found\n");
         return -10;
     }*/
-    ID = loadIRXFile("mc?:/PS2BBL/IOMANX.IRX", 0, NULL, &RET);
-    DPRINTF(" [IOMANX.IRX]: ret=%d, ID=%d\n", RET, ID);
-    if (ID < 0)
-        return -1;
-
-    ID = loadIRXFile("mc?:/PS2BBL/FILEXIO.IRX", 0, NULL, &RET);
-    DPRINTF(" [FILEXIO.IRX]: ret=%d, ID=%d\n", RET, ID);
-    if (ID < 0)
-        return -2;
-
-    fileXioInit();
 
     ID = loadIRXFile("mc?:/PS2BBL/DEV9.IRX", 0, NULL, &RET);
     DPRINTF(" [DEV9.IRX]: ret=%d, ID=%d\n", RET, ID);

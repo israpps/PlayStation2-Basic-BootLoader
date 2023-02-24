@@ -29,6 +29,14 @@ $(EE_ASM_DIR)bdmfs_fatfs_irx.s: $(PS2SDK)/iop/irx/bdmfs_fatfs.irx | $(EE_ASM_DIR
 $(EE_ASM_DIR)usbmass_bd_irx.s: $(PS2SDK)/iop/irx/usbmass_bd.irx | $(EE_ASM_DIR)
 	@bin2s $< $@ usbmass_bd_irx
 
+$(EE_ASM_DIR)iomanx_irx.s: $(PS2SDK)/iop/irx/iomanX.irx | $(EE_ASM_DIR)
+	@bin2s $< $@ iomanX_irx
+
+$(EE_ASM_DIR)filexio_irx.s: $(PS2SDK)/iop/irx/fileXio.irx | $(EE_ASM_DIR)
+	@bin2s $< $@ fileXio_irx
+
+
+
 # ---{ EMBEDDED RESOURCES }--- #
 $(EE_ASM_DIR)icon_sys_A.s : embed/icons/icon_A.sys | $(EE_ASM_DIR)
 	@bin2s $< $@ icon_sys_A
