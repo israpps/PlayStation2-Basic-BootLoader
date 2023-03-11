@@ -27,9 +27,11 @@
 #include <fileXio_rpc.h>
 #include <hdd-ioctl.h>
 #include <io_common.h>
-int LoadHDDIRX(void);
-int LoadFIO(void);
-int MountParty(const char* path);
+#include <assert.h>
+int LoadHDDIRX(void); // Load HDD IRXes
+int LoadFIO(void); // Load FileXio and it´s dependencies
+int MountParty(const char* path); ///processes strings in the format `hdd0:/$PARTITION:pfs:$PATH_TO_FILE/` to mount partition
+int mnt(const char* path); ///mount partition specified on path
 #endif
 
 #include "debugprintf.h"
@@ -262,29 +264,30 @@ int main(int argc, char *argv[])
     if (fp == NULL) {
         DPRINTF("Cant load config from mass\n");
 #ifdef HDD
-        if (MountParty("hdd0:__sysconf") >= 0)
+        if (mnt("hdd0:__sysconf") == 0)
             fp = fopen("pfs0:/PS2BBL/CONFIG.INI", "r" );
-            if (fp == NULL) 
-            {
-                DPRINTF("Cant load config from hdd0:__sysconf\n");
+        if (fp == NULL) 
+        {
+            DPRINTF("Cant open 'pfs0:/PS2BBL/CONFIG.INI'\n");
 #endif
-                fp = fopen("mc0:/PS2BBL/CONFIG.INI", "r");
+            fp = fopen("mc0:/PS2BBL/CONFIG.INI", "r");
+            if (fp == NULL) {
+                DPRINTF("Cant load config from mc0\n");
+                fp = fopen("mc1:/PS2BBL/CONFIG.INI", "r");
                 if (fp == NULL) {
-                    DPRINTF("Cant load config from mc0\n");
-                    fp = fopen("mc1:/PS2BBL/CONFIG.INI", "r");
-                    if (fp == NULL) {
-                        DPRINTF("Cant load config from mc1\n");
-                        config_source = SOURCE_INVALID;
-                    } else {
-                        config_source = SOURCE_MC1;
-                    }
+                    DPRINTF("Cant load config from mc1\n");
+                    config_source = SOURCE_INVALID;
                 } else {
-                    config_source = SOURCE_MC0;
+                    config_source = SOURCE_MC1;
                 }
-#ifdef HDD
             } else {
-                config_source = SOURCE_HDD;
+                config_source = SOURCE_MC0;
             }
+#ifdef HDD
+        } else {
+            config_source = SOURCE_HDD;
+            
+        }
 #endif
     } else {
         config_source = SOURCE_MASS;
@@ -353,7 +356,11 @@ int main(int argc, char *argv[])
         }
 #ifdef HDD
         if (config_source == SOURCE_HDD)
-            fileXioUmount("pfs0");
+        {
+
+            if (fileXioUmount("pfs0:") < 0)
+                DPRINTF("ERROR: Could not unmount 'pfs0:'\n");
+        }
 #endif
     } else {
         scr_printf("Can't find config, loading hardcoded paths\n");
@@ -403,11 +410,11 @@ int main(int argc, char *argv[])
     scr_printf(BANNER_FOOTER "\n\n\tModel:\t\t%s\n"
                              "\tPlayStation Driver:\t%s\n"
                              "\tDVD Player:\t%s\n"
-                             "\tConfig source:\t%d\n",
+                             "\tConfig source:\t%s\n",
                ModelNameGet(),
                PS1DRVGetVersion(),
                DVDPlayerGetVersion(),
-               config_source);
+               SOURCES[config_source]);
     DPRINTF("Timer starts!\n");
     TimerInit();
     tstart = Timer();
@@ -523,9 +530,15 @@ char *CheckPath(char *path)
 #ifdef HDD
     } else if (!strncmp("hdd", path, 3)) {
         if (MountParty(path) < 0)
-            return path;
+            {
+                DPRINTF("-{%s}-\n", path);
+                return path;
+            }
         else
-            return strstr(path, "pfs:"); // leave path as pfs:/blabla
+            {
+                DPRINTF("--{%s}--{%s}\n", path, strstr(path, "pfs:"));
+                return strstr(path, "pfs:");
+            } // leave path as pfs:/blabla
     }
 #endif
     return path;
@@ -629,7 +642,7 @@ int LoadHDDIRX(void)
 {
     int ID, RET, HDDSTAT;
     static const char hddarg[] = "-o" "\0" "4" "\0" "-n" "\0" "20";
-	static const char pfsarg[] = "-n\0" "24\0" "-o\0" "8";
+	//static const char pfsarg[] = "-n\0" "24\0" "-o\0" "8";
 
     /* PS2DEV9.IRX */
     ID = SifExecModuleBuffer(&ps2dev9_irx, size_ps2dev9_irx, 0, NULL, &RET);
@@ -656,7 +669,7 @@ int LoadHDDIRX(void)
     /* PS2FS.IRX */
     if (HDD_USABLE)
     {
-        ID = SifExecModuleBuffer(&ps2fs_irx, size_ps2fs_irx, sizeof(pfsarg), pfsarg, &RET);
+        ID = SifExecModuleBuffer(&ps2fs_irx, size_ps2fs_irx,  NULL, NULL,  &RET);
         DPRINTF(" [PS2FS.IRX]: ret=%d, ID=%d\n", RET, ID);
         if (ID < 0)
             return -5;
@@ -668,32 +681,140 @@ int LoadHDDIRX(void)
 int MountParty(const char* path)
 {
     DPRINTF("%s: %s\n", __func__, path);
-    char *del;
-    del = strtok(path, "@pfs");
-    DPRINTF("strtok pushed %s\n",del);
-    if (del != NULL) // if string has valid pfs token
+    char* BUF = NULL;
+    BUF = strdup(path);
+    char MountPoint[40];
+    if (getMountInfo(BUF, NULL, MountPoint, NULL, NULL))
     {
-        if (fileXioMount("pfs0:", path, FIO_MT_RDONLY ) < 0) // mount
+        mnt(MountPoint);
+        if (BUF != NULL)
+            free(BUF);
+        return 0;
+    } else {DPRINTF("ERROR: could not process path '%s'\n", path);}
+    if (BUF != NULL)
+        free(BUF);
+    return -1;
+}
+
+int mnt(const char* path)
+{
+    DPRINTF("Mounting '%s'\n", path);
+    if (fileXioMount("pfs0:", path, FIO_MT_RDONLY ) < 0) // mount
+    {
+        DPRINTF("Mount failed. unmounting pfs0 and trying again...\n");
+        if (fileXioUmount("pfs0:") < 0) //try to unmount then mount again in case it got mounted by something else
         {
-            DPRINTF("Mount failed. unmounting pfs0 and trying again...\n");
-            if (fileXioUmount("pfs0:") < 0) //try to unmount then mount again in case it got mounted by something else
-            {
-                DPRINTF("Unmount failed!!!\n");
-                return -3;
-            }
-            if (fileXioMount("pfs0:", path, FIO_MT_RDONLY ) < 0)
-            {
-                DPRINTF("mount failed again!\n");
-                return -4;
-            }
-        } else DPRINTF("mount successfull on first attemp\n");
-    } else {
-        DPRINTF("path has no valid pfs token\n");
-        return -1;
-    }
+            DPRINTF("Unmount failed!!!\n");
+        }
+        if (fileXioMount("pfs0:", path, FIO_MT_RDONLY ) < 0)
+        {
+            DPRINTF("mount failed again!\n");
+            return -4;
+        } else {
+            DPRINTF("Second mount succed!\n");
+        }
+    } else DPRINTF("mount successfull on first attemp\n");
     return 0;
 }
 
+//By fjtrujy
+static char** str_split(char* a_str, const char a_delim)
+{
+    char** result    = 0;
+    size_t count     = 0;
+    char* tmp        = a_str;
+    char* last_comma = 0;
+    char delim[2];
+    delim[0] = a_delim;
+    delim[1] = 0;
+
+    /* Count how many elements will be extracted. */
+    while (*tmp)
+    {
+        if (a_delim == *tmp)
+        {
+            count++;
+            last_comma = tmp;
+        }
+        tmp++;
+    }
+
+    /* Add space for trailing token. */
+    count += last_comma < (a_str + strlen(a_str) - 1);
+
+    /* Add space for terminating null string so caller
+       knows where the list of returned strings ends. */
+    count++;
+
+    result = malloc(sizeof(char*) * count);
+
+    if (result)
+    {
+        size_t idx  = 0;
+        char* token = strtok(a_str, delim);
+
+        while (token)
+        {
+            assert(idx < count);
+            *(result + idx++) = strdup(token);
+            token = strtok(0, delim);
+        }
+        assert(idx == count - 1);
+        *(result + idx) = 0;
+    }
+
+    return result;
+}
+
+/**
+ * @brief  method returns true if it can extract needed info from path, otherwise false.
+ * In case of true, it also updates mountString, mountPoint and newCWD parameters
+ * It splits path by ":", and requires a minimum of 3 elements
+ * Example: if path = hdd0:__common:pfs:/retroarch/ then
+ * mountString = "pfs:"
+ * mountPoint = "hdd0:__common"
+ * newCWD = pfs:/retroarch/
+ * return true
+*/
+int getMountInfo(char *path, char *mountString, char *mountPoint, char *newCWD)
+{
+    int expected_items = 4;
+    int i = 0;
+    char *items[expected_items];
+    char** tokens = str_split(path, ':');
+
+    if (!tokens)
+        return 0;
+    
+    for (i = 0; *(tokens + i); i++) {
+        if (i < expected_items) {
+            items[i] = *(tokens + i);
+        } else {
+            free(*(tokens + i));    
+        }
+    }
+
+    if (i < 3 )
+        return 0;
+    
+    if (mountPoint != NULL)
+        sprintf(mountPoint, "%s:%s", items[0], items[1]);
+
+    if (mountString != NULL)
+        sprintf(mountString, "%s:", items[2]);
+
+    if (newCWD != NULL)
+        sprintf(newCWD, "%s:%s", items[2], i > 3 ? items[3] : "");
+    
+    free(items[0]);
+    free(items[1]);
+    free(items[2]);
+
+    if (i > 3)
+        free(items[3]);
+
+    return 1;
+}
 #endif
 
 int dischandler()
