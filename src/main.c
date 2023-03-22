@@ -22,16 +22,12 @@
 #include <libmc.h>
 #include <libcdvd.h>
 
-#ifdef HDD
 #define NEWLIB_PORT_AWARE
+#ifdef HDD
 #include <fileXio_rpc.h>
 #include <hdd-ioctl.h>
 #include <io_common.h>
 #include <assert.h>
-int LoadHDDIRX(void); // Load HDD IRXes
-int LoadFIO(void); // Load FileXio and it´s dependencies
-int MountParty(const char* path); ///processes strings in the format `hdd0:/$PARTITION:pfs:$PATH_TO_FILE/` to mount partition
-int mnt(const char* path); ///mount partition specified on path
 #endif
 
 #include "debugprintf.h"
@@ -111,6 +107,12 @@ void runOSDNoUpdate(void);
 static void InitPSX();
 #endif
 
+#ifdef HDD
+int LoadHDDIRX(void); // Load HDD IRXes
+int LoadFIO(void); // Load FileXio and it´s dependencies
+int MountParty(const char* path); ///processes strings in the format `hdd0:/$PARTITION:pfs:$PATH_TO_FILE/` to mount partition
+int mnt(const char* path); ///mount partition specified on path
+#endif
 
 // --------------- glob stuff --------------- //
 typedef struct
@@ -184,12 +186,14 @@ int main(int argc, char *argv[])
     DPRINTF(" [PADMAN.IRX]: ret=%d, ID=%d\n", j, x);
 #endif
     LoadUSBIRX();
+
 #ifdef HDD
     if (LoadFIO() < 0)
         	{scr_setbgcolor(0xff0000); scr_clear(); sleep(8);}
     else if (LoadHDDIRX() < 0) // only load HDD crap if filexio and iomanx are up and running
         	{scr_setbgcolor(0x0000ff); scr_clear(); sleep(8);}
 #endif
+
     if ((fd = open("rom0:ROMVER", O_RDONLY)) >= 0) {
         read(fd, ROMVER, sizeof(ROMVER));
         close(fd);
@@ -539,8 +543,8 @@ char *CheckPath(char *path)
                 DPRINTF("--{%s}--{%s}\n", path, strstr(path, "pfs:"));
                 return strstr(path, "pfs:");
             } // leave path as pfs:/blabla
-    }
 #endif
+    }
     return path;
 }
 
