@@ -688,20 +688,19 @@ int LoadHDDIRX(void)
 
 int MountParty(const char* path)
 {
+    int ret = -1
     DPRINTF("%s: %s\n", __func__, path);
     char* BUF = NULL;
-    BUF = strdup(path);
+    BUF = strdup(path); //use strdup, otherwise, path will become `hdd0:`
     char MountPoint[40];
     if (getMountInfo(BUF, NULL, MountPoint, NULL))
     {
         mnt(MountPoint);
-        if (BUF != NULL)
-            free(BUF);
-        return 0;
+        ret = 0;
     } else {DPRINTF("ERROR: could not process path '%s'\n", path);}
     if (BUF != NULL)
         free(BUF);
-    return -1;
+    return ret;
 }
 
 int mnt(const char* path)
