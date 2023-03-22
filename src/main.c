@@ -187,9 +187,11 @@ int main(int argc, char *argv[])
 #endif
     LoadUSBIRX();
 
-#ifdef HDD
+#ifdef FILEXIO
     if (LoadFIO() < 0)
         	{scr_setbgcolor(0xff0000); scr_clear(); sleep(8);}
+#endif
+#ifdef HDD
     else if (LoadHDDIRX() < 0) // only load HDD crap if filexio and iomanx are up and running
         	{scr_setbgcolor(0x0000ff); scr_clear(); sleep(8);}
 #endif
@@ -614,16 +616,7 @@ void LoadUSBIRX(void)
     }
 }
 
-#ifdef HDD
-static int CheckHDD(void) {
-    int ret = fileXioDevctl("hdd0:", HDIOC_STATUS, NULL, 0, NULL, 0);
-    /* 0 = HDD connected and formatted, 1 = not formatted, 2 = HDD not usable, 3 = HDD not connected. */
-    DPRINTF("%s: HDD status is %d\n", __func__, ret);
-    if ((ret >= 3) || (ret < 0))
-        return -1;
-    return ret;
-}
-
+#ifdef FILEXIO
 int LoadFIO(void)
 {
     int ID, RET;
@@ -638,8 +631,20 @@ int LoadFIO(void)
     if (ID < 0)
         return -2;
     
-    fileXioInit();
+    RET = fileXioInit();
+    DPRINTF("fileXioInit: %d\n", RET);
     return 0;
+}
+#endif
+
+#ifdef HDD
+static int CheckHDD(void) {
+    int ret = fileXioDevctl("hdd0:", HDIOC_STATUS, NULL, 0, NULL, 0);
+    /* 0 = HDD connected and formatted, 1 = not formatted, 2 = HDD not usable, 3 = HDD not connected. */
+    DPRINTF("%s: HDD status is %d\n", __func__, ret);
+    if ((ret >= 3) || (ret < 0))
+        return -1;
+    return ret;
 }
 
 int LoadHDDIRX(void)

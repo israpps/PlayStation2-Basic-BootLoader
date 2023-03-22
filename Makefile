@@ -17,13 +17,15 @@ PSX ?= 0 # PSX DESR support
 HDD ?= 0 #wether to add internal HDD support
 PROHBIT_DVD_0100 ?= 0 # prohibit the DVD Players v1.00 and v1.01 from being booted.
 XCDVD_READKEY ?= 0 # Enable the newer sceCdReadKey checks, which are only supported by a newer CDVDMAN module.
-USE_ROM_PADMAN ?= 1
-USE_ROM_MCMAN ?= 1
-USE_ROM_SIO2MAN ?= 1
-# Just one print should be enabled
+
 SCR_PRINT ?= 0 #scr_printf
 EE_SIO ?= 0 #serial port
 PCSX2 ?= 0 #common printf. for PCSX2 or PS2LINK
+
+USE_ROM_PADMAN ?= 1
+USE_ROM_MCMAN ?= 1
+USE_ROM_SIO2MAN ?= 1
+FILEXIO_NEED ?= 0 #if we need filexio and imanx loaded for other features (HDD, mx4sio, etc)
 
 # Related to binary size reduction
 KERNEL_NOPATCH = 1 
@@ -121,8 +123,14 @@ endif
 
 ifeq ($(HDD), 1)
   EE_LIBS += -lfileXio -lpoweroff
-  EE_OBJS += ps2fs_irx.o ps2hdd_irx.o ps2atad_irx.o ps2dev9_irx.o filexio_irx.o iomanx_irx.o poweroff_irx.o
+  EE_OBJS += ps2fs_irx.o ps2hdd_irx.o ps2atad_irx.o ps2dev9_irx.o poweroff_irx.o
   EE_CFLAGS += -DHDD
+  FILEXIO_NEED = 1
+endif
+
+ifeq ($(FILEXIO_NEED), 1)
+  EE_CFLAGS += -DFILEXIO
+  EE_OBJS += filexio_irx.o iomanx_irx.o
 endif
 
 ifeq ($(DUMMY_TIMEZONE), 1)
