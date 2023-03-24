@@ -27,6 +27,15 @@
 #include <fileXio_rpc.h>
 #include <hdd-ioctl.h>
 #include <io_common.h>
+#include <assert.h>
+char PART[40] = {NULL};
+#define MPART PART
+int LoadHDDIRX(void); // Load HDD IRXes
+int LoadFIO(void); // Load FileXio and it´s dependencies
+int MountParty(const char* path); ///processes strings in the format `hdd0:/$PARTITION:pfs:$PATH_TO_FILE/` to mount partition
+int mnt(const char* path); ///mount partition specified on path
+#else
+#define MPART NULL
 #endif
 
 #include "debugprintf.h"
@@ -437,7 +446,7 @@ int main(int argc, char *argv[])
                         scr_printf("\tLoading %s\n", EXECPATHS[j]);
                         if (!is_PCMCIA)
                             PadDeinitPads();
-                        RunLoaderElf(EXECPATHS[j], NULL);
+                        RunLoaderElf(EXECPATHS[j], MPART);
                     } else {
                         scr_setfontcolor(0x00ffff);
                         DPRINTF("%s not found\n", EXECPATHS[j]);
@@ -457,7 +466,7 @@ int main(int argc, char *argv[])
             if (exist(CheckPath(GLOBCFG.KEYPATHS[0][j]))) {
                 if (!is_PCMCIA)
                     PadDeinitPads();
-                RunLoaderElf(CheckPath(GLOBCFG.KEYPATHS[0][j]), NULL);
+                RunLoaderElf(CheckPath(GLOBCFG.KEYPATHS[0][j]), MPART);
             } else {
                 scr_setfontcolor(0x00ffff);
                 DPRINTF("%s not found\n", GLOBCFG.KEYPATHS[0][j]);
@@ -535,15 +544,17 @@ char *CheckPath(char *path)
 #ifdef HDD
     } else if (!strncmp("hdd", path, 3)) {
         if (MountParty(path) < 0)
-            {
-                DPRINTF("-{%s}-\n", path);
-                return path;
-            }
+        {
+            DPRINTF("-{%s}-\n", path);
+            return path;
+        }
         else
-            {
-                DPRINTF("--{%s}--{%s}\n", path, strstr(path, "pfs:"));
-                return strstr(path, "pfs:");
-            } // leave path as pfs:/blabla
+        {
+            DPRINTF("--{%s}--{%s}\n", path, strstr(path, "pfs:"));
+            return strstr(path, "pfs:");
+        } // leave path as pfs:/blabla
+        if (!MountParty(path))
+            return strstr(path, "pfs:");
 #endif
     }
     return path;
@@ -696,8 +707,14 @@ int MountParty(const char* path)
     if (getMountInfo(BUF, NULL, MountPoint, NULL))
     {
         mnt(MountPoint);
-        ret = 0;
-    } else {DPRINTF("ERROR: could not process path '%s'\n", path);}
+        if (BUF != NULL)
+            free(BUF);
+        strncpy(PART, MountPoint, 40);
+        return 0;
+    } else {
+        DPRINTF("ERROR: could not process path '%s'\n", path);
+        PART[0]=NULL;
+    }
     if (BUF != NULL)
         free(BUF);
     return ret;

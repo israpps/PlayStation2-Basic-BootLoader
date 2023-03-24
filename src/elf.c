@@ -15,7 +15,7 @@
 
 void RunLoaderElf(char *filename, char *party)
 {
-    int argc = 0;
+    //int argc = 0;
     char* argv[1];
     argv[0] = party;
     DPRINTF("\tLOADING [%s]\n", filename);
