@@ -35,7 +35,7 @@ int LoadFIO(void); // Load FileXio and it´s dependencies
 int MountParty(const char* path); ///processes strings in the format `hdd0:/$PARTITION:pfs:$PATH_TO_FILE/` to mount partition
 int mnt(const char* path); ///mount partition specified on path
 #else
-#define MPART NULL
+#define MPART NULL //this ensures that when HDD support is not available, partition is always NULL on ELF Loading function.
 #endif
 
 #include "debugprintf.h"
@@ -709,7 +709,8 @@ int MountParty(const char* path)
         mnt(MountPoint);
         if (BUF != NULL)
             free(BUF);
-        strncpy(PART, path, 128);
+        strcpy(PART, MountPoint);
+        strcat(PART, ":")
         return 0;
     } else {
         DPRINTF("ERROR: could not process path '%s'\n", path);
