@@ -22,7 +22,13 @@ void RunLoaderElf(const char *filename, const char *party)
     DPRINTF(".\n");
 #endif
     if (party[0] == '\0')
+	{
+		DPRINTF("LoadELFFromFile(%s, 0, NULL)\n", filename);
         LoadELFFromFile(filename, 0, NULL);
+	}
     else
+	{
+		DPRINTF("LoadELFFromFileWithPartition(%s, %s, 0, NULL);\n", filename, party);
         LoadELFFromFileWithPartition(filename, party, 0, NULL);
+	}
 }
