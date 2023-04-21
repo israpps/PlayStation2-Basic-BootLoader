@@ -1,6 +1,3 @@
-//--------------------------------------------------------------
-// Borrowed from wLaunchELF
-//--------------------------------------------------------------
 #include <stdio.h>
 #include <string.h>
 #include <fcntl.h>
@@ -13,11 +10,8 @@
 #define MAX_PATH 1025
 
 
-void RunLoaderElf(char *filename, char *party)
+void RunLoaderElf(const char *filename, const char *party)
 {
-    //int argc = 0;
-    char* argv[1];
-    argv[0] = party;
     DPRINTF("\tLOADING [%s]\n", filename);
 #ifndef NO_DPRINTF
     if (party != NULL)
@@ -27,5 +21,8 @@ void RunLoaderElf(char *filename, char *party)
     sleep(5);
     DPRINTF(".\n");
 #endif
-    LoadELFFromFile(filename, (party != NULL), argv);
+    if (party[0] == '\0')
+        LoadELFFromFile(filename, 0, NULL);
+    else
+        LoadELFFromFileWithPartition(filename, party, 0, NULL);
 }

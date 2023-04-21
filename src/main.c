@@ -28,7 +28,7 @@
 #include <hdd-ioctl.h>
 #include <io_common.h>
 #include <assert.h>
-char PART[40] = {NULL};
+char PART[128] = "\0";
 #define MPART PART
 int LoadHDDIRX(void); // Load HDD IRXes
 int LoadFIO(void); // Load FileXio and it´s dependencies
@@ -688,7 +688,7 @@ int LoadHDDIRX(void)
     /* PS2FS.IRX */
     if (HDD_USABLE)
     {
-        ID = SifExecModuleBuffer(&ps2fs_irx, size_ps2fs_irx,  NULL, NULL,  &RET);
+        ID = SifExecModuleBuffer(&ps2fs_irx, size_ps2fs_irx,  0, NULL,  &RET);
         DPRINTF(" [PS2FS.IRX]: ret=%d, ID=%d\n", RET, ID);
         if (ID < 0)
             return -5;
@@ -699,7 +699,7 @@ int LoadHDDIRX(void)
 
 int MountParty(const char* path)
 {
-    int ret = -1
+    int ret = -1;
     DPRINTF("%s: %s\n", __func__, path);
     char* BUF = NULL;
     BUF = strdup(path); //use strdup, otherwise, path will become `hdd0:`
@@ -709,11 +709,11 @@ int MountParty(const char* path)
         mnt(MountPoint);
         if (BUF != NULL)
             free(BUF);
-        strncpy(PART, MountPoint, 40);
+        strncpy(PART, path, 128);
         return 0;
     } else {
         DPRINTF("ERROR: could not process path '%s'\n", path);
-        PART[0]=NULL;
+        PART[0] = '\0';
     }
     if (BUF != NULL)
         free(BUF);

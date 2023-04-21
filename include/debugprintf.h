@@ -3,7 +3,7 @@
 
 #ifdef EE_SIO_DEBUG
     #include <SIOCookie.h>
-    #define DPRINTF_INIT() ee_sio_start(38400, 0, 0, 0, 0);
+    #define DPRINTF_INIT() ee_sio_start(38400, 0, 0, 0, 0, 1);
     #define DPRINTF(x...) fprintf(EE_SIO, x)
 #elif PCSX2
     #define DPRINTF(x...) printf(x)
