@@ -47,7 +47,8 @@ BASENAME ?= PS2BBL
 EE_BIN = $(BINDIR)$(BASENAME).ELF
 EE_BIN_STRIPPED = $(BINDIR)stripped_$(BASENAME).ELF
 EE_BIN_PACKED = $(BINDIR)COMPRESSED_$(BASENAME).ELF
-EE_BIN_ENCRYPTED = $(BINDIR)$(BASENAME).KELF
+KELFTYPE ?= MC
+EE_BIN_ENCRYPTED = $(BINDIR)$(BASENAME)_$(KELFTYPE).KELF
 
 # ---{ OBJECTS & STUFF }--- #
 
@@ -73,11 +74,19 @@ EE_CFLAGS += -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DPATCHLEVE
 
 # ---{ CONDITIONS }--- #
 
-ifneq ($(VERBOSE),1)
+ifneq ($(VERBOSE), 1)
    .SILENT:
 endif
 
-ifeq ($(PSX),1)
+ifneq ($(HOMEBREW_IRX), 0)
+   $(info --- enforcing usage of homebrew IRX modules)
+   USE_ROM_PADMAN = 0
+   USE_ROM_MCMAN = 0
+   USE_ROM_SIO2MAN = 0
+endif
+
+ifeq ($(PSX), 1)
+   $(info --- building with PSX-DESR support)
   BASENAME = PSXBBL
   EE_CFLAGS += -DPSX=1
   EE_OBJS += scmd_add.o ioprp.o
@@ -122,14 +131,17 @@ ifneq ($(HAS_LOCAL_IRX), 1)
 endif
 
 ifeq ($(HDD), 1)
-  EE_LIBS += -lfileXio -lpoweroff
+  $(info --- compiling with HDD support)
+  EE_LIBS += -lpoweroff
   EE_OBJS += ps2fs_irx.o ps2hdd_irx.o ps2atad_irx.o ps2dev9_irx.o poweroff_irx.o
   EE_CFLAGS += -DHDD
   FILEXIO_NEED = 1
+  KELFTYPE = HDD
 endif
 
 ifeq ($(FILEXIO_NEED), 1)
   EE_CFLAGS += -DFILEXIO
+  EE_LIBS += -lfileXio
   EE_OBJS += filexio_irx.o iomanx_irx.o
 endif
 
@@ -216,9 +228,12 @@ else
 endif
 
 $(EE_BIN_ENCRYPTED): $(EE_BIN_PACKED)
-	@echo " -- Encrypting"
+	@echo " -- Encrypting ($(KELFTYPE))"
+ifeq ($(KELFTYPE), MC)
 	thirdparty/kelftool_dnasload.exe encrypt dnasload $< $@
-
+else ifeq ($(KELFTYPE), HDD)
+	thirdparty/kelftool_dnasload.exe encrypt fhdb $< $@
+endif
 # move OBJ to folder and search source on src/, borrowed from OPL makefile
 
 EE_OBJS := $(EE_OBJS:%=$(EE_OBJS_DIR)%) # remap all EE_OBJ to obj subdir
