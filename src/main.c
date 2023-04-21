@@ -710,7 +710,7 @@ int MountParty(const char* path)
         if (BUF != NULL)
             free(BUF);
         strcpy(PART, MountPoint);
-        strcat(PART, ":")
+        strcat(PART, ":");
         return 0;
     } else {
         DPRINTF("ERROR: could not process path '%s'\n", path);
