@@ -18,10 +18,18 @@ It will trigger emergency mode
 
 where PS2BBL will try to boot `RESCUE.ELF` from USB device Root on an endless loop.
 
+## Compatibility 
 
-## Properly sistem initialization
+PS2BBL is capable of properly operating on almost all ps2 systems around. even on PSX DESR!
 
-### For PS2
+the following systems have not been tested, and therefore, compatibility with them cannot be guaranteed:
+
+- Namco arcade systems `COH-H` models
+- Chinese PS2 (`SCPH-xxx09`)
+
+## Proper sistem initialization
+
+### For all systems
 
 - OSD, OSD settings and some extra facilities are loaded.
 - All modules listed on default IOP Boot configuration are loaded on startup.
@@ -29,15 +37,20 @@ where PS2BBL will try to boot `RESCUE.ELF` from USB device Root on an endless lo
 - Remote control will be enabled if possible
 - OSD Initialization is done in a way the Kernel Patches for `SCPH-10000` and `SCPH-15000` take effect
 
-### For PSX
 
+### For PSX-DESR
+<!---
 - Memory mode is set to 32mb limit, as it's described to be the best method for running homebrew (IOP remains using it's juicy 8mb)
+--->
+- PSX disc tray is enforced into PS2 mode at boot. allowing the usage of PlayStation and PlayStation 2 games even if the DVR laser is not operational
 
-- Special PSX disc drive modules are loaded (`PCDVDMAN` & `PCDVDFS`) so the bootloader can set the disc reader to PS2 mode (allows running discs even if disc burner is broken)
+## Modchip Compatibility
+
+unlike FreeMcBoot, PS2BBL has higher compatibility with modchipped consoles because it does not patch the OSDSYS on RAM.
 
 ## Running homebrew
 
-Unsigned executables can be freely loaded from memory card and USB (both FAT32 and EXFAT). even on-board software can be loaded (`rom0`)
+Unsigned executables can be freely loaded from memory card and USB (both FAT32 and EXFAT) and even built-in software can be loaded (`rom0`)
 
 ## Running Discs
 
