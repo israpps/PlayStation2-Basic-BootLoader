@@ -36,6 +36,7 @@
 #include "ps2.h"
 #include "modelname.h"
 #include "banner.h"
+#include "xparam.h"
 
 #ifdef PSX
 #include <iopcontrol_special.h>
