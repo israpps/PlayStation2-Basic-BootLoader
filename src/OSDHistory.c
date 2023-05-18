@@ -229,6 +229,11 @@ static u16 GetTimestamp(void)
 static void AddHistoryRecord(const char *name)
 {
     DPRINTF("%s: start\n", __func__);
+    if (name == NULL)
+    {
+        DPRINTF("GAME ID IS NULL, ABORTING.\n");
+        return;
+    }
     int i, value, LeastUsedRecord, LeastUsedRecordLaunchCount, LeastUsedRecordTimestamp, NewLaunchCount;
     u8 BlankSlotList[MAX_HISTORY_ENTRIES];
     int IsNewRecord;
