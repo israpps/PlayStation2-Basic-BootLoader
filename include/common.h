@@ -2,8 +2,7 @@
 #define COMMONDEF
 enum
 {
-    SOURCE_INVALID = 0,
-    SOURCE_MC0,
+    SOURCE_MC0 = 0,
     SOURCE_MC1,
     SOURCE_MASS,
 #ifdef HDD
@@ -12,13 +11,12 @@ enum
 #ifdef XFROM
     SOURCE_XFROM,
 #endif
-
-    SOURCE_COUNT
+    SOURCE_INVALID,
+    SOURCE_COUNT,
 } CONFIG_SOURCES_ID;
 
 static const char* SOURCES[SOURCE_COUNT] =
 {
-    "NOT FOUND",
     "mc0:",
     "mc1:",
     "mass:",
@@ -28,6 +26,7 @@ static const char* SOURCES[SOURCE_COUNT] =
 #ifdef XFROM
     "xfrom0:",
 #endif
+    "NOT FOUND",
 };
 
 #define MAX_LEN     64

@@ -137,13 +137,13 @@ char *EXECPATHS[3];
 u8 ROMVER[16];
 int PAD = 0;
 int HDD_USABLE = 0;
-
+static int  config_source = SOURCE_INVALID;
 int main(int argc, char *argv[])
 {
     u32 STAT;
     u64 tstart;
     int button, x, j, cnf_size, is_PCMCIA = 0, fd, result;
-    static int config_source = SOURCE_INVALID, num_buttons = 4, pad_button = 0x0100; // first pad button is L2
+    static int num_buttons = 4, pad_button = 0x0100; // first pad button is L2
     unsigned char *RAM_p = NULL;
     char *CNFBUFF, *name, *value;
 
@@ -533,11 +533,11 @@ char *CheckPath(char *path)
         }
     }
     if (!strncmp("mc?", path, 3)) {
-        path[2] = '0';
+        path[2] = (config_source == SOURCE_MC1) ? '1' : '0';
         if (exist(path)) {
             return path;
         } else {
-            path[2] = '1';
+            path[2] = (config_source == SOURCE_MC1) ? '0' : '1';
             if (exist(path))
                 return path;
         }

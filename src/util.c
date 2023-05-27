@@ -38,6 +38,7 @@ void delay(int count)
     }
 }
 
+#ifdef F_loadIRXFile
 int loadIRXFile(char *path, u32 arg_len, const char *args, int *mod_res)
 {
     FILE *fp;
@@ -74,6 +75,7 @@ int loadIRXFile(char *path, u32 arg_len, const char *args, int *mod_res)
         free(IRX);
     return RET;
 }
+#endif
 
 int get_CNF_string(char **CNF_p_p,
                    char **name_p_p,
@@ -128,9 +130,7 @@ start_line:
 } // Ends get_CNF_string
 
 #ifdef HDD
-
 //By fjtrujy
-
 char** str_split(char* a_str, const char a_delim)
 {
     char** result    = 0;
