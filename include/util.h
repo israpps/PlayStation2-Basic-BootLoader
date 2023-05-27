@@ -14,7 +14,7 @@ void delay(int count);
  * @brief load an IRX file into memory from a file
  * @param path path to the IRX
  * @param arg_len argc for IRX
- * @param args argv[][] for IRX
+ * @param args '\0' delimited list of args for IRX
  * @param mod_res see SifExecModuleBuffer documentation on SDK for this
  * @returns nonzero on failure, check SifExecModuleBuffer documentation on SDK
 */

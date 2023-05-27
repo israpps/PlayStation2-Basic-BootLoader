@@ -11,7 +11,7 @@ export HEADER
 
 
 # ---{BUILD CFG}--- #
-HAS_LOCAL_IRX = 1 # whether to embed or not non vital IRX (wich will be loaded from memcard files)
+HAS_EMBED_IRX = 1 # whether to embed or not non vital IRX (wich will be loaded from memcard files)
 DEBUG ?= 0
 PSX ?= 0 # PSX DESR support
 HDD ?= 0 #wether to add internal HDD support
@@ -22,9 +22,7 @@ SCR_PRINT ?= 0 #scr_printf
 EE_SIO ?= 0 #serial port
 PCSX2 ?= 0 #common printf. for PCSX2 or PS2LINK
 
-USE_ROM_PADMAN ?= 1
-USE_ROM_MCMAN ?= 1
-USE_ROM_SIO2MAN ?= 1
+HOMEBREW_IRX ?= 0
 FILEXIO_NEED ?= 0 #if we need filexio and imanx loaded for other features (HDD, mx4sio, etc)
 
 # Related to binary size reduction
@@ -83,6 +81,11 @@ ifneq ($(HOMEBREW_IRX), 0)
    USE_ROM_PADMAN = 0
    USE_ROM_MCMAN = 0
    USE_ROM_SIO2MAN = 0
+else
+   $(info --- using BOOT-ROM drivers)
+   USE_ROM_PADMAN = 1
+   USE_ROM_MCMAN = 1
+   USE_ROM_SIO2MAN = 1
 endif
 
 ifeq ($(PSX), 1)
@@ -96,6 +99,7 @@ else
 endif
 
 ifeq ($(DEBUG), 1)
+   $(info --- debugging enabled)
   EE_CFLAGS += -DDEBUG -O0 -g
   EE_LIBS += -lelf-loader
 else 
@@ -125,7 +129,8 @@ else
   EE_OBJS += sio2man_irx.o
 endif
 
-ifneq ($(HAS_LOCAL_IRX), 1)
+ifneq ($(HAS_EMBED_IRX), 1)
+  $(info --- USB drivers will be embedded)
   EE_OBJS += usbd_irx.o bdm_irx.o bdmfs_fatfs_irx.o usbmass_bd_irx.o
   EE_CFLAGS += -DHAS_EMBEDDED_IRX
 endif
@@ -140,6 +145,7 @@ ifeq ($(HDD), 1)
 endif
 
 ifeq ($(FILEXIO_NEED), 1)
+  $(info --- FILEXIO will be included)
   EE_CFLAGS += -DFILEXIO
   EE_LIBS += -lfileXio
   EE_OBJS += filexio_irx.o iomanx_irx.o
@@ -196,7 +202,7 @@ rebuild: clean packed
 packed: $(EE_BIN_PACKED)
 
 greeting:
-	@echo built PS2BBL PSX=$(PSX), LOCAL_IRX=$(HAS_LOCAL_IRX), DEBUG=$(DEBUG)
+	@echo built PS2BBL PSX=$(PSX), LOCAL_IRX=$(HAS_EMBED_IRX), DEBUG=$(DEBUG)
 	@echo PROHBIT_DVD_0100=$(PROHBIT_DVD_0100), XCDVD_READKEY=$(XCDVD_READKEY)
 	@echo KERNEL_NOPATCH=$(KERNEL_NOPATCH), NEWLIB_NANO=$(NEWLIB_NANO)
 	@echo binaries dispatched to $(BINDIR)
