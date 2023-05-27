@@ -34,6 +34,7 @@ int LoadHDDIRX(void); // Load HDD IRXes
 int LoadFIO(void); // Load FileXio and it´s dependencies
 int MountParty(const char* path); ///processes strings in the format `hdd0:/$PARTITION:pfs:$PATH_TO_FILE/` to mount partition
 int mnt(const char* path); ///mount partition specified on path
+void HDDChecker();
 #else
 #define MPART NULL //this ensures that when HDD support is not available, partition is always NULL on ELF Loading function.
 #endif
@@ -524,6 +525,10 @@ char *CheckPath(char *path)
             GLOBCFG.SKIPLOGO = 1;
             dischandler();
         }
+#ifdef HDD
+        if (!strcmp("$HDDCHECKER", path))
+            HDDChecker();
+#endif
         if (!strcmp("$CREDITS", path))
             credits();
         if (!strcmp("$OSDSYS", path))
@@ -741,8 +746,42 @@ int mnt(const char* path)
     } else DPRINTF("mount successfull on first attemp\n");
     return 0;
 }
-#endif
 
+void HDDChecker()
+{
+    char ErrorPartName[64];
+    const char* HEADING = "HDD Diagnosis routine";
+    int ret = -1;
+    scr_clear();
+    scr_printf("\n\n%*s%s\n", ((80 - strlen(HEADING)) / 2), "", HEADING);
+    scr_setfontcolor(0x0000FF);
+	ret = fileXioDevctl("hdd0:", HDIOC_STATUS, NULL, 0, NULL, 0);
+    if (ret == 0 || ret == 1) scr_setfontcolor(0x00FF00);
+    if (ret != 3)
+    {
+        scr_printf("\t\t - HDD CONNECTION STATUS: %d\n", ret);
+	    /* Check ATA device S.M.A.R.T. status. */
+	    ret = fileXioDevctl("hdd0:", HDIOC_SMARTSTAT, NULL, 0, NULL, 0);
+        if (ret != 0) scr_setfontcolor(0x0000ff); else scr_setfontcolor(0x00FF00);
+        scr_printf("\t\t - S.M.A.R.T STATUS: %d\n", ret);
+	    /* Check for unrecoverable I/O errors on sectors. */
+	    ret = fileXioDevctl("hdd0:", HDIOC_GETSECTORERROR, NULL, 0, NULL, 0);
+        if (ret != 0) scr_setfontcolor(0x0000ff); else scr_setfontcolor(0x00FF00);
+        scr_printf("\t\t - SECTOR ERRORS: %d\n", ret);
+	    /* Check for partitions that have errors. */
+	    ret = fileXioDevctl("hdd0:", HDIOC_GETERRORPARTNAME, NULL, 0, ErrorPartName, sizeof(ErrorPartName));
+        if (ret != 0) scr_setfontcolor(0x0000ff); else scr_setfontcolor(0x00FF00);
+        scr_printf("\t\t - CORRUPTED PARTITIONS: %d\n", ret);
+        if (ret != 0)
+        {
+            scr_printf("\t\tpartition: %s\n", ErrorPartName);
+        }
+    } else scr_setfontcolor(0x00FFFFF), scr_printf("Skipping test, HDD is not connected\n");
+    scr_printf("\t\tWaiting for 10 seconds...\n");
+    sleep(10);
+}
+
+#endif
 int dischandler()
 {
     int OldDiscType, DiscType, ValidDiscInserted, result, first_run = 1;
