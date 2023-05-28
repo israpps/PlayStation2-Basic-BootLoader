@@ -28,6 +28,7 @@
 #include <hdd-ioctl.h>
 #include <io_common.h>
 #include <assert.h>
+#include <libpwroff.h>
 char PART[128] = "\0";
 #define MPART PART
 int LoadHDDIRX(void); // Load HDD IRXes
@@ -35,6 +36,7 @@ int LoadFIO(void); // Load FileXio and it´s dependencies
 int MountParty(const char* path); ///processes strings in the format `hdd0:/$PARTITION:pfs:$PATH_TO_FILE/` to mount partition
 int mnt(const char* path); ///mount partition specified on path
 void HDDChecker();
+void poweroffCallback(void *arg);
 #else
 #define MPART NULL //this ensures that when HDD support is not available, partition is always NULL on ELF Loading function.
 #endif
@@ -110,7 +112,7 @@ int dischandler();
 void CDVDBootCertify(u8 romver[16]);
 void credits(void);
 void CleanUp(void);
-void LoadUSBIRX(void);
+int LoadUSBIRX(void);
 void runOSDNoUpdate(void);
 #ifdef PSX
 static void InitPSX();
@@ -169,40 +171,48 @@ int main(int argc, char *argv[])
     sbv_patch_disable_prefix_check(); /* disable the MODLOAD module black/white list, allowing executables to be freely loaded from any device. */
 #ifdef USE_ROM_SIO2MAN
     j = SifLoadModule("rom0:SIO2MAN", 0, NULL);
-    DPRINTF(" [SIO2MAN.IRX]: %d\n", j);
+    DPRINTF(" [SIO2MAN]: %d\n", j);
 #else
     j = SifExecModuleBuffer(sio2man_irx, size_sio2man_irx, 0, NULL, &x);
-    DPRINTF(" [SIO2MAN.IRX]: ret=%d, ID=%d\n", j, x);
+    DPRINTF(" [SIO2MAN]: ret=%d, ID=%d\n", j, x);
 #endif
 #ifdef USE_ROM_MCMAN
     j = SifLoadModule("rom0:MCMAN", 0, NULL);
-    DPRINTF(" [MCMAN.IRX]: %d\n", j);
+    DPRINTF(" [MCMAN]: %d\n", j);
     j = SifLoadModule("rom0:MCSERV", 0, NULL);
-    DPRINTF(" [MCSERV.IRX]: %d\n", j);
+    DPRINTF(" [MCSERV]: %d\n", j);
     mcInit(MC_TYPE_MC);
 #else
     j = SifExecModuleBuffer(mcman_irx, size_mcman_irx, 0, NULL, &x);
-    DPRINTF(" [MCMAN.IRX]: ret=%d, ID=%d\n", j, x);
+    DPRINTF(" [MCMAN]: ret=%d, ID=%d\n", j, x);
     j = SifExecModuleBuffer(mcserv_irx, size_mcserv_irx, 0, NULL, &x);
-    DPRINTF(" [MCSERV.IRX]: ret=%d, ID=%d\n", j, x);
+    DPRINTF(" [MCSERV]: ret=%d, ID=%d\n", j, x);
     mcInit(MC_TYPE_XMC);
 #endif
 #ifdef USE_ROM_PADMAN
     j = SifLoadModule("rom0:PADMAN", 0, NULL);
-    DPRINTF(" [PADMAN.IRX]: %d\n", j);
+    DPRINTF(" [PADMAN]: %d\n", j);
 #else
     j = SifExecModuleBuffer(padman_irx, size_padman_irx, 0, NULL, &x);
-    DPRINTF(" [PADMAN.IRX]: ret=%d, ID=%d\n", j, x);
+    DPRINTF(" [PADMAN]: ret=%d, ID=%d\n", j, x);
 #endif
-    LoadUSBIRX();
-
+    j = LoadUSBIRX();
+    if (j != 0)
+    {
+        scr_setfontcolor(0x0000ff);
+        scr_printf("ERROR: could not load USB modules (%d)\n", j);
+        scr_setfontcolor(0xffffff);
+#ifdef HAS_EMBEDDED_IRX //we have embedded IRX... something bad is going on if this condition executes. add a wait time for user to know something is wrong
+        sleep(1);
+#endif
+    }
 #ifdef FILEXIO
     if (LoadFIO() < 0)
-        	{scr_setbgcolor(0xff0000); scr_clear(); sleep(8);}
+        	{scr_setbgcolor(0xff0000); scr_clear(); sleep(4);}
 #endif
 #ifdef HDD
     else if (LoadHDDIRX() < 0) // only load HDD crap if filexio and iomanx are up and running
-        	{scr_setbgcolor(0x0000ff); scr_clear(); sleep(8);}
+        	{scr_setbgcolor(0x0000ff); scr_clear(); sleep(4);}
 #endif
 
     if ((fd = open("rom0:ROMVER", O_RDONLY)) >= 0) {
@@ -210,7 +220,7 @@ int main(int argc, char *argv[])
         close(fd);
     }
     j = SifLoadModule("rom0:ADDDRV", 0, NULL); // Load ADDDRV. The OSD has it listed in rom0:OSDCNF/IOPBTCONF, but it is otherwise not loaded automatically.
-    DPRINTF(" [ADDDRV.IRX]: %d\n", j);
+    DPRINTF(" [ADDDRV]: %d\n", j);
 
     DPRINTF("init OSD system paths\n");
     OSDInitSystemPaths();
@@ -577,46 +587,43 @@ void SetDefaultSettings(void)
     GLOBCFG.TRAYEJECT = 0;
 }
 
-void LoadUSBIRX(void)
+int LoadUSBIRX(void)
 {
-
-#ifndef NO_DPRINTF
-    int TMP;
-#define ATMP TMP =
-#else
-#define ATMP
-#endif
-    int x;
+    int ID, RET;
 
 // ------------------------------------------------------------------------------------ //
 #ifdef HAS_EMBEDDED_IRX
-    ATMP SifExecModuleBuffer(bdm_irx, size_bdm_irx, 0, NULL, &x);
+    ID = SifExecModuleBuffer(bdm_irx, size_bdm_irx, 0, NULL, &RET);
 #else
-    ATMP loadIRXFile("mc?:/PS2BBL/BDM.IRX", 0, NULL, &x);
+    ID = loadIRXFile("mc?:/PS2BBL/BDM.IRX", 0, NULL, &RET);
 #endif
-    DPRINTF(" [BDM.IRX]: ret=%d, ID=%d\n", TMP, x);
+    DPRINTF(" [BDM]: ret=%d, ID=%d\n", RET, ID);
+    if (ID < 0 || RET == 1) return -1;
 // ------------------------------------------------------------------------------------ //
 #ifdef HAS_EMBEDDED_IRX
-    ATMP SifExecModuleBuffer(bdmfs_fatfs_irx, size_bdmfs_fatfs_irx, 0, NULL, &x);
+    ID = SifExecModuleBuffer(bdmfs_fatfs_irx, size_bdmfs_fatfs_irx, 0, NULL, &RET);
 #else
-    ATMP loadIRXFile("mc?:/PS2BBL/BDMFS_FATFS.IRX", 0, NULL, &x);
+    ID = loadIRXFile("mc?:/PS2BBL/BDMFS_FATFS.IRX", 0, NULL, &RET);
 #endif
-    DPRINTF(" [BDMFS_FATFS.IRX]: ret=%d, ID=%d\n", TMP, x);
+    DPRINTF(" [BDMFS_FATFS]: ret=%d, ID=%d\n", RET, ID);
+    if (ID < 0 || RET == 1) return -2;
 // ------------------------------------------------------------------------------------ //
 #ifdef HAS_EMBEDDED_IRX
-    ATMP SifExecModuleBuffer(usbd_irx, size_usbd_irx, 0, NULL, &x);
+    ID = SifExecModuleBuffer(usbd_irx, size_usbd_irx, 0, NULL, &RET);
 #else
-    ATMP loadIRXFile("mc?:/PS2BBL/USBD.IRX", 0, NULL, &x);
+    ID = loadIRXFile("mc?:/PS2BBL/USBD.IRX", 0, NULL, &RET);
 #endif
     delay(3);
-    DPRINTF(" [USBD.IRX]: ret=%d, ID=%d\n", TMP, x);
+    DPRINTF(" [USBD]: ret=%d, ID=%d\n", RET, ID);
+    if (ID < 0 || RET == 1) return -3;
 // ------------------------------------------------------------------------------------ //
 #ifdef HAS_EMBEDDED_IRX
-    ATMP SifExecModuleBuffer(usbmass_bd_irx, size_usbmass_bd_irx, 0, NULL, &x);
+    ID = SifExecModuleBuffer(usbmass_bd_irx, size_usbmass_bd_irx, 0, NULL, &RET);
 #else
-    ATMP loadIRXFile("mc?:/PS2BBL/USBMASS_BD.IRX", 0, NULL, &x);
+    ID = loadIRXFile("mc?:/PS2BBL/USBMASS_BD.IRX", 0, NULL, &RET);
 #endif
-    DPRINTF(" [USBMASS_BD.IRX]: ret=%d, ID=%d\n", TMP, x);
+    DPRINTF(" [USBMASS_BD]: ret=%d, ID=%d\n", RET, ID);
+    if (ID < 0 || RET == 1) return -4;
     // ------------------------------------------------------------------------------------ //
     struct stat buffer;
     int ret = -1;
@@ -629,6 +636,7 @@ void LoadUSBIRX(void)
 
         retries--;
     }
+    return 0;
 }
 
 #ifdef FILEXIO
@@ -636,14 +644,14 @@ int LoadFIO(void)
 {
     int ID, RET;
     ID = SifExecModuleBuffer(&iomanX_irx, size_iomanX_irx, 0, NULL, &RET);
-    DPRINTF(" [IOMANX.IRX]: ret=%d, ID=%d\n", RET, ID);
-    if (ID < 0)
+    DPRINTF(" [IOMANX]: ret=%d, ID=%d\n", RET, ID);
+    if (ID < 0 || RET == 1)
         return -1;
 
     /* FILEXIO.IRX */
     ID = SifExecModuleBuffer(&fileXio_irx, size_fileXio_irx, 0, NULL, &RET);
-    DPRINTF(" [FILEXIO.IRX]: ret=%d, ID=%d\n", RET, ID);
-    if (ID < 0)
+    DPRINTF(" [FILEXIO]: ret=%d, ID=%d\n", RET, ID);
+    if (ID < 0 || RET == 1)
         return -2;
     
     RET = fileXioInit();
@@ -668,25 +676,30 @@ int LoadHDDIRX(void)
     static const char hddarg[] = "-o" "\0" "4" "\0" "-n" "\0" "20";
 	//static const char pfsarg[] = "-n\0" "24\0" "-o\0" "8";
 
-    /* PS2DEV9.IRX */
     ID = SifExecModuleBuffer(&ps2dev9_irx, size_ps2dev9_irx, 0, NULL, &RET);
-    DPRINTF(" [DEV9.IRX]: ret=%d, ID=%d\n", RET, ID);
-    if (ID < 0)
+    DPRINTF(" [DEV9]: ret=%d, ID=%d\n", RET, ID);
+    if (ID < 0 || RET == 1)
         return -1;
-    
-    /* PS2ATAD.IRX */
-    ID = SifExecModuleBuffer(&ps2atad_irx, size_ps2atad_irx, 0, NULL, &RET);
-    DPRINTF(" [ATAD.IRX]: ret=%d, ID=%d\n", RET, ID);
-    if (ID < 0)
+
+    ID = SifExecModuleBuffer(&poweroff_irx, size_poweroff_irx, 0, NULL, &RET);
+    DPRINTF(" [POWEROFF]: ret=%d, ID=%d\n", RET, ID);
+    if (ID < 0 || RET == 1)
         return -2;
 
-    /* PS2HDD.IRX */
-    ID = SifExecModuleBuffer(&ps2hdd_irx, size_ps2hdd_irx, sizeof(hddarg), hddarg, &RET);
-    DPRINTF(" [PS2HDD.IRX]: ret=%d, ID=%d\n", RET, ID);
-    if (ID < 0)
+    poweroffInit();
+    poweroffSetCallback(&poweroffCallback, NULL);
+    DPRINTF("PowerOFF Callback installed...\n")
+
+    ID = SifExecModuleBuffer(&ps2atad_irx, size_ps2atad_irx, 0, NULL, &RET);
+    DPRINTF(" [ATAD]: ret=%d, ID=%d\n", RET, ID);
+    if (ID < 0 || RET == 1)
         return -3;
 
-    /* Check if HDD is formatted and ready to be used */
+    ID = SifExecModuleBuffer(&ps2hdd_irx, size_ps2hdd_irx, sizeof(hddarg), hddarg, &RET);
+    DPRINTF(" [PS2HDD]: ret=%d, ID=%d\n", RET, ID);
+    if (ID < 0 || RET == 1)
+        return -4;
+
     HDDSTAT = CheckHDD();
     HDD_USABLE = !(HDDSTAT < 0);
     
@@ -694,8 +707,8 @@ int LoadHDDIRX(void)
     if (HDD_USABLE)
     {
         ID = SifExecModuleBuffer(&ps2fs_irx, size_ps2fs_irx,  0, NULL,  &RET);
-        DPRINTF(" [PS2FS.IRX]: ret=%d, ID=%d\n", RET, ID);
-        if (ID < 0)
+        DPRINTF(" [PS2FS]: ret=%d, ID=%d\n", RET, ID);
+        if (ID < 0 || RET == 1)
             return -5;
     }
     
@@ -779,6 +792,17 @@ void HDDChecker()
     } else scr_setfontcolor(0x00FFFFF), scr_printf("Skipping test, HDD is not connected\n");
     scr_printf("\t\tWaiting for 10 seconds...\n");
     sleep(10);
+}
+/// @brief poweroff callback function
+/// @note only expansion bay models will properly make use of this. the other models will run the callback but will poweroff themselves before reaching function end...
+void poweroffCallback(void *arg)
+{
+    fileXioDevctl("pfs:", PDIOC_CLOSEALL, NULL, 0, NULL, 0);
+    while (fileXioDevctl("dev9x:", DDIOC_OFF, NULL, 0, NULL, 0) < 0) {};
+    // As required by some (typically 2.5") HDDs, issue the SCSI STOP UNIT command to avoid causing an emergency park.
+    fileXioDevctl("mass:", USBMASS_DEVCTL_STOP_ALL, NULL, 0, NULL, 0);
+    /* Power-off the PlayStation 2. */
+    poweroffShutdown();
 }
 
 #endif

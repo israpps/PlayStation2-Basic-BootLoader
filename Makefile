@@ -266,7 +266,7 @@ endif
 	$(EE_AS) $(EE_ASFLAGS) $< -o $@
 #
 analize:
-	$(MAKE) rebuild DEBUG=1 PCSX2=0 EE_SIO=0 SCR_PRINT=0
+	$(MAKE) rebuild DEBUG=1
 	python3 thirdparty/elf-size-analize.py $(EE_BIN) -R -t mips64r5900el-ps2-elf-
 
 celan: clean # a repetitive typo when quicktyping
