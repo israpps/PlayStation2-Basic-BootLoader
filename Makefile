@@ -209,6 +209,7 @@ greeting:
 
 release: clean $(EE_BIN_PACKED)
 	$(MAKE) greeting
+	@rm -f $(EE_BIN_STRIPPED)
 	@echo "$$HEADER"
 
 clean:
