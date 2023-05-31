@@ -21,7 +21,6 @@
 *.s
 
 # folders where object files and embedded stuff is dumped
-src/
 asm/
 
 #other non desired files
