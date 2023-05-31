@@ -178,6 +178,8 @@ else ifeq ($(PRINTF), EE_SIO)
 else ifeq ($(PRINTF), PRINTF)
   $(info --- Common Printf enabled)
   EE_CFLAGS += -DCOMMON_PRINTF
+else
+  $(warning UNKNOWN PRINTF REQUESTED: '$(PRINTF)')
 endif
 
 ifeq ($(XCDVD_READKEY),1)
@@ -208,7 +210,6 @@ greeting:
 	@echo $(EE_OBJS)
 
 release: clean $(EE_BIN_PACKED)
-	$(MAKE) greeting
 	@rm -f $(EE_BIN_STRIPPED)
 	@echo "$$HEADER"
 
