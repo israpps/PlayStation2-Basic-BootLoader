@@ -218,7 +218,7 @@ clean:
 	@rm -rf $(EE_BIN) $(EE_BIN_STRIPPED) $(EE_BIN_ENCRYPTED) $(EE_BIN_PACKED)
 	@echo - Object folders 
 	@rm -rf $(EE_OBJS_DIR) $(EE_ASM_DIR)
-	@echo  "\n\n\n"
+	@echo  "\n"
 
 $(EE_BIN_STRIPPED): $(EE_BIN)
 	@echo " -- Stripping"
