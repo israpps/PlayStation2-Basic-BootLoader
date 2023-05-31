@@ -688,7 +688,7 @@ int LoadHDDIRX(void)
 
     poweroffInit();
     poweroffSetCallback(&poweroffCallback, NULL);
-    DPRINTF("PowerOFF Callback installed...\n")
+    DPRINTF("PowerOFF Callback installed...\n");
 
     ID = SifExecModuleBuffer(&ps2atad_irx, size_ps2atad_irx, 0, NULL, &RET);
     DPRINTF(" [ATAD]: ret=%d, ID=%d\n", RET, ID);

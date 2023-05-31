@@ -239,6 +239,8 @@ ifeq ($(KELFTYPE), MC)
 	thirdparty/kelftool_dnasload.exe encrypt dnasload $< $@
 else ifeq ($(KELFTYPE), HDD)
 	thirdparty/kelftool_dnasload.exe encrypt fhdb $< $@
+else
+	$(error UNKNOWN KELF TYPE: '$(KELFTYPE)')
 endif
 # move OBJ to folder and search source on src/, borrowed from OPL makefile
 
