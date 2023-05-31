@@ -18,9 +18,7 @@ HDD ?= 0 #wether to add internal HDD support
 PROHBIT_DVD_0100 ?= 0 # prohibit the DVD Players v1.00 and v1.01 from being booted.
 XCDVD_READKEY ?= 0 # Enable the newer sceCdReadKey checks, which are only supported by a newer CDVDMAN module.
 
-SCR_PRINT ?= 0 #scr_printf
-EE_SIO ?= 0 #serial port
-PCSX2 ?= 0 #common printf. for PCSX2 or PS2LINK
+PRINTF ?= NONE
 
 HOMEBREW_IRX ?= 0
 FILEXIO_NEED ?= 0 #if we need filexio and imanx loaded for other features (HDD, mx4sio, etc)
@@ -169,17 +167,17 @@ ifeq ($(KERNEL_NOPATCH), 1)
   EE_CFLAGS += -DKERNEL_NOPATCH
 endif
 
-ifeq ($(SCR_PRINT), 1)
+ifeq ($(PRINTF), NONE)
+else ifeq ($(PRINTF), SCR)
+  $(info --- SCR Printf enabled)
   EE_CFLAGS += -DSCR_PRINT
-endif
-
-ifeq ($(EE_SIO), 1)
+else ifeq ($(PRINTF), EE_SIO)
+  $(info --- EESIO Printf enabled)
   EE_CFLAGS += -DEE_SIO_DEBUG
   EE_LIBS += -lsiocookie
-endif
-
-ifeq ($(PCSX2), 1)
-  EE_CFLAGS += -DPCSX2
+else ifeq ($(PRINTF), PRINTF)
+  $(info --- Common Printf enabled)
+  EE_CFLAGS += -DCOMMON_PRINTF
 endif
 
 ifeq ($(XCDVD_READKEY),1)
@@ -206,7 +204,7 @@ greeting:
 	@echo PROHBIT_DVD_0100=$(PROHBIT_DVD_0100), XCDVD_READKEY=$(XCDVD_READKEY)
 	@echo KERNEL_NOPATCH=$(KERNEL_NOPATCH), NEWLIB_NANO=$(NEWLIB_NANO)
 	@echo binaries dispatched to $(BINDIR)
-	@echo printf: printf=$(PCSX2), eesio=$(EE_SIO), scr_printf=$(SCR_PRINT)
+	@echo printf=$(PRINTF)
 	@echo $(EE_OBJS)
 
 release: clean $(EE_BIN_PACKED)

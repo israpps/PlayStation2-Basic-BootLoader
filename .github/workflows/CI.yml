@@ -13,6 +13,18 @@ on:
       - '**.gitkeep'
       - '**.gitignore'
   workflow_dispatch:
+    inputs:
+      debug:
+        type: boolean
+        description: compile with debugging functionality
+      printf:
+        type: choice
+        description: wich debugging messages variant to use
+        options:
+        - NONE
+        - PRINTF
+        - EE_SIO
+        - SCR
 
 jobs:
   build:
@@ -29,17 +41,22 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git fetch --prune --unshallow
 
+      - name: compilation opts
+        if: github.event.inputs.debug == true
+        run: |
+          echo "DEBUG=$(echo DEBUG=1)" >> $GITHUB_ENV
+
       - name: Compile PS2 build
         run: |
-          make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PS2/
+          make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PS2/ ${{ env.DEBUG }} PRINTF=${{ github.event.inputs.name }}
 
       - name: Compile PSX build
         run: |
-          make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PSX/ PSX=1
+          make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PSX/ PSX=1 ${{ env.DEBUG }} PRINTF=${{ github.event.inputs.name }}
 
       - name: Compile PS2 HDD build
         run: |
-          make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PS2_HDD/ HDD=1
+          make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PS2_HDD/ HDD=1 ${{ env.DEBUG }} PRINTF=${{ github.event.inputs.name }}
 
       - name: list
         run: |
