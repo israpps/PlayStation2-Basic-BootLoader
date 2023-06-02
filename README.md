@@ -1,7 +1,7 @@
 
 <br />
 <p align="center">
-  <a href="https://github.com/israpps/KELFBinder">
+  <a href="https://github.com/israpps/PlayStation2-Basic-BootLoader">
     <img src="./logo.png" alt="Logo" width="100%" height="auto">
   </a>
 
