@@ -11,18 +11,17 @@ export HEADER
 
 
 # ---{BUILD CFG}--- #
-HAS_LOCAL_IRX = 1 # whether to embed or not non vital IRX (wich will be loaded from memcard files)
+HAS_EMBED_IRX = 1 # whether to embed or not non vital IRX (wich will be loaded from memcard files)
 DEBUG ?= 0
 PSX ?= 0 # PSX DESR support
+HDD ?= 0 #wether to add internal HDD support
 PROHBIT_DVD_0100 ?= 0 # prohibit the DVD Players v1.00 and v1.01 from being booted.
 XCDVD_READKEY ?= 0 # Enable the newer sceCdReadKey checks, which are only supported by a newer CDVDMAN module.
-USE_ROM_PADMAN ?= 1
-USE_ROM_MCMAN ?= 1
-USE_ROM_SIO2MAN ?= 1
-# Just one print should be enabled
-SCR_PRINT ?= 0 #scr_printf
-EE_SIO ?= 0 #serial port
-PCSX2 ?= 0 #common printf. for PCSX2 or PS2LINK
+
+PRINTF ?= NONE
+
+HOMEBREW_IRX ?= 0
+FILEXIO_NEED ?= 0 #if we need filexio and imanx loaded for other features (HDD, mx4sio, etc)
 
 # Related to binary size reduction
 KERNEL_NOPATCH = 1 
@@ -33,7 +32,7 @@ DUMMY_LIBC_INIT = 1
 # ---{ VERSIONING }--- #
 
 VERSION = 1
-SUBVERSION = 0
+SUBVERSION = 2
 PATCHLEVEL = 0
 STATUS = Beta
 
@@ -44,7 +43,8 @@ BASENAME ?= PS2BBL
 EE_BIN = $(BINDIR)$(BASENAME).ELF
 EE_BIN_STRIPPED = $(BINDIR)stripped_$(BASENAME).ELF
 EE_BIN_PACKED = $(BINDIR)COMPRESSED_$(BASENAME).ELF
-EE_BIN_ENCRYPTED = $(BINDIR)$(BASENAME).KELF
+KELFTYPE ?= MC
+EE_BIN_ENCRYPTED = $(BINDIR)$(BASENAME)_$(KELFTYPE).KELF
 
 # ---{ OBJECTS & STUFF }--- #
 
@@ -70,11 +70,24 @@ EE_CFLAGS += -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DPATCHLEVE
 
 # ---{ CONDITIONS }--- #
 
-ifneq ($(VERBOSE),1)
+ifneq ($(VERBOSE), 1)
    .SILENT:
 endif
 
-ifeq ($(PSX),1)
+ifneq ($(HOMEBREW_IRX), 0)
+   $(info --- enforcing usage of homebrew IRX modules)
+   USE_ROM_PADMAN = 0
+   USE_ROM_MCMAN = 0
+   USE_ROM_SIO2MAN = 0
+else
+   $(info --- using BOOT-ROM drivers)
+   USE_ROM_PADMAN = 1
+   USE_ROM_MCMAN = 1
+   USE_ROM_SIO2MAN = 1
+endif
+
+ifeq ($(PSX), 1)
+   $(info --- building with PSX-DESR support)
   BASENAME = PSXBBL
   EE_CFLAGS += -DPSX=1
   EE_OBJS += scmd_add.o ioprp.o
@@ -84,6 +97,7 @@ else
 endif
 
 ifeq ($(DEBUG), 1)
+   $(info --- debugging enabled)
   EE_CFLAGS += -DDEBUG -O0 -g
   EE_LIBS += -lelf-loader
 else 
@@ -113,9 +127,26 @@ else
   EE_OBJS += sio2man_irx.o
 endif
 
-ifneq ($(HAS_LOCAL_IRX), 1)
+ifneq ($(HAS_EMBED_IRX), 1)
+  $(info --- USB drivers will be embedded)
   EE_OBJS += usbd_irx.o bdm_irx.o bdmfs_fatfs_irx.o usbmass_bd_irx.o
   EE_CFLAGS += -DHAS_EMBEDDED_IRX
+endif
+
+ifeq ($(HDD), 1)
+  $(info --- compiling with HDD support)
+  EE_LIBS += -lpoweroff
+  EE_OBJS += ps2fs_irx.o ps2hdd_irx.o ps2atad_irx.o ps2dev9_irx.o poweroff_irx.o
+  EE_CFLAGS += -DHDD
+  FILEXIO_NEED = 1
+  KELFTYPE = HDD
+endif
+
+ifeq ($(FILEXIO_NEED), 1)
+  $(info --- FILEXIO will be included)
+  EE_CFLAGS += -DFILEXIO
+  EE_LIBS += -lfileXio
+  EE_OBJS += filexio_irx.o iomanx_irx.o
 endif
 
 ifeq ($(DUMMY_TIMEZONE), 1)
@@ -136,17 +167,19 @@ ifeq ($(KERNEL_NOPATCH), 1)
   EE_CFLAGS += -DKERNEL_NOPATCH
 endif
 
-ifeq ($(SCR_PRINT), 1)
+ifeq ($(PRINTF), NONE)
+else ifeq ($(PRINTF), SCR)
+  $(info --- SCR Printf enabled)
   EE_CFLAGS += -DSCR_PRINT
-endif
-
-ifeq ($(EE_SIO), 1)
+else ifeq ($(PRINTF), EE_SIO)
+  $(info --- EESIO Printf enabled)
   EE_CFLAGS += -DEE_SIO_DEBUG
   EE_LIBS += -lsiocookie
-endif
-
-ifeq ($(PCSX2), 1)
-  EE_CFLAGS += -DPCSX2
+else ifeq ($(PRINTF), PRINTF)
+  $(info --- Common Printf enabled)
+  EE_CFLAGS += -DCOMMON_PRINTF
+else
+  $(warning UNKNOWN PRINTF REQUESTED: '$(PRINTF)')
 endif
 
 ifeq ($(XCDVD_READKEY),1)
@@ -169,15 +202,15 @@ rebuild: clean packed
 packed: $(EE_BIN_PACKED)
 
 greeting:
-	@echo built PS2BBL PSX=$(PSX), LOCAL_IRX=$(HAS_LOCAL_IRX), DEBUG=$(DEBUG)
+	@echo built PS2BBL PSX=$(PSX), LOCAL_IRX=$(HAS_EMBED_IRX), DEBUG=$(DEBUG)
 	@echo PROHBIT_DVD_0100=$(PROHBIT_DVD_0100), XCDVD_READKEY=$(XCDVD_READKEY)
 	@echo KERNEL_NOPATCH=$(KERNEL_NOPATCH), NEWLIB_NANO=$(NEWLIB_NANO)
 	@echo binaries dispatched to $(BINDIR)
-	@echo printf: printf=$(PCSX2), eesio=$(EE_SIO), scr_printf=$(SCR_PRINT)
+	@echo printf=$(PRINTF)
 	@echo $(EE_OBJS)
 
 release: clean $(EE_BIN_PACKED)
-	$(MAKE) greeting
+	@rm -f $(EE_BIN_STRIPPED)
 	@echo "$$HEADER"
 
 clean:
@@ -186,7 +219,7 @@ clean:
 	@rm -rf $(EE_BIN) $(EE_BIN_STRIPPED) $(EE_BIN_ENCRYPTED) $(EE_BIN_PACKED)
 	@echo - Object folders 
 	@rm -rf $(EE_OBJS_DIR) $(EE_ASM_DIR)
-	@echo  "\n\n\n"
+	@echo  "\n"
 
 $(EE_BIN_STRIPPED): $(EE_BIN)
 	@echo " -- Stripping"
@@ -201,9 +234,14 @@ else
 endif
 
 $(EE_BIN_ENCRYPTED): $(EE_BIN_PACKED)
-	@echo " -- Encrypting"
+	@echo " -- Encrypting ($(KELFTYPE))"
+ifeq ($(KELFTYPE), MC)
 	thirdparty/kelftool_dnasload.exe encrypt dnasload $< $@
-
+else ifeq ($(KELFTYPE), HDD)
+	thirdparty/kelftool_dnasload.exe encrypt fhdb $< $@
+else
+	$(error UNKNOWN KELF TYPE: '$(KELFTYPE)')
+endif
 # move OBJ to folder and search source on src/, borrowed from OPL makefile
 
 EE_OBJS := $(EE_OBJS:%=$(EE_OBJS_DIR)%) # remap all EE_OBJ to obj subdir
@@ -230,7 +268,7 @@ endif
 	$(EE_AS) $(EE_ASFLAGS) $< -o $@
 #
 analize:
-	$(MAKE) rebuild DEBUG=1 PCSX2=0 EE_SIO=0 SCR_PRINT=0
+	$(MAKE) rebuild DEBUG=1
 	python3 thirdparty/elf-size-analize.py $(EE_BIN) -R -t mips64r5900el-ps2-elf-
 
 celan: clean # a repetitive typo when quicktyping

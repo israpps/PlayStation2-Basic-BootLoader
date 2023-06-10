@@ -2,19 +2,32 @@
 #define COMMONDEF
 enum
 {
-    SOURCE_INVALID = 0,
-    SOURCE_MC0,
+    SOURCE_MC0 = 0,
     SOURCE_MC1,
     SOURCE_MASS,
-#ifdef HDD_SUPPORT
+#ifdef HDD
     SOURCE_HDD,
 #endif
-#ifdef XFROM_SUPPORT
+#ifdef XFROM
     SOURCE_XFROM,
 #endif
-
-    SOURCE_COUNT
+    SOURCE_INVALID,
+    SOURCE_COUNT,
 } CONFIG_SOURCES_ID;
+
+static const char* SOURCES[SOURCE_COUNT] =
+{
+    "mc0:",
+    "mc1:",
+    "mass:",
+#ifdef HDD
+    "hdd0:",
+#endif
+#ifdef XFROM
+    "xfrom0:",
+#endif
+    "NOT FOUND",
+};
 
 #define MAX_LEN     64
 #define CNF_LEN_MAX 20480 // 20kb should be enough for massive CNF's
