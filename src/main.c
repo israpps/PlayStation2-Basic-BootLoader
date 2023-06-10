@@ -789,7 +789,8 @@ void HDDChecker()
         {
             scr_printf("\t\tpartition: %s\n", ErrorPartName);
         }
-    } else scr_setfontcolor(0x00FFFFF), scr_printf("Skipping test, HDD is not connected\n");
+    } else scr_setfontcolor(0x00FFFF), scr_printf("Skipping test, HDD is not connected\n");
+    scr_setfontcolor(0xFFFFFF)
     scr_printf("\t\tWaiting for 10 seconds...\n");
     sleep(10);
 }
