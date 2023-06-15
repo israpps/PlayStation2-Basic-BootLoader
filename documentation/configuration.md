@@ -35,10 +35,15 @@ example:
 - `LK_SELECT_E2`: apllication to be looked for if previous one was not found
 - `LK_SELECT_E3`: last apllication to be looked for if previous one was not found
 
+<div class="Box anim-hover-grow m-3 p-4">
+
 ```tip
 when adding multiple paths, set the first path on USB or other removable media, and second or third path on a storage device that is always there (HDD, MC, ROM, etc..)
 This way you can setup a default version of the application and at the same time provide updated versions on the USB (so you can fall back to the old one by just removing the USB)
 ```
+
+</div>
+
 
 ## Config Parameters
 
