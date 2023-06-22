@@ -56,7 +56,7 @@ EE_OBJS = main.o \
           util.o elf.o timer.o ps2.o ps1.o dvdplayer.o \
           modelname.o libcdvd_add.o OSDHistory.o OSDInit.o OSDConfig.o \
           $(EMBEDDED_STUFF) \
-		  $(IOP_OBJS)
+		      $(IOP_OBJS)
 
 EMBEDDED_STUFF = icon_sys_A.o icon_sys_J.o icon_sys_C.o
 
@@ -156,7 +156,7 @@ endif
 ifdef COMMIT_HASH
   EE_CFLAGS += -DCOMMIT_HASH=\"$(COMMIT_HASH)\"
 else
-  EE_CFLAGS += -DCOMMIT_HASH=\"UNKNOWN\"
+  EE_CFLAGS += -DCOMMIT_HASH=\"$(shell git rev-parse --short HEAD)\"
 endif
 
 ifeq ($(DUMMY_LIBC_INIT), 1)
