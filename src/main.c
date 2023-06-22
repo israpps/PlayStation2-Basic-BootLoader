@@ -158,7 +158,7 @@ int main(int argc, char *argv[])
     scr_setCursor(0); // get rid of annoying that cursor.
     DPRINTF_INIT()
 #ifndef NO_DPRINTF
-    DPRINTF("PS2BBL: starting with the following argumments:\n");
+    DPRINTF("PS2BBL: starting with %d argumments:\n", argc);
     for (x = 0; x < argc; x++)
         DPRINTF("\targv[%d] = [%s]\n", x, argv[x]);
 #endif
