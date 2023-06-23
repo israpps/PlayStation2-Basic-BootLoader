@@ -178,7 +178,7 @@ else ifeq ($(PRINTF), EE_SIO)
 else ifeq ($(PRINTF), PRINTF)
   $(info --- Common Printf enabled)
   EE_CFLAGS += -DCOMMON_PRINTF
-else
+else ifneq ($(PRINTF),)
   $(warning UNKNOWN PRINTF REQUESTED: '$(PRINTF)')
 endif
 
