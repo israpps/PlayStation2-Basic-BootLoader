@@ -56,6 +56,7 @@ void poweroffCallback(void *arg);
 #include "ps2.h"
 #include "modelname.h"
 #include "banner.h"
+#include "xparam.h"
 
 #ifdef PSX
 #include <iopcontrol_special.h>
@@ -266,7 +267,8 @@ int main(int argc, char *argv[])
             break;
         }
     } while ((STAT & 0x80) || (result == 0));
-
+    DPRINTF("Resetting DECKARD XPARAMS\n");
+    ResetDeckardXParams();
     // Remember to set the video output option (RGB or Y Cb/Pb Cr/Pr) accordingly, before SetGsCrt() is called.
     DPRINTF("Setting vmode\n");
     SetGsVParam(OSDConfigGetVideoOutput() == VIDEO_OUTPUT_RGB ? VIDEO_OUTPUT_RGB : VIDEO_OUTPUT_COMPONENT);

@@ -12,6 +12,7 @@
 #include "ps2.h"
 #include "OSDInit.h"
 #include "OSDHistory.h"
+#include "xparam.h"
 #include "debugprintf.h"
 
 void CleanUp(void);
@@ -301,7 +302,7 @@ int PS2DiscBoot(int skip_PS2LOGO)
     DPRINTF("%s updating play history\n", __func__);
     DPRINTF("%s:\n\tline:[%s]\n\tps2discboot:[%s]\n", __func__, line, ps2disc_boot);
     UpdatePlayHistory(ps2disc_boot);
-	
+	ApplyDeckardXParam(ps2disc_boot);
     CleanUp();
     SifExitCmd();
     if (skip_PS2LOGO) {

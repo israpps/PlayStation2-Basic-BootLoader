@@ -53,7 +53,7 @@ EE_SRC_DIR = src/
 EE_ASM_DIR = asm/
 
 EE_OBJS = main.o \
-          util.o elf.o timer.o ps2.o ps1.o dvdplayer.o \
+          util.o elf.o timer.o ps2.o ps1.o dvdplayer.o xparam.o\
           modelname.o libcdvd_add.o OSDHistory.o OSDInit.o OSDConfig.o \
           $(EMBEDDED_STUFF) \
 		      $(IOP_OBJS)
