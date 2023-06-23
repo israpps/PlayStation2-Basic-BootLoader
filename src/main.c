@@ -30,6 +30,7 @@
 #include <assert.h>
 #include <libpwroff.h>
 char PART[128] = "\0";
+int HDD_USABLE = 0;
 #define MPART PART
 int LoadHDDIRX(void); // Load HDD IRXes
 int LoadFIO(void); // Load FileXio and it´s dependencies
@@ -37,8 +38,8 @@ int MountParty(const char* path); ///processes strings in the format `hdd0:/$PAR
 int mnt(const char* path); ///mount partition specified on path
 void HDDChecker();
 void poweroffCallback(void *arg);
-#else
-#define MPART NULL //this ensures that when HDD support is not available, partition is always NULL on ELF Loading function.
+#else //this ensures that when HDD support is not available, loaded ELFs dont have any extra arg...
+#define MPART NULL
 #endif
 
 #include "debugprintf.h"
@@ -139,7 +140,6 @@ CONFIG GLOBCFG;
 char *EXECPATHS[3];
 u8 ROMVER[16];
 int PAD = 0;
-int HDD_USABLE = 0;
 static int  config_source = SOURCE_INVALID;
 int main(int argc, char *argv[])
 {
@@ -426,7 +426,9 @@ int main(int argc, char *argv[])
             scr_setfontcolor(RBG2INT(B, G, R));
             DPRINTF("New banner color is: #%8x\n", RBG2INT(B, G, R));
         } else
+        {
             DPRINTF("can't find any osd history for banner color\n");
+        }
     }
     // Stores last key during DELAY msec
     scr_clear();
