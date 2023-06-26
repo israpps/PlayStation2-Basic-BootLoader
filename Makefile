@@ -14,6 +14,7 @@ export HEADER
 HAS_LOCAL_IRX = 1 # whether to embed or not non vital IRX (wich will be loaded from memcard files)
 DEBUG ?= 0
 PSX ?= 0 # PSX DESR support
+XPARAM ?= 0 # whether to include or not support for managing the DECKARD compatiblity modes when running discs
 PROHBIT_DVD_0100 ?= 0 # prohibit the DVD Players v1.00 and v1.01 from being booted.
 XCDVD_READKEY ?= 0 # Enable the newer sceCdReadKey checks, which are only supported by a newer CDVDMAN module.
 USE_ROM_PADMAN ?= 1
@@ -53,7 +54,7 @@ EE_SRC_DIR = src/
 EE_ASM_DIR = asm/
 
 EE_OBJS = main.o \
-          util.o elf.o timer.o ps2.o ps1.o dvdplayer.o xparam.o\
+          util.o elf.o timer.o ps2.o ps1.o dvdplayer.o \
           modelname.o libcdvd_add.o OSDHistory.o OSDInit.o OSDConfig.o \
           $(EMBEDDED_STUFF) \
 		      $(IOP_OBJS)
@@ -116,6 +117,14 @@ endif
 ifneq ($(HAS_LOCAL_IRX), 1)
   EE_OBJS += usbd_irx.o bdm_irx.o bdmfs_fatfs_irx.o usbmass_bd_irx.o
   EE_CFLAGS += -DHAS_EMBEDDED_IRX
+endif
+
+ifeq ($(XPARAM), 1)
+  EE_OBJS += xparam.o
+  EE_CFLAGS += -DXPARAM
+  ifeq ($(HDD), 1)
+  $(warning --- XPARAM and HDD support enabled. consoles wich have HDD support cannot benefit from XPARAM and vice versa)
+  endif
 endif
 
 ifeq ($(DUMMY_TIMEZONE), 1)
