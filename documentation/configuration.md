@@ -56,7 +56,7 @@ the program supports the following config entries
 - `$CREDITS`: displays credits (duh). and shows compilation date and associated git commit hash
 - `$RUNKELF:KELFPATH`: executes the file path specified in `KELFPATH` as a PS2 KELF
 - `$OSDSYS`: Executes the OSDSYS program with special argumments to skip Memory card & HDD updates, and goes straight to mc browser. this is very usefull for users wich install PS2BBL as system update and wants to access the memory card browser of OSDSYS (__WARNING__: USELESS ON PSX-DESR Because it's OSDSYS has no menu)
-
+- `$HDDCHECKER`: **Only available when Internal HDD support is enabled**. it performs the same integrity checks than FreeHdBoot/HDD-OSD MBR Programs (S.M.A.R.T status, sector errors, damaged partitions and HDD connection status)
 
 ## configuration sample
 
