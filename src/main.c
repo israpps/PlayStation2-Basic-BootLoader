@@ -24,7 +24,6 @@
 
 #define NEWLIB_PORT_AWARE
 #ifdef HDD
-#include <fileXio_rpc.h>
 #include <hdd-ioctl.h>
 #include <io_common.h>
 #include <assert.h>
@@ -40,6 +39,10 @@ void HDDChecker();
 void poweroffCallback(void *arg);
 #else //this ensures that when HDD support is not available, loaded ELFs dont have any extra arg...
 #define MPART NULL
+#endif
+
+#ifdef FILEXIO
+#include <fileXio_rpc.h>
 #endif
 
 #include "debugprintf.h"
@@ -71,22 +74,30 @@ void fioInit();
     extern unsigned int size_##_n
 
 // --------------- IRX/IOPRP extern --------------- //
-#ifdef PSX
-IMPORT_BIN2C(psx_ioprp);
-#endif
 IMPORT_BIN2C(sio2man_irx);
 IMPORT_BIN2C(mcman_irx);
 IMPORT_BIN2C(mcserv_irx);
 IMPORT_BIN2C(padman_irx);
 
-#ifdef HDD
-IMPORT_BIN2C(poweroff_irx);
+#ifdef PSX
+IMPORT_BIN2C(psx_ioprp);
+#endif
+
+#ifdef FILEXIO
 IMPORT_BIN2C(iomanX_irx);
 IMPORT_BIN2C(fileXio_irx);
+#endif
+
+#ifdef HDD
+IMPORT_BIN2C(poweroff_irx);
 IMPORT_BIN2C(ps2dev9_irx);
 IMPORT_BIN2C(ps2atad_irx);
 IMPORT_BIN2C(ps2hdd_irx);
 IMPORT_BIN2C(ps2fs_irx);
+#endif
+
+#ifdef MX4SIO
+IMPORT_BIN2C(mx4sio_bd_irx);
 #endif
 
 #ifdef HAS_EMBEDDED_IRX
@@ -206,10 +217,17 @@ int main(int argc, char *argv[])
         sleep(1);
 #endif
     }
+
 #ifdef FILEXIO
     if (LoadFIO() < 0)
         	{scr_setbgcolor(0xff0000); scr_clear(); sleep(4);}
 #endif
+
+#ifdef MX4SIO
+    j = SifExecModuleBuffer(mx4sio_bd_irx, size_mx4sio_bd_irx, 0, NULL, &x);
+    DPRINTF(" [MX4SIO_BD]: ret=%d, ID=%d\n", j, x);
+#endif
+
 #ifdef HDD
     else if (LoadHDDIRX() < 0) // only load HDD crap if filexio and iomanx are up and running
         	{scr_setbgcolor(0x0000ff); scr_clear(); sleep(4);}
@@ -573,6 +591,13 @@ char *CheckPath(char *path)
         if (!MountParty(path))
             return strstr(path, "pfs:");
 #endif
+#ifdef MX4SIO
+    } else if (!strncmp("massX:", path, 6)) {
+        int x = LookForBDMDevice();
+        if (x >= 0)
+            path[4] = '0' + x;
+#endif
+
     }
     return path;
 }
@@ -640,6 +665,33 @@ int LoadUSBIRX(void)
     }
     return 0;
 }
+
+
+#ifdef MX4SIO
+int LookForBDMDevice(void)
+{
+    static char mass_path[] = "massX:";
+	static char DEVID[5];
+    int dd;
+    int x = 0;
+    for (x = 0; x < 5; x++)
+    {
+        mass_path[4] = '0' + x;
+        if ((dd = fileXioDopen(mass_path)) >= 0) {
+            int *intptr_ctl = (int *)DEVID;
+            *intptr_ctl = fileXioIoctl(dd, USBMASS_IOCTL_GET_DRIVERNAME, "");
+            close(dd);
+	        if (!strncmp(DEVID, "sdc", 3))
+	        {
+	        	return x;
+	        	DPRINTF("%s: Found MX4SIO device at mass%d:/\n", __func__, i);
+	        }
+        }
+    }
+    return -1;
+}
+#endif
+
 
 #ifdef FILEXIO
 int LoadFIO(void)

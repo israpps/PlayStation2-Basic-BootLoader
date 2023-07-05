@@ -15,6 +15,7 @@ HAS_EMBED_IRX = 1 # whether to embed or not non vital IRX (wich will be loaded f
 DEBUG ?= 0
 PSX ?= 0 # PSX DESR support
 HDD ?= 0 #wether to add internal HDD support
+MX4SIO ?= 0
 PROHBIT_DVD_0100 ?= 0 # prohibit the DVD Players v1.00 and v1.01 from being booted.
 XCDVD_READKEY ?= 0 # Enable the newer sceCdReadKey checks, which are only supported by a newer CDVDMAN module.
 
@@ -72,6 +73,13 @@ EE_CFLAGS += -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DPATCHLEVE
 
 ifneq ($(VERBOSE), 1)
    .SILENT:
+endif
+
+ifneq ($(MX4SIO), 0)
+  HOMEBREW_IRX = 1
+  FILEXIO_NEED = 1
+  EE_OBJS += mx4sio_bd.o
+  EE_CFLAGS += -DMX4SIO
 endif
 
 ifneq ($(HOMEBREW_IRX), 0)
@@ -142,7 +150,7 @@ ifeq ($(HDD), 1)
   KELFTYPE = HDD
 endif
 
-ifeq ($(FILEXIO_NEED), 1)
+ifneq ($(FILEXIO_NEED), 0)
   $(info --- FILEXIO will be included)
   EE_CFLAGS += -DFILEXIO
   EE_LIBS += -lfileXio
