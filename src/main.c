@@ -477,6 +477,8 @@ int main(int argc, char *argv[])
         scr_clear();
         for (j = 0; j < 3; j++) {
             if (exist(CheckPath(GLOBCFG.KEYPATHS[0][j]))) {
+                scr_setfontcolor(0x00ff00);
+                scr_printf("\tLoading %s\n", EXECPATHS[j]);
                 if (!is_PCMCIA)
                     PadDeinitPads();
                 RunLoaderElf(CheckPath(GLOBCFG.KEYPATHS[0][j]), MPART);
