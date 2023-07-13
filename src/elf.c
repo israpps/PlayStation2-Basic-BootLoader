@@ -12,16 +12,6 @@
 
 void RunLoaderElf(const char *filename, const char *party)
 {
-    DPRINTF("\tLOADING [%s]\n", filename);
-#ifndef NO_DPRINTF
-    if (party != NULL)
-        DPRINTF("%s\tparty is %s\n", __func__, party);
-#endif
-#ifdef SCR_PRINT
-    sleep(5);
-    DPRINTF(".\n");
-#endif
-
 	DPRINTF("LoadELFFromFileWithPartition(%s, %s, 0, NULL);\n", filename, party);
     LoadELFFromFileWithPartition(filename, party, 0, NULL);
 }
