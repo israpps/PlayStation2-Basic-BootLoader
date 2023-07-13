@@ -46,17 +46,6 @@ jobs:
         run: |
           echo "DEBUG=$(echo DEBUG=1)" >> $GITHUB_ENV
 
-      - name: Get branch
-        if: github.ref != 'refs/heads/main'
-        id: brnch
-        run: | 
-          echo "BRANCH=$(echo -${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
-
-      - name: Get short SHA
-        id: slug
-        run: | 
-          echo "SHA8=$(echo ${GITHUB_SHA} | cut -c1-8)" >> $GITHUB_ENV
-
       - name: Compile PS2 build
         run: |
           make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PS2/ ${{ env.DEBUG }} PRINTF=${{ github.event.inputs.name }}
@@ -93,7 +82,7 @@ jobs:
         if: ${{ success() }}
         uses: actions/upload-artifact@v3
         with:
-          name: PS2BBL-${{ env.SHA8 }}${{ env.BRANCH }}
+          name: PS2BBL
           path: |
             release/*
 
