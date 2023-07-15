@@ -175,6 +175,7 @@ else ifeq ($(PRINTF), EE_SIO)
   $(info --- EESIO Printf enabled)
   EE_CFLAGS += -DEE_SIO_DEBUG
   EE_LIBS += -lsiocookie
+  EE_OBJS += sioprintf.o
 else ifeq ($(PRINTF), PRINTF)
   $(info --- Common Printf enabled)
   EE_CFLAGS += -DCOMMON_PRINTF

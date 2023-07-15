@@ -19,7 +19,11 @@ const char* BANNER =
     "\t\t |____|   /_______  /\\_______ \\  |______  /|______  /_______ \\\n"
     "\t\t                  \\/         \\/         \\/        \\/        \\/\n"
 #endif
-    "\t\t\tv" VERSION "-" SUBVERSION "-" PATCHLEVEL " - " STATUS "\n"
+    "\t\t\tv" VERSION "-" SUBVERSION "-" PATCHLEVEL " - " STATUS 
+#ifdef DEBUG
+" - DEBUG"
+#endif
+    "\n"
     "\n";
 #define BANNER_FOOTER \
     "\t\t		PlayStation2 Basic BootLoader - By Matias Israelson\n" \
