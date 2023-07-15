@@ -1,0 +1,31 @@
+name: Feature request
+description: Ask/propose a new Feature
+title: "[FR]: "
+labels: [Feature Request]
+assignees:
+  - israpps
+body:
+  - type: markdown
+    attributes:
+      value: |
+        "Thanks for collaborating with the project! Please provide the following data:"
+
+  - type: checkboxes
+    id: other_checks
+    attributes:
+      label: other checks
+      description: check if necesary
+      options:
+        - label: "I've checked if such feature exists on [Latest version](https://github.com/israpps/PlayStation2-Basic-BootLoader/releases/)"
+        - label: "This Feature requires an update of [PS2SDK](https://github.com/ps2dev/ps2sdk)"
+              
+  - type: textarea
+    id: explanation
+    attributes:
+      label: Explanation
+      description: What do you have in mind?
+      placeholder: Could you add...
+      value: "Could you add..."
+    validations:
+      required: true
+

@@ -3,13 +3,8 @@
 
 # Object files
 *.o
-*.ko
 *.obj
 *.a
-
-# embedded stuff
-*_irx.c
-*_irx.s
 
 #PS2 executables
 *.elf
@@ -18,10 +13,8 @@
 
 # IOP Executable
 *.irx
-*.s
 
 # folders where object files and embedded stuff is dumped
-src/
 asm/
 
 #other non desired files
