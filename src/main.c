@@ -685,8 +685,8 @@ int LookForBDMDevice(void)
             close(dd);
 	        if (!strncmp(DEVID, "sdc", 3))
 	        {
+	        	DPRINTF("%s: Found MX4SIO device at mass%d:/\n", __func__, x);
 	        	return x;
-	        	DPRINTF("%s: Found MX4SIO device at mass%d:/\n", __func__, i);
 	        }
         }
     }
@@ -1085,6 +1085,13 @@ void credits(void)
                "\tThanks to: fjtrujy, uyjulian, asmblur and AKuHAK\n"
                "\tthis build corresponds to the hash [" COMMIT_HASH "]\n"
                "\t\tcompiled on "__DATE__" "__TIME__"\n"
+#ifdef MX4SIO
+" MX4SIO"
+#endif
+#ifdef HDD
+" HDD "
+#endif
+    
                );
     while (1) {};
 }
