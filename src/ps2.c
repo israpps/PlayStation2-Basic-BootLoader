@@ -6,6 +6,7 @@
 #include <libcdvd.h>
 #include "libcdvd_add.h"
 #include <fcntl.h>
+#include <debug.h>
 #include <ctype.h>
 #include <unistd.h>
 //#include "main.h"

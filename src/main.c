@@ -892,7 +892,7 @@ int dischandler()
     u32 STAT;
 
     scr_clear();
-    scr_printf("\t%s: Activated\n", __func__);
+    scr_printf("\n\t%s: Activated\n", __func__);
 
     scr_printf("\t\tEnabling Diagnosis...\n");
     do { // 0 = enable, 1 = disable.
