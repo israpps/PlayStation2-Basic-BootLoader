@@ -62,7 +62,7 @@ EE_OBJS = main.o \
 EMBEDDED_STUFF = icon_sys_A.o icon_sys_J.o icon_sys_C.o
 
 EE_CFLAGS = -Wall
-EE_CFLAGS += -fdata-sections -ffunction-sections
+EE_CFLAGS += -fdata-sections -ffunction-sections -DREPORT_FATAL_ERRORS
 EE_LDFLAGS += -L$(PS2SDK)/ports/lib
 EE_LDFLAGS += -Wl,--gc-sections -Wno-sign-compare
 EE_LIBS += -ldebug -lmc -lpatches

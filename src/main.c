@@ -402,17 +402,23 @@ int main(int argc, char *argv[])
                 free(RAM_p);
             } else {
                 fclose(fp);
+                DPRINTF("\tERROR: could not read %d bytes of config file, only %d readed\n", cnf_size, temp);
+#ifdef REPORT_FATAL_ERRORS
                 scr_setfontcolor(0x0000ff);
                 scr_printf("\tERROR: could not read %d bytes of config file, only %d readed\n", cnf_size, temp);
                 scr_setfontcolor(0xffffff);
+#endif
             }
         } else {
+            DPRINTF("\tFailed to allocate %d+1 bytes!\n", cnf_size);
+#ifdef REPORT_FATAL_ERRORS
             scr_setbgcolor(0x0000ff);
             scr_clear();
             scr_printf("\tFailed to allocate %d+1 bytes!\n", cnf_size);
             sleep(3);
             scr_setbgcolor(0x000000);
             scr_clear();
+#endif
         }
 #ifdef HDD
         if (config_source == SOURCE_HDD)
