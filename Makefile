@@ -75,7 +75,7 @@ ifneq ($(VERBOSE), 1)
    .SILENT:
 endif
 
-ifneq ($(MX4SIO), 0)
+ifeq ($(MX4SIO), 1)
   HOMEBREW_IRX = 1
   FILEXIO_NEED = 1
   EE_OBJS += mx4sio_bd.o
@@ -150,7 +150,7 @@ ifeq ($(HDD), 1)
   KELFTYPE = HDD
 endif
 
-ifneq ($(FILEXIO_NEED), 0)
+ifeq ($(FILEXIO_NEED), 1)
   $(info --- FILEXIO will be included)
   EE_CFLAGS += -DFILEXIO
   EE_LIBS += -lfileXio
@@ -237,7 +237,7 @@ $(EE_BIN_STRIPPED): $(EE_BIN)
 $(EE_BIN_PACKED): $(EE_BIN_STRIPPED)
 	@echo " -- Compressing"
 ifneq ($(DEBUG),1)
-	ps2-packer $< $@ > /dev/null
+	ps2-packer $< $@
 else
 	ps2-packer -v $< $@
 endif
