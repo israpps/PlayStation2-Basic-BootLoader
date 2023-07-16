@@ -32,7 +32,6 @@ char PART[128] = "\0";
 int HDD_USABLE = 0;
 #define MPART PART
 int LoadHDDIRX(void); // Load HDD IRXes
-int LoadFIO(void); // Load FileXio and it´s dependencies
 int MountParty(const char* path); ///processes strings in the format `hdd0:/$PARTITION:pfs:$PATH_TO_FILE/` to mount partition
 int mnt(const char* path); ///mount partition specified on path
 void HDDChecker();
@@ -41,8 +40,13 @@ void poweroffCallback(void *arg);
 #define MPART NULL
 #endif
 
+#ifdef MX4SIO
+int LookForBDMDevice(void);
+#endif
+
 #ifdef FILEXIO
 #include <fileXio_rpc.h>
+int LoadFIO(void); // Load FileXio and it´s dependencies
 #endif
 
 #include "debugprintf.h"
@@ -313,19 +317,32 @@ int main(int argc, char *argv[])
         {
             DPRINTF("Cant open 'pfs0:/PS2BBL/CONFIG.INI'\n");
 #endif
-            fp = fopen("mc0:/PS2BBL/CONFIG.INI", "r");
-            if (fp == NULL) {
-                DPRINTF("Cant load config from mc0\n");
-                fp = fopen("mc1:/PS2BBL/CONFIG.INI", "r");
+#ifdef MX4SIO
+            char* MX4SIO_CONF = CheckPath("massX:/PS2BBL/CONFIG.INI");
+            fp = fopen(MX4SIO_CONF, "r");
+            if (fp == NULL)
+            {
+                DPRINTF("Cant open 'mx4sio:/PS2BBL/CONFIG.INI'\n");
+#endif
+                fp = fopen("mc0:/PS2BBL/CONFIG.INI", "r");
                 if (fp == NULL) {
-                    DPRINTF("Cant load config from mc1\n");
-                    config_source = SOURCE_INVALID;
+                    DPRINTF("Cant load config from mc0\n");
+                    fp = fopen("mc1:/PS2BBL/CONFIG.INI", "r");
+                    if (fp == NULL) {
+                        DPRINTF("Cant load config from mc1\n");
+                        config_source = SOURCE_INVALID;
+                    } else {
+                        config_source = SOURCE_MC1;
+                    }
                 } else {
-                    config_source = SOURCE_MC1;
+                    config_source = SOURCE_MC0;
                 }
+#ifdef MX4SIO
             } else {
-                config_source = SOURCE_MC0;
+                config_source = SOURCE_MX4SIO;
+                
             }
+#endif
 #ifdef HDD
         } else {
             config_source = SOURCE_HDD;
