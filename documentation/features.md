@@ -85,4 +85,5 @@ The device names are:
 - `mc1:/`: Memory Card 2
 - `mc?:/`: Pseudo-device used to search on both Memory Cards ports
 - `mass:/`: first compatible usb device that was mapped by the USBMASS driver
+- `massX:/`: MX4SIO SD Card
 - `rom0:`: console main ROM memory. holds software (such as `OSDSYS` and `TESTMODE`), system information, configurations and lots of IRX modules.
