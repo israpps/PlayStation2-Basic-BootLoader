@@ -13,6 +13,9 @@
         "osdhistory.h": "c",
         "ps2_sio2man_driver.h": "c",
         "fcntl.h": "c",
-        "siocookie.h": "c"
+        "siocookie.h": "c",
+        "compare": "c",
+        "limits": "c",
+        "new": "c"
     }
 }

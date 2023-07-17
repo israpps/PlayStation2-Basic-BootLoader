@@ -24,7 +24,6 @@
 
 #define NEWLIB_PORT_AWARE
 #ifdef HDD
-#include <fileXio_rpc.h>
 #include <hdd-ioctl.h>
 #include <io_common.h>
 #include <assert.h>
@@ -33,13 +32,21 @@ char PART[128] = "\0";
 int HDD_USABLE = 0;
 #define MPART PART
 int LoadHDDIRX(void); // Load HDD IRXes
-int LoadFIO(void); // Load FileXio and it´s dependencies
 int MountParty(const char* path); ///processes strings in the format `hdd0:/$PARTITION:pfs:$PATH_TO_FILE/` to mount partition
 int mnt(const char* path); ///mount partition specified on path
 void HDDChecker();
 void poweroffCallback(void *arg);
 #else //this ensures that when HDD support is not available, loaded ELFs dont have any extra arg...
 #define MPART NULL
+#endif
+
+#ifdef MX4SIO
+int LookForBDMDevice(void);
+#endif
+
+#ifdef FILEXIO
+#include <fileXio_rpc.h>
+int LoadFIO(void); // Load FileXio and it´s dependencies
 #endif
 
 #include "debugprintf.h"
@@ -71,22 +78,30 @@ void fioInit();
     extern unsigned int size_##_n
 
 // --------------- IRX/IOPRP extern --------------- //
-#ifdef PSX
-IMPORT_BIN2C(psx_ioprp);
-#endif
 IMPORT_BIN2C(sio2man_irx);
 IMPORT_BIN2C(mcman_irx);
 IMPORT_BIN2C(mcserv_irx);
 IMPORT_BIN2C(padman_irx);
 
-#ifdef HDD
-IMPORT_BIN2C(poweroff_irx);
+#ifdef PSX
+IMPORT_BIN2C(psx_ioprp);
+#endif
+
+#ifdef FILEXIO
 IMPORT_BIN2C(iomanX_irx);
 IMPORT_BIN2C(fileXio_irx);
+#endif
+
+#ifdef HDD
+IMPORT_BIN2C(poweroff_irx);
 IMPORT_BIN2C(ps2dev9_irx);
 IMPORT_BIN2C(ps2atad_irx);
 IMPORT_BIN2C(ps2hdd_irx);
 IMPORT_BIN2C(ps2fs_irx);
+#endif
+
+#ifdef MX4SIO
+IMPORT_BIN2C(mx4sio_bd_irx);
 #endif
 
 #ifdef HAS_EMBEDDED_IRX
@@ -206,10 +221,17 @@ int main(int argc, char *argv[])
         sleep(1);
 #endif
     }
+
 #ifdef FILEXIO
     if (LoadFIO() < 0)
         	{scr_setbgcolor(0xff0000); scr_clear(); sleep(4);}
 #endif
+
+#ifdef MX4SIO
+    j = SifExecModuleBuffer(mx4sio_bd_irx, size_mx4sio_bd_irx, 0, NULL, &x);
+    DPRINTF(" [MX4SIO_BD]: ret=%d, ID=%d\n", j, x);
+#endif
+
 #ifdef HDD
     else if (LoadHDDIRX() < 0) // only load HDD crap if filexio and iomanx are up and running
         	{scr_setbgcolor(0x0000ff); scr_clear(); sleep(4);}
@@ -295,19 +317,32 @@ int main(int argc, char *argv[])
         {
             DPRINTF("Cant open 'pfs0:/PS2BBL/CONFIG.INI'\n");
 #endif
-            fp = fopen("mc0:/PS2BBL/CONFIG.INI", "r");
-            if (fp == NULL) {
-                DPRINTF("Cant load config from mc0\n");
-                fp = fopen("mc1:/PS2BBL/CONFIG.INI", "r");
+#ifdef MX4SIO
+            char* MX4SIO_CONF = CheckPath("massX:/PS2BBL/CONFIG.INI");
+            fp = fopen(MX4SIO_CONF, "r");
+            if (fp == NULL)
+            {
+                DPRINTF("Cant open 'mx4sio:/PS2BBL/CONFIG.INI'\n");
+#endif
+                fp = fopen("mc0:/PS2BBL/CONFIG.INI", "r");
                 if (fp == NULL) {
-                    DPRINTF("Cant load config from mc1\n");
-                    config_source = SOURCE_INVALID;
+                    DPRINTF("Cant load config from mc0\n");
+                    fp = fopen("mc1:/PS2BBL/CONFIG.INI", "r");
+                    if (fp == NULL) {
+                        DPRINTF("Cant load config from mc1\n");
+                        config_source = SOURCE_INVALID;
+                    } else {
+                        config_source = SOURCE_MC1;
+                    }
                 } else {
-                    config_source = SOURCE_MC1;
+                    config_source = SOURCE_MC0;
                 }
+#ifdef MX4SIO
             } else {
-                config_source = SOURCE_MC0;
+                config_source = SOURCE_MX4SIO;
+                
             }
+#endif
 #ifdef HDD
         } else {
             config_source = SOURCE_HDD;
@@ -367,17 +402,23 @@ int main(int argc, char *argv[])
                 free(RAM_p);
             } else {
                 fclose(fp);
+                DPRINTF("\tERROR: could not read %d bytes of config file, only %d readed\n", cnf_size, temp);
+#ifdef REPORT_FATAL_ERRORS
                 scr_setfontcolor(0x0000ff);
                 scr_printf("\tERROR: could not read %d bytes of config file, only %d readed\n", cnf_size, temp);
                 scr_setfontcolor(0xffffff);
+#endif
             }
         } else {
+            DPRINTF("\tFailed to allocate %d+1 bytes!\n", cnf_size);
+#ifdef REPORT_FATAL_ERRORS
             scr_setbgcolor(0x0000ff);
             scr_clear();
             scr_printf("\tFailed to allocate %d+1 bytes!\n", cnf_size);
             sleep(3);
             scr_setbgcolor(0x000000);
             scr_clear();
+#endif
         }
 #ifdef HDD
         if (config_source == SOURCE_HDD)
@@ -575,6 +616,13 @@ char *CheckPath(char *path)
         if (!MountParty(path))
             return strstr(path, "pfs:");
 #endif
+#ifdef MX4SIO
+    } else if (!strncmp("massX:", path, 6)) {
+        int x = LookForBDMDevice();
+        if (x >= 0)
+            path[4] = '0' + x;
+#endif
+
     }
     return path;
 }
@@ -642,6 +690,33 @@ int LoadUSBIRX(void)
     }
     return 0;
 }
+
+
+#ifdef MX4SIO
+int LookForBDMDevice(void)
+{
+    static char mass_path[] = "massX:";
+	static char DEVID[5];
+    int dd;
+    int x = 0;
+    for (x = 0; x < 5; x++)
+    {
+        mass_path[4] = '0' + x;
+        if ((dd = fileXioDopen(mass_path)) >= 0) {
+            int *intptr_ctl = (int *)DEVID;
+            *intptr_ctl = fileXioIoctl(dd, USBMASS_IOCTL_GET_DRIVERNAME, "");
+            close(dd);
+	        if (!strncmp(DEVID, "sdc", 3))
+	        {
+	        	DPRINTF("%s: Found MX4SIO device at mass%d:/\n", __func__, x);
+	        	return x;
+	        }
+        }
+    }
+    return -1;
+}
+#endif
+
 
 #ifdef FILEXIO
 int LoadFIO(void)
@@ -817,7 +892,7 @@ int dischandler()
     u32 STAT;
 
     scr_clear();
-    scr_printf("\t%s: Activated\n", __func__);
+    scr_printf("\n\t%s: Activated\n", __func__);
 
     scr_printf("\t\tEnabling Diagnosis...\n");
     do { // 0 = enable, 1 = disable.
@@ -1033,6 +1108,13 @@ void credits(void)
                "\tThanks to: fjtrujy, uyjulian, asmblur and AKuHAK\n"
                "\tthis build corresponds to the hash [" COMMIT_HASH "]\n"
                "\t\tcompiled on "__DATE__" "__TIME__"\n"
+#ifdef MX4SIO
+" MX4SIO"
+#endif
+#ifdef HDD
+" HDD "
+#endif
+    
                );
     while (1) {};
 }

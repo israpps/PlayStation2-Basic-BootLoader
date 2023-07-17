@@ -50,6 +50,10 @@ jobs:
         run: |
           make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PS2/ ${{ env.DEBUG }} PRINTF=${{ github.event.inputs.name }}
 
+      - name: Compile PS2 MX4SIO build
+        run: |
+          make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PS2_MX4SIO/ MX4SIO=1 ${{ env.DEBUG }} PRINTF=${{ github.event.inputs.name }}
+
       - name: Compile PSX build
         run: |
           make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PSX/ PSX=1 ${{ env.DEBUG }} PRINTF=${{ github.event.inputs.name }}
@@ -69,6 +73,7 @@ jobs:
           mv PS2/ release/PS2/
           mv PSX/ release/PSX/
           mv PS2_HDD/ release/PS2_HDD/
+          mv PS2_MX4SIO/ release/PS2_MX4SIO/
 
       - name: pack release
         run: |

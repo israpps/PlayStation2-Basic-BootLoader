@@ -15,6 +15,7 @@ HAS_EMBED_IRX = 1 # whether to embed or not non vital IRX (wich will be loaded f
 DEBUG ?= 0
 PSX ?= 0 # PSX DESR support
 HDD ?= 0 #wether to add internal HDD support
+MX4SIO ?= 0
 PROHBIT_DVD_0100 ?= 0 # prohibit the DVD Players v1.00 and v1.01 from being booted.
 XCDVD_READKEY ?= 0 # Enable the newer sceCdReadKey checks, which are only supported by a newer CDVDMAN module.
 
@@ -61,7 +62,7 @@ EE_OBJS = main.o \
 EMBEDDED_STUFF = icon_sys_A.o icon_sys_J.o icon_sys_C.o
 
 EE_CFLAGS = -Wall
-EE_CFLAGS += -fdata-sections -ffunction-sections
+EE_CFLAGS += -fdata-sections -ffunction-sections -DREPORT_FATAL_ERRORS
 EE_LDFLAGS += -L$(PS2SDK)/ports/lib
 EE_LDFLAGS += -Wl,--gc-sections -Wno-sign-compare
 EE_LIBS += -ldebug -lmc -lpatches
@@ -72,6 +73,13 @@ EE_CFLAGS += -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DPATCHLEVE
 
 ifneq ($(VERBOSE), 1)
    .SILENT:
+endif
+
+ifeq ($(MX4SIO), 1)
+  HOMEBREW_IRX = 1
+  FILEXIO_NEED = 1
+  EE_OBJS += mx4sio_bd.o
+  EE_CFLAGS += -DMX4SIO
 endif
 
 ifneq ($(HOMEBREW_IRX), 0)
@@ -229,7 +237,7 @@ $(EE_BIN_STRIPPED): $(EE_BIN)
 $(EE_BIN_PACKED): $(EE_BIN_STRIPPED)
 	@echo " -- Compressing"
 ifneq ($(DEBUG),1)
-	ps2-packer $< $@ > /dev/null
+	ps2-packer $< $@
 else
 	ps2-packer -v $< $@
 endif

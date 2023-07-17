@@ -5,6 +5,9 @@ enum
     SOURCE_MC0 = 0,
     SOURCE_MC1,
     SOURCE_MASS,
+#ifdef MX4SIO
+    SOURCE_MX4SIO,
+#endif
 #ifdef HDD
     SOURCE_HDD,
 #endif
@@ -17,14 +20,17 @@ enum
 
 static const char* SOURCES[SOURCE_COUNT] =
 {
-    "mc0:",
-    "mc1:",
-    "mass:",
+    "mc0",
+    "mc1",
+    "usb",
+#ifdef MX4SIO
+    "mx4sio",
+#endif
 #ifdef HDD
-    "hdd0:",
+    "hdd",
 #endif
 #ifdef XFROM
-    "xfrom0:",
+    "xfrom",
 #endif
     "NOT FOUND",
 };
