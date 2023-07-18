@@ -271,9 +271,7 @@ int main(int argc, char *argv[])
         DPRINTF("OSD Configuration not initialized. Defaults loaded.\n");
         scr_setfontcolor(0xffffff);
     }
-
-    // Applies OSD configuration (saves settings into the EE kernel)
-    DPRINTF("Saving OSD configuration to EE Kernel\n");
+    DPRINTF("Saving OSD configuration\n");
     OSDConfigApply();
 
     /*  Try to enable the remote control, if it is enabled.
