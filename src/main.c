@@ -488,7 +488,8 @@ int main(int argc, char *argv[])
     tstart = Timer();
     while (Timer() <= (tstart + GLOBCFG.DELAY)) {
         button = pad_button; // reset the value so we can iterate (bit-shift) again
-        PAD = ReadCombinedPadStatus();
+        PAD = ReadCombinedPadStatus_raw();
+        DPRINTF("PAD %x\n", PAD);
         for (x = 0; x < num_buttons; x++) { // check all pad buttons
             if (PAD & button) {
                 DPRINTF("PAD detected\n");
@@ -537,7 +538,7 @@ int main(int argc, char *argv[])
     scr_setfontcolor(0xffffff);
     while (1) {
         sleep(1);
-        PAD = ReadCombinedPadStatus();
+        PAD = ReadCombinedPadStatus_raw();
         if ((PAD & PAD_R1) && (PAD & PAD_START)) // if ONLY R1+START are pressed...
             EMERGENCY();
     }
