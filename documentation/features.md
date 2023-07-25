@@ -48,10 +48,6 @@ the following systems have not been tested, and therefore, compatibility with th
 
 unlike FreeMcBoot, PS2BBL has higher compatibility with modchipped consoles because it does not patch the OSDSYS on RAM.
 
-## Running homebrew
-
-Unsigned executables can be freely loaded from memory card and USB (both FAT32 and EXFAT) and even built-in software can be loaded (`rom0`)
-
 ## Running Discs
 
 PS2BBL can run PS1, PS2 and DVD Discs.
@@ -78,12 +74,11 @@ the impact on program size was just ~`3 kb`!
 
 ## Applications Execution
 
-Unsigned ELF files can be executed from memory card (any port), USB devices (fat32 or exfat) and board software (ROM)
-
-The device names are:
+Unsigned ELF files can be executed from the following devices
 - `mc0:/`: Memory Card 1
 - `mc1:/`: Memory Card 2
 - `mc?:/`: Pseudo-device used to search on both Memory Cards ports
 - `mass:/`: first compatible usb device that was mapped by the USBMASS driver
 - `massX:/`: MX4SIO SD Card
 - `rom0:`: console main ROM memory. holds software (such as `OSDSYS` and `TESTMODE`), system information, configurations and lots of IRX modules.
+- `hdd0:PARTITION:pfs:PATH_TO_ELF`: PFS partition of internal HDD
