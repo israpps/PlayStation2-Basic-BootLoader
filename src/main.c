@@ -322,19 +322,34 @@ int main(int argc, char *argv[])
             {
                 DPRINTF("Cant open 'mx4sio:/PS2BBL/CONFIG.INI'\n");
 #endif
-                fp = fopen("mc0:/PS2BBL/CONFIG.INI", "r");
-                if (fp == NULL) {
-                    DPRINTF("Cant load config from mc0\n");
-                    fp = fopen("mc1:/PS2BBL/CONFIG.INI", "r");
+#ifdef PSX
+                static char* PSX_CONF = CheckPath("mc?:/PS2BBL/XCONFIG.INI");
+                fp = fopen(PSX_CONF, "r");
+                if (fp == NULL)
+                {
+                    DPRINTF("Cant open '%s'\n", PSX_CONF);
+#endif
+                    fp = fopen("mc0:/PS2BBL/CONFIG.INI", "r");
                     if (fp == NULL) {
-                        DPRINTF("Cant load config from mc1\n");
-                        config_source = SOURCE_INVALID;
+                        DPRINTF("Cant load config from mc0\n");
+                        fp = fopen("mc1:/PS2BBL/CONFIG.INI", "r");
+                        if (fp == NULL) {
+                            DPRINTF("Cant load config from mc1\n");
+                            config_source = SOURCE_INVALID;
+                        } else {
+                            config_source = SOURCE_MC1;
+                        }
                     } else {
-                        config_source = SOURCE_MC1;
+                        config_source = SOURCE_MC0;
                     }
+#ifdef PSX
                 } else {
-                    config_source = SOURCE_MC0;
+                    config_source = PSX_CONF[2] - '0'; /* since the enumerators for SOURCE_MC0 and SOURCE_MC1 have values of 0 and 1
+                                                        we can substract '0' to the MC index and still get the proper value */
+
                 }
+
+#endif
 #ifdef MX4SIO
             } else {
                 config_source = SOURCE_MX4SIO;
