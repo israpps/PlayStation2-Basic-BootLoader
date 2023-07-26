@@ -323,7 +323,7 @@ int main(int argc, char *argv[])
                 DPRINTF("Cant open 'mx4sio:/PS2BBL/CONFIG.INI'\n");
 #endif
 #ifdef PSX
-                static char* PSX_CONF = CheckPath("mc?:/PS2BBL/XCONFIG.INI");
+                char* PSX_CONF = CheckPath("mc?:/PS2BBL/XCONFIG.INI");
                 fp = fopen(PSX_CONF, "r");
                 if (fp == NULL)
                 {
