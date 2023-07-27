@@ -282,6 +282,11 @@ analize:
 
 celan: clean # a repetitive typo when quicktyping
 kelf: $(EE_BIN_ENCRYPTED) # alias of KELF creation
+
+
+banner:
+	@echo "$$HEADER"
+
 # Include makefiles
 include $(PS2SDK)/samples/Makefile.pref
 include $(PS2SDK)/samples/Makefile.eeglobal
