@@ -11,7 +11,6 @@ export HEADER
 
 
 # ---{BUILD CFG}--- #
-HAS_EMBED_IRX = 1 # whether to embed or not non vital IRX (wich will be loaded from memcard files)
 DEBUG ?= 0
 PSX ?= 0 # PSX DESR support
 HDD ?= 0 #wether to add internal HDD support
@@ -23,11 +22,12 @@ PRINTF ?= NONE
 
 HOMEBREW_IRX ?= 0
 FILEXIO_NEED ?= 0 #if we need filexio and imanx loaded for other features (HDD, mx4sio, etc)
+HAS_LOCAL_IRX ?= 0 # whether to embed or not non vital IRX (wich will be loaded from memcard files)
 
 # Related to binary size reduction
 KERNEL_NOPATCH = 1 
 NEWLIB_NANO = 1
-DUMMY_TIMEZONE = 0
+DUMMY_TIMEZONE = 1
 DUMMY_LIBC_INIT = 1
 
 # ---{ VERSIONING }--- #
@@ -135,10 +135,12 @@ else
   EE_OBJS += sio2man_irx.o
 endif
 
-ifneq ($(HAS_EMBED_IRX), 1)
+ifneq ($(HAS_LOCAL_IRX), 1)
   $(info --- USB drivers will be embedded)
   EE_OBJS += usbd_irx.o bdm_irx.o bdmfs_fatfs_irx.o usbmass_bd_irx.o
   EE_CFLAGS += -DHAS_EMBEDDED_IRX
+else
+  $(info --- USB drivers will be loaded of memory card)
 endif
 
 ifeq ($(HDD), 1)

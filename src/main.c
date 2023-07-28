@@ -171,7 +171,7 @@ int main(int argc, char *argv[])
     fioInit(); // NO scr_printf BEFORE here
     init_scr();
     scr_setCursor(0); // get rid of annoying that cursor.
-    DPRINTF_INIT()
+    DPRINTF_INIT();
 #ifndef NO_DPRINTF
     DPRINTF("PS2BBL: starting with %d argumments:\n", argc);
     for (x = 0; x < argc; x++)
@@ -1143,3 +1143,4 @@ void runOSDNoUpdate(void)
 #endif
 
 PS2_DISABLE_AUTOSTART_PTHREAD();
+DISABLE_EXTRA_TIMERS_FUNCTIONS(); // Disable the extra functionalities for timers

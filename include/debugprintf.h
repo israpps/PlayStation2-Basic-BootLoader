@@ -4,8 +4,9 @@
 #ifdef EE_SIO_DEBUG
 void sio_printf(const char *fmt, ...);
     #include <SIOCookie.h>
-    #define DPRINTF_INIT() ee_sio_start(38400, 0, 0, 0, 0, 1);
-    #define DPRINTF(x...) sio_printf( x)
+    #include <kernel.h>
+    #define DPRINTF_INIT() ee_sio_start(38400, 0, 0, 0, 0, 1), InitDebug()
+    #define DPRINTF(x...) _print(x)
 #elif COMMON_PRINTF
     #define DPRINTF(x...) printf(x)
 #elif SCR_PRINT
