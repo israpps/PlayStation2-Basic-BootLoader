@@ -522,11 +522,10 @@ int main(int argc, char *argv[])
                 PadDeinitPads();
             RunLoaderElf(EXECPATHS[j], MPART);
         } else {
-            scr_setfontcolor(0x00ffff);
             DPRINTF("%s not found\n", EXECPATHS[j]);
-            scr_setfontcolor(0xffffff);
         }
     }
+
     scr_clear();
     scr_setfontcolor(0x00ffff);
     scr_printf("\n\n\tEND OF EXECUTION REACHED\nCould not find any of the default applications\nCheck your config file for the LK_AUTO_E# entries\nOr press a key while logo displays to run the bound application\npress R1+START to enter emergency mode");
