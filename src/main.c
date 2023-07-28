@@ -513,7 +513,6 @@ int main(int argc, char *argv[])
     }
     DPRINTF("Wait time consummed. running AUTO entry\n");
     TimerEnd();
-    scr_clear();
     for (j = 0; j < 3; j++) {
         EXECPATHS[j] = CheckPath(GLOBCFG.KEYPATHS[0][j]);
         if (exist(EXECPATHS[j])) {
@@ -528,7 +527,7 @@ int main(int argc, char *argv[])
             scr_setfontcolor(0xffffff);
         }
     }
-
+    scr_clear();
     scr_setfontcolor(0x00ffff);
     scr_printf("\n\n\tEND OF EXECUTION REACHED\nCould not find any of the default applications\nCheck your config file for the LK_AUTO_E# entries\nOr press a key while logo displays to run the bound application\npress R1+START to enter emergency mode");
     scr_setfontcolor(0xffffff);
