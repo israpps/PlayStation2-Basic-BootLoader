@@ -83,7 +83,7 @@ ifeq ($(MX4SIO), 1)
   EE_CFLAGS += -DMX4SIO
 endif
 
-ifneq ($(HOMEBREW_IRX), 0)
+ifeq ($(HOMEBREW_IRX), 1)
    $(info --- enforcing usage of homebrew IRX modules)
    USE_ROM_PADMAN = 0
    USE_ROM_MCMAN = 0
