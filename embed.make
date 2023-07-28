@@ -1,6 +1,8 @@
 BIN2S = @bin2s
 vpath %.irx embed/iop/
 vpath %.irx $(PS2SDK)/iop/irx/
+IRXTAG = $(notdir $(addsuffix _irx, $(basename $<)))
+
 # ---{ IOP BINARIES }--- #
 $(EE_ASM_DIR)ioprp.s: embed/ioprp.img | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ psx_ioprp
@@ -57,6 +59,19 @@ $(EE_ASM_DIR)ps2hdd_irx.s: ps2hdd-osd.irx | $(EE_ASM_DIR)
 $(EE_ASM_DIR)ps2fs_irx.s: ps2fs.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ ps2fs_irx
 #HDD
+
+$(EE_ASM_DIR)ps2ip_irx.s: ps2ip-nm.irx | $(EE_ASM_DIR)
+	$(BIN2S) $< $@ ps2ip_irx
+
+$(EE_ASM_DIR)udptty_irx.s: udptty.irx | $(EE_ASM_DIR)
+	$(BIN2S) $< $@ $(IRXTAG)
+
+$(EE_ASM_DIR)netman_irx.s: netman.irx | $(EE_ASM_DIR)
+	$(BIN2S) $< $@ $(IRXTAG)
+
+$(EE_ASM_DIR)smap_irx.s: smap.irx | $(EE_ASM_DIR)
+	$(BIN2S) $< $@ $(IRXTAG)
+
 
 # ---{ EMBEDDED RESOURCES }--- #
 $(EE_ASM_DIR)icon_sys_A.s : embed/icons/icon_A.sys | $(EE_ASM_DIR)

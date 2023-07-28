@@ -18,11 +18,12 @@ HDD ?= 0 #wether to add internal HDD support
 MX4SIO ?= 0
 PROHBIT_DVD_0100 ?= 0 # prohibit the DVD Players v1.00 and v1.01 from being booted.
 XCDVD_READKEY ?= 0 # Enable the newer sceCdReadKey checks, which are only supported by a newer CDVDMAN module.
-
+UDPTTY ?= 0 # printf ove UDP
 PRINTF ?= NONE
 
-HOMEBREW_IRX ?= 0
-FILEXIO_NEED ?= 0 #if we need filexio and imanx loaded for other features (HDD, mx4sio, etc)
+HOMEBREW_IRX ?= 0 # if we need homebrew SIO2MAN, MCMAN, MCSERV & PADMAN embedded, else, builtin console drivers are used
+FILEXIO_NEED ?= 0 # if we need filexio and imanx loaded for other features (HDD, mx4sio, etc)
+DEV9_NEED ?= 0    # if we need DEV9 loaded for other features (HDD, UDPTTY, etc)
 
 # Related to binary size reduction
 KERNEL_NOPATCH = 1 
@@ -144,10 +145,21 @@ endif
 ifeq ($(HDD), 1)
   $(info --- compiling with HDD support)
   EE_LIBS += -lpoweroff
-  EE_OBJS += ps2fs_irx.o ps2hdd_irx.o ps2atad_irx.o ps2dev9_irx.o poweroff_irx.o
+  EE_OBJS += ps2fs_irx.o ps2hdd_irx.o ps2atad_irx.o poweroff_irx.o
   EE_CFLAGS += -DHDD
   FILEXIO_NEED = 1
+  DEV9_NEED = 1
   KELFTYPE = HDD
+endif
+
+ifeq ($(UDPTTY), 1)
+  $(info --- UDPTTY enabled)
+  EE_CFLAGS += -DUDPTTY
+  EE_OBJS += udptty_irx.o ps2ip_irx.o netman_irx.o smap_irx.o
+  DEV9_NEED = 1
+  ifneq ($(PRINTF), EE_SIO) # only enable common printf if EE_SIO is disabled. this allows separating EE and IOP printf
+    PRINTF = PRINTF
+  endif
 endif
 
 ifeq ($(FILEXIO_NEED), 1)
@@ -159,6 +171,11 @@ endif
 
 ifeq ($(DUMMY_TIMEZONE), 1)
   EE_CFLAGS += -DDUMMY_TIMEZONE
+endif
+
+ifeq ($(DEV9_NEED), 1)
+  EE_CFLAGS += -DDEV9
+  EE_OBJS += ps2dev9_irx.o
 endif
 
 ifdef COMMIT_HASH
@@ -282,6 +299,11 @@ analize:
 
 celan: clean # a repetitive typo when quicktyping
 kelf: $(EE_BIN_ENCRYPTED) # alias of KELF creation
+
+
+banner:
+	@echo "$$HEADER"
+
 # Include makefiles
 include $(PS2SDK)/samples/Makefile.pref
 include $(PS2SDK)/samples/Makefile.eeglobal
