@@ -21,9 +21,9 @@ XCDVD_READKEY ?= 0 # Enable the newer sceCdReadKey checks, which are only suppor
 UDPTTY ?= 0 # printf ove UDP
 PRINTF ?= NONE
 
-HOMEBREW_IRX ?= 0
+HOMEBREW_IRX ?= 0 # if we need homebrew SIO2MAN, MCMAN, MCSERV & PADMAN embedded, else, builtin console drivers are used
 FILEXIO_NEED ?= 0 # if we need filexio and imanx loaded for other features (HDD, mx4sio, etc)
-DEV9_NEED ?= # if we need DEV9 loaded for other features (HDD, UDPTTY, etc)
+DEV9_NEED ?= 0    # if we need DEV9 loaded for other features (HDD, UDPTTY, etc)
 
 # Related to binary size reduction
 KERNEL_NOPATCH = 1 
