@@ -117,6 +117,9 @@ IMPORT_BIN2C(smap_irx);
 
 #ifdef MX4SIO
 IMPORT_BIN2C(mx4sio_bd_irx);
+#ifdef USE_ROM_SIO2MAN
+#error MX4SIO needs Homebrew SIO2MAN to work
+#endif
 #endif
 
 #ifdef DEV9
