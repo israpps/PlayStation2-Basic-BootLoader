@@ -69,6 +69,15 @@ int LoadFIO(void); // Load FileXio and it´s dependencies
 #include "psx/plibcdvd_add.h"
 #endif
 
+#ifdef DEV9
+static int dev9_loaded = 0;
+int loadDEV9(void);
+#endif
+
+#ifdef UDPTTY
+void loadUDPTTY();
+#endif
+
 // For avoiding define NEWLIB_AWARE
 void fioInit();
 
@@ -94,14 +103,24 @@ IMPORT_BIN2C(fileXio_irx);
 
 #ifdef HDD
 IMPORT_BIN2C(poweroff_irx);
-IMPORT_BIN2C(ps2dev9_irx);
 IMPORT_BIN2C(ps2atad_irx);
 IMPORT_BIN2C(ps2hdd_irx);
 IMPORT_BIN2C(ps2fs_irx);
 #endif
 
+#ifdef UDPTTY
+IMPORT_BIN2C(ps2ip_irx);
+IMPORT_BIN2C(udptty_irx);
+IMPORT_BIN2C(netman_irx);
+IMPORT_BIN2C(smap_irx);
+#endif
+
 #ifdef MX4SIO
 IMPORT_BIN2C(mx4sio_bd_irx);
+#endif
+
+#ifdef DEV9
+IMPORT_BIN2C(ps2dev9_irx);
 #endif
 
 #ifdef HAS_EMBEDDED_IRX
@@ -156,6 +175,7 @@ char *EXECPATHS[3];
 u8 ROMVER[16];
 int PAD = 0;
 static int  config_source = SOURCE_INVALID;
+
 int main(int argc, char *argv[])
 {
     u32 STAT;
@@ -184,6 +204,12 @@ int main(int argc, char *argv[])
 
     DPRINTF("disabling MODLOAD device blacklist/whitelist\n");
     sbv_patch_disable_prefix_check(); /* disable the MODLOAD module black/white list, allowing executables to be freely loaded from any device. */
+
+#ifdef UDPTTY
+    if (loadDEV9())
+        loadUDPTTY();
+#endif
+
 #ifdef USE_ROM_SIO2MAN
     j = SifLoadModule("rom0:SIO2MAN", 0, NULL);
     DPRINTF(" [SIO2MAN]: %d\n", j);
@@ -352,7 +378,7 @@ int main(int argc, char *argv[])
     }
 
     if (config_source != SOURCE_INVALID) {
-        DPRINTF("valid config on device %d, reading now\n", config_source);
+        DPRINTF("valid config on device '%s', reading now\n", SOURCES[config_source]);
         pad_button = 0x0001; // on valid config, change the value of `pad_button` so the pad detection loop iterates all the buttons instead of only those configured on default paths
         num_buttons = 16;
         fseek(fp, 0, SEEK_END);
@@ -516,12 +542,13 @@ int main(int argc, char *argv[])
     if (Timer() <= (tstart + 4000)) {
         scr_clear();
         for (j = 0; j < 3; j++) {
-            if (exist(CheckPath(GLOBCFG.KEYPATHS[0][j]))) {
+            EXECPATHS[j] = CheckPath(GLOBCFG.KEYPATHS[0][j]);
+            if (exist(EXECPATHS[j])) {
                 scr_setfontcolor(0x00ff00);
-                scr_printf("\tLoading %s\n", GLOBCFG.KEYPATHS[0][j]);
+                scr_printf("\tLoading %s\n", EXECPATHS[j]);
                 if (!is_PCMCIA)
                     PadDeinitPads();
-                RunLoaderElf(CheckPath(GLOBCFG.KEYPATHS[0][j]), MPART);
+                RunLoaderElf(EXECPATHS[j], MPART);
             } else {
                 scr_setfontcolor(0x00ffff);
                 DPRINTF("%s not found\n", GLOBCFG.KEYPATHS[0][j]);
@@ -738,6 +765,38 @@ int LoadFIO(void)
 }
 #endif
 
+#ifdef DEV9
+int loadDEV9(void)
+{
+    if (!dev9_loaded)
+    {
+        int ID, RET;
+        ID = SifExecModuleBuffer(&ps2dev9_irx, size_ps2dev9_irx, 0, NULL, &RET);
+        DPRINTF("[DEV9]: ret=%d, ID=%d\n", RET, ID);
+        if (ID < 0 && RET == 1) // ID smaller than 0: issue reported from modload | RET == 1: driver returned no resident end
+            return 0;
+        dev9_loaded = 1;
+    }
+    return 1;
+}
+#endif
+
+#ifdef UDPTTY
+void loadUDPTTY()
+{
+    int ID, RET;
+    ID = SifExecModuleBuffer(&netman_irx, size_netman_irx, 0, NULL, &RET);
+    DPRINTF(" [NETMAN]: ret=%d, ID=%d\n", RET, ID);
+    ID = SifExecModuleBuffer(&smap_irx, size_smap_irx, 0, NULL, &RET);
+    DPRINTF(" [SMAP]: ret=%d, ID=%d\n", RET, ID);
+    ID = SifExecModuleBuffer(&ps2ip_irx, size_ps2ip_irx, 0, NULL, &RET);
+    DPRINTF(" [PS2IP]: ret=%d, ID=%d\n", RET, ID);
+    ID = SifExecModuleBuffer(&udptty_irx, size_udptty_irx, 0, NULL, &RET);
+    DPRINTF(" [UDPTTY]: ret=%d, ID=%d\n", RET, ID);
+    sleep(3);
+}
+#endif
+
 #ifdef HDD
 static int CheckHDD(void) {
     int ret = fileXioDevctl("hdd0:", HDIOC_STATUS, NULL, 0, NULL, 0);
@@ -754,9 +813,7 @@ int LoadHDDIRX(void)
     static const char hddarg[] = "-o" "\0" "4" "\0" "-n" "\0" "20";
 	//static const char pfsarg[] = "-n\0" "24\0" "-o\0" "8";
 
-    ID = SifExecModuleBuffer(&ps2dev9_irx, size_ps2dev9_irx, 0, NULL, &RET);
-    DPRINTF(" [DEV9]: ret=%d, ID=%d\n", RET, ID);
-    if (ID < 0 || RET == 1)
+    if (!loadDEV9())
         return -1;
 
     ID = SifExecModuleBuffer(&poweroff_irx, size_poweroff_irx, 0, NULL, &RET);
