@@ -47,7 +47,8 @@ EE_BIN_STRIPPED = $(BINDIR)stripped_$(BASENAME).ELF
 EE_BIN_PACKED = $(BINDIR)COMPRESSED_$(BASENAME).ELF
 KELFTYPE ?= MC
 EE_BIN_ENCRYPTED = $(BINDIR)$(BASENAME)_$(KELFTYPE).KELF
-
+MBR_KELF ?= $(BASENAME)_MBR.KELF
+MBR_RAW = MBR.RAW
 # ---{ OBJECTS & STUFF }--- #
 
 EE_OBJS_DIR = obj/
@@ -181,6 +182,11 @@ ifeq ($(DEV9_NEED), 1)
   EE_OBJS += ps2dev9_irx.o
 endif
 
+LOADADDR  = 0x100000
+ifeq ($(LOADADDR_100K), 1)
+  EE_LDFLAGS += -Wl,$(LOADADDR)
+endif
+
 ifdef COMMIT_HASH
   EE_CFLAGS += -DCOMMIT_HASH=\"$(COMMIT_HASH)\"
 else
@@ -303,6 +309,16 @@ analize:
 celan: clean # a repetitive typo when quicktyping
 kelf: $(EE_BIN_ENCRYPTED) # alias of KELF creation
 
+mbr: clean
+	$(info --- CREATING MBR BOOTSTRAP PROGRAM)
+	$(MAKE) $(MBR_KELF) HDD=1 LOADADDR_100K=1
+  
+$(MBR_RAW): $(EE_BIN_STRIPPED)
+	$(EE_OBJCOPY) -O binary -v $< $@ 
+
+$(MBR_KELF): $(MBR_RAW)
+	thirdparty/kelftool_dnasload.exe encrypt mbr $< $@
+	rm $<
 
 banner:
 	@echo "$$HEADER"
