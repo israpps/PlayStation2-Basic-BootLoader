@@ -1,7 +1,7 @@
 {
     "configurations": [
         {
-            "name": "PS2SDK",
+            "name": "PS2SDK EE Toolchain",
             "includePath": [
                 "${workspaceFolder}/**",
                 "/usr/local/ps2dev/ps2sdk/common/include/",
@@ -14,6 +14,23 @@
                 "_EE"
             ],
             "compilerPath": "/usr/local/ps2dev/ee/bin/mips64r5900el-ps2-elf-gcc",
+            "cStandard": "gnu17",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "${default}",
+            "configurationProvider": "ms-vscode.makefile-tools"
+        },
+        {
+            "name": "PS2SDK IOP Toolchain",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/usr/local/ps2dev/ps2sdk/common/include/",
+                "/usr/local/ps2dev/ps2sdk/iop/include/",
+                "/usr/local/ps2dev/ps2sdk/iop/*",
+            ],
+            "defines": [
+                "_IOP"
+            ],
+            "compilerPath": "/usr/local/ps2dev/iop/bin/mipsel-ps2-irx-gcc",
             "cStandard": "gnu17",
             "cppStandard": "gnu++17",
             "intelliSenseMode": "${default}",

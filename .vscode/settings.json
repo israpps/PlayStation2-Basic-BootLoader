@@ -16,6 +16,8 @@
         "siocookie.h": "c",
         "compare": "c",
         "limits": "c",
-        "new": "c"
+        "new": "c",
+        "irx_imports.h": "c",
+        "module_debug.h": "c"
     }
 }
