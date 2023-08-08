@@ -56,5 +56,8 @@ IMPORT_BIN2C(ps2dev9_irx);
 #endif // HAS_EMBEDDED_IRX
 
 
+#ifdef SD2PSX
+IMPORT_BIN2C(sd2psxman_irx);
+#endif
 
 #endif

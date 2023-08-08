@@ -86,6 +86,12 @@ ifeq ($(MX4SIO), 1)
   endif
 endif
 
+ifeq ($(SD2PSX), 1)
+   $(info --- SD2PSX support enabled)
+   EE_CFLAGS += -DSD2PSX
+   EE_OBJS += sd2psxman_irx.o
+endif
+
 ifeq ($(HOMEBREW_IRX), 1)
    $(info --- enforcing usage of homebrew IRX modules)
    USE_ROM_PADMAN = 0

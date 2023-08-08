@@ -1,4 +1,5 @@
 BIN2S = @bin2s
+vpath %.irx iop/
 vpath %.irx embed/iop/
 vpath %.irx $(PS2SDK)/iop/irx/
 IRXTAG = $(notdir $(addsuffix _irx, $(basename $<)))
@@ -72,6 +73,12 @@ $(EE_ASM_DIR)netman_irx.s: netman.irx | $(EE_ASM_DIR)
 $(EE_ASM_DIR)smap_irx.s: smap.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ $(IRXTAG)
 
+
+$(EE_ASM_DIR)%_irx.s: %.irx | $(EE_ASM_DIR)
+	$(BIN2S) $< $@ $(IRXTAG)
+
+iop/sd2psxman.irx: iop/sd2psxman
+	$(MAKE) -C $<
 
 # ---{ EMBEDDED RESOURCES }--- #
 $(EE_ASM_DIR)icon_sys_A.s : embed/icons/icon_A.sys | $(EE_ASM_DIR)

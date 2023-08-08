@@ -44,6 +44,11 @@ void poweroffCallback(void *arg);
 int LookForBDMDevice(void);
 #endif
 
+
+#ifdef SD2PSX
+static int cardAvailable(int slot);
+#endif
+
 #ifdef FILEXIO
 #include <fileXio_rpc.h>
 int LoadFIO(void); // Load FileXio and it´s dependencies
@@ -124,8 +129,8 @@ CONFIG GLOBCFG;
 char *EXECPATHS[3];
 u8 ROMVER[16];
 int PAD = 0;
-static int  config_source = SOURCE_INVALID;
-
+static int config_source = SOURCE_INVALID;
+static int boot_mcslot = -1;
 int main(int argc, char *argv[])
 {
     u32 STAT;
@@ -134,6 +139,12 @@ int main(int argc, char *argv[])
     static int num_buttons = 4, pad_button = 0x0100; // first pad button is L2
     unsigned char *RAM_p = NULL;
     char *CNFBUFF, *name, *value;
+
+    if (argc > 0)
+    {
+        if (!strncmp("mc", argv[0], 2))
+            boot_mcslot = argv[0][2] - '0';
+    }
 
     ResetIOP();
     SifInitIopHeap(); // Initialize SIF services for loading modules and files.
@@ -167,6 +178,12 @@ int main(int argc, char *argv[])
     j = SifExecModuleBuffer(sio2man_irx, size_sio2man_irx, 0, NULL, &x);
     DPRINTF(" [SIO2MAN]: ret=%d, ID=%d\n", j, x);
 #endif
+
+#ifdef SD2PSX
+    j = SifExecModuleBuffer(sd2psxman_irx, size_sd2psxman_irx, 0, NULL, &x);
+    DPRINTF(" [SD2PSXMAN]: ret=%d, ID=%d\n", j, x);
+#endif
+
 #ifdef USE_ROM_MCMAN
     j = SifLoadModule("rom0:MCMAN", 0, NULL);
     DPRINTF(" [MCMAN]: %d\n", j);
@@ -279,6 +296,17 @@ int main(int argc, char *argv[])
     TimerEnd();
     DPRINTF("load default settings\n");
     SetDefaultSettings();
+
+#ifdef SD2PSX
+    if (boot_mcslot != -1) // if we are booting from MC, wait for SD2PSX memory card swap to be done!
+        while(!cardAvailable(boot_mcslot) || exist("mc0:/SD2PSX_BOOT"))
+            sleep(1);
+    else
+    {
+        DPRINTF("Warning: Running a version with SD2PSX support outside of SD2PSX\n");
+    }
+#endif
+
     FILE *fp;
     DPRINTF("Reading settings...\n");
     fp = fopen("mass:/PS2BBL/CONFIG.INI", "r");
@@ -343,6 +371,8 @@ int main(int argc, char *argv[])
     }
 
     if (config_source != SOURCE_INVALID) {
+        if (boot_mcslot == -1 && (config_source == SOURCE_MC0 || config_source == SOURCE_MC1))
+            boot_mcslot = config_source; // we did not boot from a memory card, but config was found on a memory card! change priority according to where config was found
         DPRINTF("valid config on device '%s', reading now\n", SOURCES[config_source]);
         pad_button = 0x0001; // on valid config, change the value of `pad_button` so the pad detection loop iterates all the buttons instead of only those configured on default paths
         num_buttons = 16;
@@ -478,10 +508,9 @@ int main(int argc, char *argv[])
     while (Timer() <= (tstart + GLOBCFG.DELAY)) {
         button = pad_button; // reset the value so we can iterate (bit-shift) again
         PAD = ReadCombinedPadStatus_raw();
-        DPRINTF("PAD %x\n", PAD);
         for (x = 0; x < num_buttons; x++) { // check all pad buttons
             if (PAD & button) {
-                DPRINTF("PAD detected\n");
+                DPRINTF("PAD detected %x\n", PAD);
                 // if button detected , copy path to corresponding index
                 for (j = 0; j < 3; j++) {
                     EXECPATHS[j] = CheckPath(GLOBCFG.KEYPATHS[x + 1][j]);
@@ -579,11 +608,11 @@ char *CheckPath(char *path)
         }
     }
     if (!strncmp("mc?", path, 3)) {
-        path[2] = (config_source == SOURCE_MC1) ? '1' : '0';
+        path[2] = (boot_mcslot == SOURCE_MC1) ? '1' : '0';
         if (exist(path)) {
             return path;
         } else {
-            path[2] = (config_source == SOURCE_MC1) ? '0' : '1';
+            path[2] = (boot_mcslot == SOURCE_MC1) ? '0' : '1';
             if (exist(path))
                 return path;
         }
@@ -624,6 +653,17 @@ void SetDefaultSettings(void)
     GLOBCFG.DELAY = DEFDELAY;
     GLOBCFG.TRAYEJECT = 0;
 }
+
+#ifdef SD2PSX
+static int cardAvailable(int slot)
+{
+    int ret, type, free, format;
+    mcGetInfo(slot ,0, &type, &free, &format);
+    mcSync(0, NULL, &ret);
+    
+    return (ret >= -2);
+}
+#endif
 
 int LoadUSBIRX(void)
 {
