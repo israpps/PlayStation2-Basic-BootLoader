@@ -40,15 +40,9 @@ int __start(int argc, char *argv[])
         return MODULE_NO_RESIDENT_END;
     }
     DPRINTF("Found SECRMAN. version 0x%X\n", SECRMAN->version);
-    if (SecrSetMcCommandHandler_Expnum < ioplib_getTableSize(SECRMAN)) {
-        ORIGINAL_SecrSetMcCommandHandler = (SecrSetMcCommandHandler_hook_t)SECRMAN->exports[SecrSetMcCommandHandler_Expnum];
-        DPRINTF("Original SecrSetMcCommandHandler found (ptr:0x%p)\n", ORIGINAL_SecrSetMcCommandHandler);
-    } else {
-        DPRINTF("Unicorn! SECRMAN has LESS than %d exports\n", SecrSetMcCommandHandler_Expnum);
-    }
 
-    
-    if (ioplib_hookExportEntry(SECRMAN, SecrSetMcCommandHandler_Expnum, HOOKED_SecrSetMcCommandHandler) == NULL)
+    ORIGINAL_SecrSetMcCommandHandler = (SecrSetMcCommandHandler_hook_t)ioplib_hookExportEntry(SECRMAN, SecrSetMcCommandHandler_Expnum, HOOKED_SecrSetMcCommandHandler);
+    if (ORIGINAL_SecrSetMcCommandHandler == NULL)
     {
         DPRINTF("Error hooking into SecrSetMcCommandHandler\n");
         return MODULE_NO_RESIDENT_END;
