@@ -1,4 +1,5 @@
 #include "main.h"
+#include "rpc_common.h"
 #include "module_debug.h"
 
 IRX_ID(MODNAME, MAJOR, MINOR);
@@ -6,12 +7,51 @@ IRX_ID(MODNAME, MAJOR, MINOR);
 SecrSetMcCommandHandler_hook_t ORIGINAL_SecrSetMcCommandHandler = NULL;
 static McCommandHandler_t McCommandHandler = NULL;
 
+static SifRpcDataQueue_t sd2psxman_queue;
+static SifRpcServerData_t sd2psxman_server;
+static u8 _rpc_buffer[512 * 4] __attribute__((__aligned__(4))); // TODO: ADJUST RPC BUFFER SIZE
+
 void HOOKED_SecrSetMcCommandHandler(McCommandHandler_t handler)
 {
     DPRINTF("%s: handler ptr 0x%p\n",__FUNCTION__, handler);
     McCommandHandler = handler;
     ORIGINAL_SecrSetMcCommandHandler(handler); //we kept the original function to call it from here... else, SECRMAN wont auth cards...
 }
+
+static void * rpcHandlerFunction(unsigned int CMD, void * rpcBuffer, int size)
+{
+    printf("CMD %d\n", CMD);
+	switch(CMD)
+	{
+    case SD2PSX_QUIT_BOOTCARD:
+        break;
+    case SD2PSX_SWITCH_CARD_SLOT:
+        break;
+    case SD2PSX_SWITCH_CARD_CHANNEL:
+        break;
+    case SD2PSX_SWITCH_CARD_SLOT_BY_GAMEID:
+        break;
+    case SD2PSX_SEND_CMD:
+        break;
+	default:
+		printf(MODNAME": Unknown CMD (%d) called!\n", CMD);
+
+  }
+
+  return rpcBuffer;
+}
+
+static void threadRpcFunction(void *arg)
+{
+	(void)arg;
+
+	DPRINTF("RPC Thread Started\n");
+
+	SifSetRpcQueue( &sd2psxman_queue , GetThreadId() );
+	SifRegisterRpc( &sd2psxman_server, SD2PSXMAN_IRX, (void *)rpcHandlerFunction,(u8 *)&_rpc_buffer,NULL,NULL, &sd2psxman_queue );
+	SifRpcLoop( &sd2psxman_queue );
+}
+
 
 int __stop(int argc, char *argv[]);
 int __start(int argc, char *argv[]);
@@ -58,6 +98,30 @@ int __start(int argc, char *argv[])
     } else {
         DPRINTF("modload not detected!\n");
     }
+
+	int		threadID;
+	iop_thread_t	T;
+
+	DPRINTF("Creating RPC thread.\n");
+
+	T.attr = TH_C;
+	T.option = 0;
+	T.thread = &threadRpcFunction;
+	T.stacksize = 0x800;
+	T.priority = 0x1e;
+
+	threadID = CreateThread(&T);
+	if (threadID < 0)
+	{
+		DPRINTF("CreateThread failed. (%i)\n", threadID );
+		return MODULE_NO_RESIDENT_END;
+	}
+	else
+	{
+		StartThread(threadID, NULL);
+	}
+
+
     return MODULE_RESIDENT_END;
 }
 

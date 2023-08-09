@@ -19,7 +19,9 @@
 #include "intrman.h"
 #include "loadcore.h"
 #include "sio2man.h"
+#include "sifcmd.h"
 #include "secrman.h"
 #include "stdio.h"
+#include "thbase.h"
 
 #endif /* IOP_IRX_IMPORTS_H */
