@@ -13,7 +13,12 @@
 #include "ps2.h"
 #include "OSDInit.h"
 #include "OSDHistory.h"
+#include "sd2psxman_rpc.h"
 #include "debugprintf.h"
+
+#ifdef SD2PSX
+extern int boot_mcslot; //we need to extern this so the disc launcher knows the SD2PSX Slot
+#endif
 
 void CleanUp(void);
 void BootError(void)
@@ -290,7 +295,7 @@ int PS2DiscBoot(int skip_PS2LOGO)
     DPRINTF("%s ELF:  [%s]\n", __func__, ps2disc_boot);
     if (CNFCheckBootFile(ps2disc_boot, line) == 0) { // Parse error
         scr_setfontcolor(0x0000ff);
-        scr_printf("%s: parsing SYSTEM.CNF failed! (CNFCheckBootFile == 0)\n", __func__);
+        scr_printf("%s: parsing SYSTEM.CNF failed! (CNFCheckBootFile: 0)\n", __func__);
         sleep(3);
         scr_clear();
         BootError();
@@ -299,6 +304,9 @@ int PS2DiscBoot(int skip_PS2LOGO)
     args[0] = ps2disc_boot;
 
 
+#ifdef SD2PSX_CHANGE_VMC_ON_DISC_RUNNER
+    sd2psx_switch_card_by_gameID(boot_mcslot, 0, line)
+#endif
     DPRINTF("%s updating play history\n", __func__);
     DPRINTF("%s:\n\tline:[%s]\n\tps2discboot:[%s]\n", __func__, line, ps2disc_boot);
     UpdatePlayHistory(ps2disc_boot);

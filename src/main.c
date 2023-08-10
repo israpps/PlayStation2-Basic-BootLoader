@@ -128,9 +128,10 @@ CONFIG GLOBCFG;
 
 char *EXECPATHS[3];
 u8 ROMVER[16];
-int PAD = 0;
+static int PAD = 0;
 static int config_source = SOURCE_INVALID;
-static int boot_mcslot = -1;
+int boot_mcslot = -1;
+
 int main(int argc, char *argv[])
 {
     u32 STAT;
@@ -301,8 +302,11 @@ int main(int argc, char *argv[])
 
 #ifdef SD2PSX
     if (boot_mcslot != -1) // if we are booting from MC, wait for SD2PSX memory card swap to be done!
+    {
+        sd2psx_umount_bootcard(boot_mcslot, 0);
         while(!cardAvailable(boot_mcslot) || exist("mc0:/SD2PSX_BOOT"))
             sleep(1);
+    }
     else
     {
         DPRINTF("Warning: Running a version with SD2PSX support outside of SD2PSX\n");
