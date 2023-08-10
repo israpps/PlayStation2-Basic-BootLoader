@@ -550,6 +550,7 @@ int OSDInitROMVER(void)
     if ((fd = open("rom0:ROMVER", O_RDONLY)) >= 0) {
         read(fd, ConsoleROMVER, ROMVER_MAX_LEN);
         close(fd);
+        return 1;
     }
 
     return 0;
