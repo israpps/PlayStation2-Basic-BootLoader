@@ -55,7 +55,7 @@ EE_SRC_DIR = src/
 EE_ASM_DIR = asm/
 
 EE_OBJS = main.o \
-          util.o elf.o timer.o ps2.o ps1.o dvdplayer.o \
+          util.o elf.o timer.o pad.o \
           modelname.o libcdvd_add.o OSDHistory.o OSDInit.o OSDConfig.o \
           $(EMBEDDED_STUFF) \
 		      $(IOP_OBJS)
@@ -76,10 +76,15 @@ ifneq ($(VERBOSE), 1)
    .SILENT:
 endif
 
+ifeq ($(CDVD), 1)
+  EE_OBJS +=  ps2.o ps1.o dvdplayer.o
+  EE_CFLAGS += -DCDVD_SUPPORT
+endif
+
 ifeq ($(MX4SIO), 1)
   HOMEBREW_IRX = 1
   FILEXIO_NEED = 1
-  EE_OBJS += mx4sio_bd.o
+  IOP_OBJS += mx4sio_bd.o
   EE_CFLAGS += -DMX4SIO
   ifeq ($(USE_ROM_SIO2MAN), 1)
     $(error MX4SIO needs Homebrew SIO2MAN to work)
@@ -121,34 +126,33 @@ endif
 ifeq ($(USE_ROM_PADMAN), 1)
   EE_CFLAGS += -DUSE_ROM_PADMAN
   EE_LIBS += -lpad
-  EE_OBJS += pad.o
 else
-  EE_OBJS += pad.o padman_irx.o
+  IOP_OBJS += padman_irx.o
   EE_LIBS += -lpadx
 endif
 
 ifeq ($(USE_ROM_MCMAN), 1)
   EE_CFLAGS += -DUSE_ROM_MCMAN
 else
-  EE_OBJS += mcman_irx.o mcserv_irx.o
+  IOP_OBJS += mcman_irx.o mcserv_irx.o
 endif
 
 ifeq ($(USE_ROM_SIO2MAN), 1)
   EE_CFLAGS += -DUSE_ROM_SIO2MAN
 else
-  EE_OBJS += sio2man_irx.o
+  IOP_OBJS += sio2man_irx.o
 endif
 
-ifneq ($(HAS_EMBED_IRX), 1)
+ifeq ($(HAS_EMBED_IRX), 1)
   $(info --- USB drivers will be embedded)
-  EE_OBJS += usbd_irx.o bdm_irx.o bdmfs_fatfs_irx.o usbmass_bd_irx.o
+  IOP_OBJS += usbd_irx.o bdm_irx.o bdmfs_fatfs_irx.o usbmass_bd_irx.o
   EE_CFLAGS += -DHAS_EMBEDDED_IRX
 endif
 
 ifeq ($(HDD), 1)
   $(info --- compiling with HDD support)
   EE_LIBS += -lpoweroff
-  EE_OBJS += ps2fs_irx.o ps2hdd_irx.o ps2atad_irx.o poweroff_irx.o
+  IOP_OBJS += ps2fs_irx.o ps2hdd_irx.o ps2atad_irx.o poweroff_irx.o
   EE_CFLAGS += -DHDD
   FILEXIO_NEED = 1
   DEV9_NEED = 1
@@ -158,7 +162,7 @@ endif
 ifeq ($(UDPTTY), 1)
   $(info --- UDPTTY enabled)
   EE_CFLAGS += -DUDPTTY
-  EE_OBJS += udptty_irx.o ps2ip_irx.o netman_irx.o smap_irx.o
+  IOP_OBJS += udptty_irx.o ps2ip_irx.o netman_irx.o smap_irx.o
   DEV9_NEED = 1
   ifneq ($(PRINTF), EE_SIO) # only enable common printf if EE_SIO is disabled. this allows separating EE and IOP printf
     PRINTF = PRINTF
@@ -169,7 +173,7 @@ ifeq ($(FILEXIO_NEED), 1)
   $(info --- FILEXIO will be included)
   EE_CFLAGS += -DFILEXIO
   EE_LIBS += -lfileXio
-  EE_OBJS += filexio_irx.o iomanx_irx.o
+  IOP_OBJS += filexio_irx.o iomanx_irx.o
 endif
 
 ifeq ($(DUMMY_TIMEZONE), 1)
@@ -178,7 +182,7 @@ endif
 
 ifeq ($(DEV9_NEED), 1)
   EE_CFLAGS += -DDEV9
-  EE_OBJS += ps2dev9_irx.o
+  IOP_OBJS += ps2dev9_irx.o
 endif
 
 ifdef COMMIT_HASH

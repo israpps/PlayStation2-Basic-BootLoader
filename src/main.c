@@ -145,8 +145,6 @@ void TimerInit(void);
 u64 Timer(void);
 void TimerEnd(void);
 char *CheckPath(char *path);
-static void AlarmCallback(s32 alarm_id, u16 time, void *common);
-int dischandler();
 void CDVDBootCertify(u8 romver[16]);
 void credits(void);
 void CleanUp(void);
@@ -154,6 +152,10 @@ int LoadUSBIRX(void);
 void runOSDNoUpdate(void);
 #ifdef PSX
 static void InitPSX();
+#endif
+#ifdef CDVD_SUPPORT
+int dischandler();
+static void AlarmCallback(s32 alarm_id, u16 time, void *common);
 #endif
 
 #ifdef HDD
@@ -291,8 +293,10 @@ int main(int argc, char *argv[])
     DPRINTF("init ROMVER, model name ps1dvr and dvdplayer ver\n");
     OSDInitROMVER(); // Initialize ROM version (must be done first).
     ModelNameInit(); // Initialize model name
+#ifdef CDVD_SUPPORT
     PS1DRVInit();    // Initialize PlayStation Driver (PS1DRV)
     DVDPlayerInit(); // Initialize ROM DVD player. It is normal for this to fail on consoles that have no DVD ROM chip (i.e. DEX or the SCPH-10000/SCPH-15000).
+#endif
 
     if (OSDConfigLoad() != 0) // Load OSD configuration
     {                         // OSD configuration not initialized. Defaults loaded.
@@ -419,10 +423,12 @@ int main(int argc, char *argv[])
                         GLOBCFG.OSDHISTORY_READ = atoi(value);
                         continue;
                     }
+#ifdef CDVD_SUPPORT
                     if (!strcmp("SKIP_PS2LOGO", name)) {
                         GLOBCFG.SKIPLOGO = atoi(value);
                         continue;
                     }
+#endif
                     if (!strcmp("KEY_READ_WAIT_TIME", name)) {
                         GLOBCFG.DELAY = atoi(value);
                         continue;
@@ -518,12 +524,16 @@ int main(int argc, char *argv[])
     scr_printf("\n\n\n\n%s", BANNER);
     scr_setfontcolor(0xffffff);
     scr_printf(BANNER_FOOTER "\n\n\tModel:\t\t%s\n"
+#ifdef CDVD_SUPPORT
                              "\tPlayStation Driver:\t%s\n"
                              "\tDVD Player:\t%s\n"
+#endif
                              "\tConfig source:\t%s\n",
                ModelNameGet(),
+#ifdef CDVD_SUPPORT
                PS1DRVGetVersion(),
                DVDPlayerGetVersion(),
+#endif
                SOURCES[config_source]);
     DPRINTF("Timer starts!\n");
     TimerInit();
@@ -613,12 +623,14 @@ char *CheckPath(char *path)
 {
     if (path[0] == '$') // we found a program command
     {
+#ifdef CDVD_SUPPORT
         if (!strcmp("$CDVD", path))
             dischandler();
         if (!strcmp("$CDVD_NO_PS2LOGO", path)) {
             GLOBCFG.SKIPLOGO = 1;
             dischandler();
         }
+#endif
 #ifdef HDD
         if (!strcmp("$HDDCHECKER", path))
             HDDChecker();
@@ -686,7 +698,7 @@ int LoadUSBIRX(void)
 #ifdef HAS_EMBEDDED_IRX
     ID = SifExecModuleBuffer(bdm_irx, size_bdm_irx, 0, NULL, &RET);
 #else
-    ID = loadIRXFile("mc?:/PS2BBL/BDM.IRX", 0, NULL, &RET);
+    ID = SifLoadStartModule("mc?:/PS2BBL/BDM.IRX", 0, NULL, &RET);
 #endif
     DPRINTF(" [BDM]: ret=%d, ID=%d\n", RET, ID);
     if (ID < 0 || RET == 1) return -1;
@@ -694,7 +706,7 @@ int LoadUSBIRX(void)
 #ifdef HAS_EMBEDDED_IRX
     ID = SifExecModuleBuffer(bdmfs_fatfs_irx, size_bdmfs_fatfs_irx, 0, NULL, &RET);
 #else
-    ID = loadIRXFile("mc?:/PS2BBL/BDMFS_FATFS.IRX", 0, NULL, &RET);
+    ID = SifLoadStartModule("mc?:/PS2BBL/BDMFS_FATFS.IRX", 0, NULL, &RET);
 #endif
     DPRINTF(" [BDMFS_FATFS]: ret=%d, ID=%d\n", RET, ID);
     if (ID < 0 || RET == 1) return -2;
@@ -702,7 +714,7 @@ int LoadUSBIRX(void)
 #ifdef HAS_EMBEDDED_IRX
     ID = SifExecModuleBuffer(usbd_irx, size_usbd_irx, 0, NULL, &RET);
 #else
-    ID = loadIRXFile("mc?:/PS2BBL/USBD.IRX", 0, NULL, &RET);
+    ID = SifLoadStartModule("mc?:/PS2BBL/USBD.IRX", 0, NULL, &RET);
 #endif
     delay(3);
     DPRINTF(" [USBD]: ret=%d, ID=%d\n", RET, ID);
@@ -711,7 +723,7 @@ int LoadUSBIRX(void)
 #ifdef HAS_EMBEDDED_IRX
     ID = SifExecModuleBuffer(usbmass_bd_irx, size_usbmass_bd_irx, 0, NULL, &RET);
 #else
-    ID = loadIRXFile("mc?:/PS2BBL/USBMASS_BD.IRX", 0, NULL, &RET);
+    ID = SifLoadStartModule("mc?:/PS2BBL/USBMASS_BD.IRX", 0, NULL, &RET);
 #endif
     DPRINTF(" [USBMASS_BD]: ret=%d, ID=%d\n", RET, ID);
     if (ID < 0 || RET == 1) return -4;
@@ -953,8 +965,9 @@ void poweroffCallback(void *arg)
     /* Power-off the PlayStation 2. */
     poweroffShutdown();
 }
-
 #endif
+
+#ifdef CDVD_SUPPORT
 int dischandler()
 {
     int OldDiscType, DiscType, ValidDiscInserted, result, first_run = 1;
@@ -1071,6 +1084,7 @@ int dischandler()
     }
     return 0;
 }
+#endif
 
 void ResetIOP(void)
 {
@@ -1154,10 +1168,12 @@ void CDVDBootCertify(u8 romver[16])
 }
 #endif
 
+#ifdef CDVD_SUPPORT
 static void AlarmCallback(s32 alarm_id, u16 time, void *common)
 {
     iWakeupThread((int)common);
 }
+#endif
 
 void CleanUp(void)
 {
