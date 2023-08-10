@@ -89,7 +89,7 @@ endif
 ifeq ($(SD2PSX), 1)
    $(info --- SD2PSX support enabled)
    EE_CFLAGS += -DSD2PSX
-   EE_OBJS += sd2psxman_irx.o
+   EE_OBJS += sd2psxman_rpc.o sd2psxman_irx.o
 endif
 
 ifeq ($(HOMEBREW_IRX), 1)

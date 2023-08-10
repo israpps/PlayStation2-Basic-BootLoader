@@ -9,7 +9,7 @@ static McCommandHandler_t McCommandHandler = NULL;
 
 static SifRpcDataQueue_t sd2psxman_queue;
 static SifRpcServerData_t sd2psxman_server;
-static u8 _rpc_buffer[32] __attribute__((__aligned__(4)));
+static u8 _rpc_buffer[SD2PSXMAN_PKT_SIZE] __attribute__((__aligned__(4)));
 static int RPCThreadID;
 
 void HOOKED_SecrSetMcCommandHandler(McCommandHandler_t handler)

@@ -182,6 +182,8 @@ int main(int argc, char *argv[])
 #ifdef SD2PSX
     j = SifExecModuleBuffer(sd2psxman_irx, size_sd2psxman_irx, 0, NULL, &x);
     DPRINTF(" [SD2PSXMAN]: ret=%d, ID=%d\n", j, x);
+    nopdelay();
+    sd2psxman_init();
 #endif
 
 #ifdef USE_ROM_MCMAN

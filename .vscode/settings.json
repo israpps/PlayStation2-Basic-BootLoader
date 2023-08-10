@@ -18,6 +18,7 @@
         "limits": "c",
         "new": "c",
         "irx_imports.h": "c",
-        "module_debug.h": "c"
+        "module_debug.h": "c",
+        "stdbool.h": "c"
     }
 }
