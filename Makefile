@@ -246,6 +246,7 @@ greeting:
 
 release: clean $(EE_BIN_PACKED)
 	@rm -f $(EE_BIN_STRIPPED)
+	$(MAKE) -C iop/sd2psxman clean
 	@echo "$$HEADER"
 
 clean:
