@@ -10,6 +10,7 @@ static McCommandHandler_t McCommandHandler = NULL;
 static SifRpcDataQueue_t sd2psxman_queue;
 static SifRpcServerData_t sd2psxman_server;
 static u8 _rpc_buffer[512 * 4] __attribute__((__aligned__(4))); // TODO: ADJUST RPC BUFFER SIZE
+static int RPCThreadID;
 
 void HOOKED_SecrSetMcCommandHandler(McCommandHandler_t handler)
 {
@@ -99,7 +100,6 @@ int __start(int argc, char *argv[])
         DPRINTF("modload not detected!\n");
     }
 
-	int		threadID;
 	iop_thread_t	T;
 
 	DPRINTF("Creating RPC thread.\n");
@@ -110,15 +110,19 @@ int __start(int argc, char *argv[])
 	T.stacksize = 0x800;
 	T.priority = 0x1e;
 
-	threadID = CreateThread(&T);
-	if (threadID < 0)
+	RPCThreadID = CreateThread(&T);
+	if (RPCThreadID < 0)
 	{
-		DPRINTF("CreateThread failed. (%i)\n", threadID );
+		DPRINTF("CreateThread failed. (%i)\n", RPCThreadID );
 		return MODULE_NO_RESIDENT_END;
 	}
 	else
 	{
-		StartThread(threadID, NULL);
+#ifdef DEBUG
+		int TSTAT = 
+#endif
+        StartThread(RPCThreadID, NULL);
+        DPRINTF("Thread started (%d)\n", TSTAT);
 	}
 
 
@@ -128,5 +132,6 @@ int __start(int argc, char *argv[])
 int __stop(int argc, char *argv[])
 {
     DPRINTF("Unloading module\n");
+    DeleteThread(RPCThreadID);
     return MODULE_NO_RESIDENT_END;
 }
