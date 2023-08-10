@@ -46,6 +46,7 @@ int LookForBDMDevice(void);
 
 
 #ifdef SD2PSX
+#include "sd2psxman_rpc.h"
 static int cardAvailable(int slot);
 #endif
 
@@ -127,7 +128,7 @@ typedef struct
 CONFIG GLOBCFG;
 
 char *EXECPATHS[3];
-u8 ROMVER[16];
+EXTERN_ROMVER();
 static int PAD = 0;
 static int config_source = SOURCE_INVALID;
 int boot_mcslot = -1;
@@ -136,7 +137,7 @@ int main(int argc, char *argv[])
 {
     u32 STAT;
     u64 tstart;
-    int button, x, j, cnf_size, is_PCMCIA = 0, fd, result;
+    int button, x, j, cnf_size, is_PCMCIA = 0, result;
     static int num_buttons = 4, pad_button = 0x0100; // first pad button is L2
     unsigned char *RAM_p = NULL;
     char *CNFBUFF, *name, *value;
@@ -166,6 +167,10 @@ int main(int argc, char *argv[])
 
     DPRINTF("disabling MODLOAD device blacklist/whitelist\n");
     sbv_patch_disable_prefix_check(); /* disable the MODLOAD module black/white list, allowing executables to be freely loaded from any device. */
+
+
+    if (!OSDInitROMVER()) {
+    }
 
 #ifdef UDPTTY
     if (loadDEV9())
@@ -233,10 +238,6 @@ int main(int argc, char *argv[])
         	{scr_setbgcolor(0x0000ff); scr_clear(); sleep(4);}
 #endif
 
-    if ((fd = open("rom0:ROMVER", O_RDONLY)) >= 0) {
-        read(fd, ROMVER, sizeof(ROMVER));
-        close(fd);
-    }
     j = SifLoadModule("rom0:ADDDRV", 0, NULL); // Load ADDDRV. The OSD has it listed in rom0:OSDCNF/IOPBTCONF, but it is otherwise not loaded automatically.
     DPRINTF(" [ADDDRV]: %d\n", j);
 
@@ -249,14 +250,14 @@ int main(int argc, char *argv[])
 
 #ifndef PSX
     DPRINTF("Certifying CDVD Boot\n");
-    CDVDBootCertify(ROMVER); /* This is not required for the PSX, as its OSDSYS will do it before booting the update. */
+    CDVDBootCertify(ConsoleROMVER); /* This is not required for the PSX, as its OSDSYS will do it before booting the update. */
 #endif
 
     DPRINTF("init OSD\n");
     InitOsd(); // Initialize OSD so kernel patches can do their magic
 
-    DPRINTF("init ROMVER, model name ps1dvr and dvdplayer ver\n");
-    OSDInitROMVER(); // Initialize ROM version (must be done first).
+    DPRINTF("init model name ps1dvr and dvdplayer ver\n");
+    
     ModelNameInit(); // Initialize model name
     PS1DRVInit();    // Initialize PlayStation Driver (PS1DRV)
     DVDPlayerInit(); // Initialize ROM DVD player. It is normal for this to fail on consoles that have no DVD ROM chip (i.e. DEX or the SCPH-10000/SCPH-15000).
@@ -1134,6 +1135,7 @@ void CDVDBootCertify(u8 romver[16])
     } else {
         scr_setfontcolor(0x0000ff);
         scr_printf("\tERROR: Could not certify CDVD Boot. ROMVER was NULL\n");
+        sleep(1);
         scr_setfontcolor(0xffffff);
     }
 

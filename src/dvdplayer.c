@@ -39,7 +39,7 @@ static int openMCFile(int port, int slot, const char *path, int mode);
 static int closeMCFile(int fd);
 static int CheckFileFromMC(int port, int slot, const char *file);
 
-extern char ConsoleROMVER[ROMVER_MAX_LEN];
+EXTERN_ROMVER();
 
 static int readMCFile(int fd, void *buffer, int len)
 {

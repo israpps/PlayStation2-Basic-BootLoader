@@ -8,12 +8,13 @@
 #include "libcdvd_add.h"
 #include <unistd.h>
 
+#include "OSDInit.h"
 #include "modelname.h"
 
 #define MODEL_NAME_MAX_LEN 17
 static char ModelName[MODEL_NAME_MAX_LEN];
 
-extern char ConsoleROMVER[];
+EXTERN_ROMVER();
 
 static int ReadModelName(char *name)
 {

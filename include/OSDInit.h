@@ -1,7 +1,13 @@
 #define ROMVER_MAX_LEN 16
 
-int OSDInitROMVER(void);
 
+/**
+ * @brief Reads the content of rom0:ROMVER into a buffer
+ * 
+ * @return bool. simple success and error. if an error was returned, consider printing a scary warning for the user. since ROM0 I/O errors are a serious thing...
+ */
+int OSDInitROMVER(void);
+#define EXTERN_ROMVER() extern char ConsoleROMVER[ROMVER_MAX_LEN]
 #define CONFIG_BLOCK_SIZE 15
 
 /** console region enumerator according the system update folders*/

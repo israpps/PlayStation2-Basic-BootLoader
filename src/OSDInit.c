@@ -159,14 +159,10 @@ static int GetConsoleRegion(void)
     int result;
 
     if ((result = ConsoleRegion) < 0) {
-        int fd;
-        if ((fd = open("rom0:ROMVER", O_RDONLY)) >= 0) {
-            char romver[16];
-            read(fd, romver, sizeof(romver));
-            close(fd);
-            ConsoleRegionParamsInitPS1DRV(romver);
+        if (OSDInitROMVER()) {
+            ConsoleRegionParamsInitPS1DRV(ConsoleROMVER);
 
-            switch (romver[4]) {
+            switch (ConsoleROMVER[4]) {
                 case 'C':
                     ConsoleRegion = CONSOLE_REGION_CHINA;
                     break;
