@@ -21,7 +21,12 @@ void HOOKED_SecrSetMcCommandHandler(McCommandHandler_t handler)
 
 static void * rpcHandlerFunction(unsigned int CMD, void * rpcBuffer, int size)
 {
-    printf("CMD %d\n", CMD);
+    if (McCommandHandler == NULL)
+    {
+        DPRINTF("ERROR: CANNOT SEND COMMANDS IF 'McCommandHandler' HAS NOT BEEN INTERCEPTED, PLEASE LOAD MCMAN BEFORE USING SD2PSXMAN FEATURES\n");
+        goto err;
+    }
+    printf(MODNAME": CMD %d\n", CMD);
 	switch(CMD)
 	{
     case SD2PSX_QUIT_BOOTCARD:
@@ -37,9 +42,9 @@ static void * rpcHandlerFunction(unsigned int CMD, void * rpcBuffer, int size)
 	default:
 		printf(MODNAME": Unknown CMD (%d) called!\n", CMD);
 
-  }
-
-  return rpcBuffer;
+    }
+    err:
+    return rpcBuffer;
 }
 
 static void threadRpcFunction(void *arg)
