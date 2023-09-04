@@ -67,6 +67,7 @@ int _start(int argc, char *argv[])
 
 int __start(int argc, char *argv[])
 {
+    int ret = MODULE_RESIDENT_END;
     printf("SD2PSX Manager v%d.%d by El_isra\n", MAJOR, MINOR);
 
     if (ioplib_getByName("mcman") != NULL)
@@ -95,7 +96,7 @@ int __start(int argc, char *argv[])
     if (lib_modload != NULL) {
         DPRINTF("modload 0x%x detected\n", lib_modload->version);
         if (lib_modload->version > 0x102) //IOP is running a MODLOAD version wich supports unloading IRX Modules
-            return MODULE_REMOVABLE_END; // and we do support getting unloaded...
+            ret = MODULE_REMOVABLE_END; // and we do support getting unloaded...
     } else {
         DPRINTF("modload not detected!\n");
     }
@@ -126,7 +127,7 @@ int __start(int argc, char *argv[])
 	}
 
 
-    return MODULE_RESIDENT_END;
+    return ret;
 }
 
 int __stop(int argc, char *argv[])
