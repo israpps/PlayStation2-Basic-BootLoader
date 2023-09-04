@@ -133,6 +133,10 @@ int __start(int argc, char *argv[])
 int __stop(int argc, char *argv[])
 {
     DPRINTF("Unloading module\n");
+    DPRINTF("Stopping RPC Thread\n");
     DeleteThread(RPCThreadID);
+    DPRINTF("Restoring SECRMAN callback setter\n");
+    iop_library_t * SECRMAN = ioplib_getByName("secrman");
+    ioplib_hookExportEntry(SECRMAN, SecrSetMcCommandHandler_Expnum, ORIGINAL_SecrSetMcCommandHandler);
     return MODULE_NO_RESIDENT_END;
 }
