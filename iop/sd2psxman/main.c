@@ -62,60 +62,32 @@ int _start(int argc, char *argv[])
     if (argc >= 0) 
         return __start(argc, argv);
     else
-        return __stop(argc, argv);
+        return __stop(-argc, argv);
 }
 
 int __start(int argc, char *argv[])
 {
-    int ret = MODULE_RESIDENT_END;
     printf("SD2PSX Manager v%d.%d by El_isra\n", MAJOR, MINOR);
 
     if (ioplib_getByName("mcman") != NULL)
     {
         DPRINTF("MCMAN FOUND. Must be loaded after this module to intercept the McCommandHandler\n");
-        return MODULE_NO_RESIDENT_END;
-    }
-    iop_library_t * SECRMAN = ioplib_getByName("secrman");
-    if (SECRMAN == NULL)
-    {
-        DPRINTF("SECRMAN not found\n");
-        return MODULE_NO_RESIDENT_END;
-    }
-    DPRINTF("Found SECRMAN. version 0x%X\n", SECRMAN->version);
-
-    ORIGINAL_SecrSetMcCommandHandler = (SecrSetMcCommandHandler_hook_t)ioplib_hookExportEntry(SECRMAN, SecrSetMcCommandHandler_Expnum, HOOKED_SecrSetMcCommandHandler);
-    if (ORIGINAL_SecrSetMcCommandHandler == NULL)
-    {
-        DPRINTF("Error hooking into SecrSetMcCommandHandler\n");
-        return MODULE_NO_RESIDENT_END;
-    } else {
-        DPRINTF("Hooked SecrSetMcCommandHandler (ptr:0x%p)\n", HOOKED_SecrSetMcCommandHandler);
+        goto quit;
     }
 
-    iop_library_t * lib_modload = ioplib_getByName("modload");
-    if (lib_modload != NULL) {
-        DPRINTF("modload 0x%x detected\n", lib_modload->version);
-        if (lib_modload->version > 0x102) //IOP is running a MODLOAD version wich supports unloading IRX Modules
-            ret = MODULE_REMOVABLE_END; // and we do support getting unloaded...
-    } else {
-        DPRINTF("modload not detected!\n");
-    }
-
-	iop_thread_t	T;
-
-	DPRINTF("Creating RPC thread.\n");
-
+	iop_thread_t T;
 	T.attr = TH_C;
 	T.option = 0;
 	T.thread = &threadRpcFunction;
 	T.stacksize = 0x800;
 	T.priority = 0x1e;
 
+	DPRINTF("Creating RPC thread.\n");
 	RPCThreadID = CreateThread(&T);
 	if (RPCThreadID < 0)
 	{
-		DPRINTF("CreateThread failed. (%i)\n", RPCThreadID );
-		return MODULE_NO_RESIDENT_END;
+		DPRINTF("CreateThread failed. (%i)\n", RPCThreadID);
+        goto quit;
 	}
 	else
 	{
@@ -125,9 +97,37 @@ int __start(int argc, char *argv[])
         StartThread(RPCThreadID, NULL);
         DPRINTF("Thread started (%d)\n", TSTAT);
 	}
+    iop_library_t * SECRMAN = ioplib_getByName("secrman");
+    if (SECRMAN == NULL)
+    {
+        DPRINTF("SECRMAN not found\n");
+        goto quit_and_stop_thread;
+    }
+    DPRINTF("Found SECRMAN. version 0x%X\n", SECRMAN->version);
 
+    ORIGINAL_SecrSetMcCommandHandler = (SecrSetMcCommandHandler_hook_t)ioplib_hookExportEntry(SECRMAN, SecrSetMcCommandHandler_Expnum, HOOKED_SecrSetMcCommandHandler);
+    if (ORIGINAL_SecrSetMcCommandHandler == NULL)
+    {
+        DPRINTF("Error hooking into SecrSetMcCommandHandler\n");
+        goto quit_and_stop_thread;
+    } else {
+        DPRINTF("Hooked SecrSetMcCommandHandler (new one:0x%p, old one 0x%p)\n", HOOKED_SecrSetMcCommandHandler, ORIGINAL_SecrSetMcCommandHandler);
+    }
 
-    return ret;
+    iop_library_t * lib_modload = ioplib_getByName("modload");
+    if (lib_modload != NULL) {
+        DPRINTF("modload 0x%x detected\n", lib_modload->version);
+        if (lib_modload->version > 0x102) //IOP is running a MODLOAD version wich supports unloading IRX Modules
+            return MODULE_REMOVABLE_END; // and we do support getting unloaded...
+    } else {
+        DPRINTF("modload not detected!\n");
+    }
+
+    return MODULE_RESIDENT_END;
+    quit_and_stop_thread:
+    DeleteThread(RPCThreadID);
+    quit:
+    return MODULE_NO_RESIDENT_END;
 }
 
 int __stop(int argc, char *argv[])
