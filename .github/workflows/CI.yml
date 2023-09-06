@@ -25,6 +25,7 @@ on:
         - PRINTF
         - EE_SIO
         - SCR
+        - UDPTTY
 
 jobs:
   build:
