@@ -207,9 +207,7 @@ static int DVDPlayerUpdateCheck(int *pPort, int *pSlot, char *pVersion)
 
 static int DVDPlayerGetUpdateVersion(const char *file, int *pPort, int *pSlot)
 {
-    int result;
-
-    if ((result = DVDPlayerUpdateCheck(pPort, pSlot, NULL)) == 0) { // DVD Player update of the right region exists and is newer.
+    if (DVDPlayerUpdateCheck(pPort, pSlot, NULL) == 0) { // DVD Player update of the right region exists and is newer.
         return (CheckFileFromMC(*pPort, *pSlot, file) == 0 ? 0 : -1);
     }
 
