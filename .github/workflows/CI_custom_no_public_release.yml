@@ -1,0 +1,42 @@
+name: "CI custom (No public release)"
+
+on:
+  workflow_dispatch:
+    inputs:
+      make_args:
+        description: pass extra make argumments to Program compilation
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: ps2dev/ps2dev:latest
+    steps:
+
+      - name: Install dependencies
+        run: |
+          apk add build-base git
+
+      - uses: actions/checkout@v3
+      - run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git fetch --prune --unshallow
+
+      - name: Compile PS2 build
+        run: |
+          make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PS2BBL_CUSTOM_BUILD/ ${{ github.event.inputs.make_args }}
+
+      - name: Compile PSX build
+        run: |
+          make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PS2BBL_CUSTOM_BUILD/ PSX=1 ${{ github.event.inputs.make_args }}
+
+      - name: list
+        run: |
+          git ls-files -i --exclude-standard -c
+
+      - name: Upload artifacts
+        if: ${{ success() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: PS2BBL_CUSTOM_BUILD
+          path: |
+            PS2BBL_CUSTOM_BUILD/*
