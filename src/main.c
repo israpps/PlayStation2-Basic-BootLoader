@@ -419,6 +419,11 @@ int main(int argc, char *argv[])
                         GLOBCFG.OSDHISTORY_READ = atoi(value);
                         continue;
                     }
+                    if (!strncmp("LOAD_IRX_E", name, 10)) {
+                        j = SifLoadStartModule(CheckPath(value), 0, NULL, &x);
+                        DPRINTF("# Loaded IRX from config entry [%s] -> [%s]: ret=%d, ID=%d\n", name, value, j, x);
+                        continue;
+                    }
                     if (!strcmp("SKIP_PS2LOGO", name)) {
                         GLOBCFG.SKIPLOGO = atoi(value);
                         continue;
