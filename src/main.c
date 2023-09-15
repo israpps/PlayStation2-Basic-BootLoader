@@ -436,12 +436,14 @@ int main(int argc, char *argv[])
                         GLOBCFG.TRAYEJECT = atoi(value);
                         continue;
                     }
-                    for (x = 0; x < 17; x++) {
-                        for (j = 0; j < 3; j++) {
-                            sprintf(TMP, "LK_%s_E%d", KEYS_ID[x], j + 1);
-                            if (!strcmp(name, TMP)) {
-                                GLOBCFG.KEYPATHS[x][j] = value;
-                                break;
+                    if (!strncmp("LK_", name, 3)) {
+                        for (x = 0; x < 17; x++) {
+                            for (j = 0; j < 3; j++) {
+                                sprintf(TMP, "LK_%s_E%d", KEYS_ID[x], j + 1);
+                                if (!strcmp(name, TMP)) {
+                                    GLOBCFG.KEYPATHS[x][j] = value;
+                                    break;
+                                }
                             }
                         }
                     }
