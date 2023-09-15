@@ -226,7 +226,7 @@ ifeq ($(PROHBIT_DVD_0100),1)
 endif
 
 # ---{ RECIPES }--- #
-.PHONY: greeting debug all clean kelf packed release
+.PHONY: greeting debug all clean cleaniop kelf packed release
 
 all: $(EE_BIN)
 ifeq (DEBUG, 1)
@@ -246,16 +246,17 @@ greeting:
 
 release: clean $(EE_BIN_PACKED)
 	@rm -f $(EE_BIN_STRIPPED)
-	$(MAKE) -C iop/sd2psxman clean
 	@echo "$$HEADER"
 
-clean:
+clean: cleaniop
 	@echo cleaning...
 	@echo - Executables
 	@rm -rf $(EE_BIN) $(EE_BIN_STRIPPED) $(EE_BIN_ENCRYPTED) $(EE_BIN_PACKED)
 	@echo - Object folders 
 	@rm -rf $(EE_OBJS_DIR) $(EE_ASM_DIR)
-	@echo  "\n"
+
+cleaniop:
+	$(MAKE) -C iop/sd2psxman clean
 
 $(EE_BIN_STRIPPED): $(EE_BIN)
 	@echo " -- Stripping"
