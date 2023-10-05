@@ -171,6 +171,7 @@ typedef struct
     int DELAY;
     int OSDHISTORY_READ;
     int TRAYEJECT;
+    int LOGO_DISP; //0: NO, 1: Only Console info, any other value: YES
 } CONFIG;
 CONFIG GLOBCFG;
 
@@ -436,6 +437,10 @@ int main(int argc, char *argv[])
                         GLOBCFG.TRAYEJECT = atoi(value);
                         continue;
                     }
+                    if (!strcmp("LOGO_DISPLAY", name)) {
+                        GLOBCFG.LOGO_DISP = atoi(value);
+                        continue;
+                    }
                     if (!strncmp("LK_", name, 3)) {
                         for (x = 0; x < 17; x++) {
                             for (j = 0; j < 3; j++) {
@@ -487,7 +492,7 @@ int main(int argc, char *argv[])
     if (RAM_p != NULL)
         free(RAM_p);
     int R = 0x80, G = 0x80, B = 0x80;
-    if (GLOBCFG.OSDHISTORY_READ) {
+    if (GLOBCFG.OSDHISTORY_READ && (GLOBCFG.LOGO_DISP > 1)) {
         j = 1;
         // Try to load the history file from memory card slot 1
         if (LoadHistoryFile(0) < 0) { // Try memory card slot 2
@@ -522,16 +527,18 @@ int main(int argc, char *argv[])
     }
     // Stores last key during DELAY msec
     scr_clear();
-    scr_printf("\n\n\n\n%s", BANNER);
+    if (GLOBCFG.LOGO_DISP > 1)
+        scr_printf("\n\n\n\n%s" BANNER_FOOTER, BANNER);
     scr_setfontcolor(0xffffff);
-    scr_printf(BANNER_FOOTER "\n\n\tModel:\t\t%s\n"
-                             "\tPlayStation Driver:\t%s\n"
-                             "\tDVD Player:\t%s\n"
-                             "\tConfig source:\t%s\n",
-               ModelNameGet(),
-               PS1DRVGetVersion(),
-               DVDPlayerGetVersion(),
-               SOURCES[config_source]);
+    if (GLOBCFG.LOGO_DISP > 0)
+        scr_printf("\n\n\tModel:\t\t%s\n"
+                                 "\tPlayStation Driver:\t%s\n"
+                                 "\tDVD Player:\t%s\n"
+                                 "\tConfig source:\t%s\n",
+                   ModelNameGet(),
+                   PS1DRVGetVersion(),
+                   DVDPlayerGetVersion(),
+                   SOURCES[config_source]);
     DPRINTF("Timer starts!\n");
     TimerInit();
     tstart = Timer();
@@ -683,6 +690,7 @@ void SetDefaultSettings(void)
     GLOBCFG.OSDHISTORY_READ = 1;
     GLOBCFG.DELAY = DEFDELAY;
     GLOBCFG.TRAYEJECT = 0;
+    GLOBCFG.LOGO_DISP = 2;
 }
 
 int LoadUSBIRX(void)
