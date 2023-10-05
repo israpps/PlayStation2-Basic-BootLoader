@@ -528,8 +528,10 @@ int main(int argc, char *argv[])
     // Stores last key during DELAY msec
     scr_clear();
     if (GLOBCFG.LOGO_DISP > 1)
-        scr_printf("\n\n\n\n%s" BANNER_FOOTER, BANNER);
+        scr_printf("\n\n\n\n%s", BANNER);
     scr_setfontcolor(0xffffff);
+    if (GLOBCFG.LOGO_DISP > 1)
+        scr_printf(BANNER_FOOTER);
     if (GLOBCFG.LOGO_DISP > 0)
         scr_printf("\n\n\tModel:\t\t%s\n"
                                  "\tPlayStation Driver:\t%s\n"
