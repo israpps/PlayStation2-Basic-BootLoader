@@ -61,7 +61,7 @@ the program supports the following config entries
   + `0`: don't display logo and console info
   + `1`: display console info
   + `2`: display logo and console info
-
+- `LOAD_IRX_E#`: defines a path for an IRX file to be uploaded into the I/O CPU. `#` means any number.
 
 
 ## supported commands
@@ -83,6 +83,7 @@ EJECT_TRAY = 1
 OSDHISTORY_READ = 1
 KEY_READ_WAIT_TIME = 4000
 LOGO_DISPLAY = 2
+LOAD_IRX_E1 = mass:/PS2BBL/EXAMPLE.IRX
 # applications:
 LK_AUTO_E1 = mc?:/APPS/OPNPS2LD.ELF
 LK_AUTO_E2 = mc?:/OPL/OPNPS2LD.ELF
