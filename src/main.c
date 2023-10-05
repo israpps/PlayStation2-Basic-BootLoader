@@ -334,68 +334,15 @@ int main(int argc, char *argv[])
     DPRINTF("load default settings\n");
     SetDefaultSettings();
     FILE *fp;
-    DPRINTF("Reading settings...\n");
-    fp = fopen("mass:/PS2BBL/CONFIG.INI", "r");
-    if (fp == NULL) {
-        DPRINTF("Cant load config from mass\n");
-#ifdef HDD
-        if (mnt("hdd0:__sysconf") == 0)
-            fp = fopen("pfs0:/PS2BBL/CONFIG.INI", "r" );
-        if (fp == NULL) 
-        {
-            DPRINTF("Cant open 'pfs0:/PS2BBL/CONFIG.INI'\n");
-#endif
-#ifdef MX4SIO
-            char* MX4SIO_CONF = CheckPath("massX:/PS2BBL/CONFIG.INI");
-            fp = fopen(MX4SIO_CONF, "r");
-            if (fp == NULL)
-            {
-                DPRINTF("Cant open 'mx4sio:/PS2BBL/CONFIG.INI'\n");
-#endif
-#ifdef PSX
-                char* PSX_CONF = CheckPath("mc?:/PS2BBL/XCONFIG.INI");
-                fp = fopen(PSX_CONF, "r");
-                if (fp == NULL)
-                {
-                    DPRINTF("Cant open '%s'\n", PSX_CONF);
-#endif
-                    fp = fopen("mc0:/PS2BBL/CONFIG.INI", "r");
-                    if (fp == NULL) {
-                        DPRINTF("Cant load config from mc0\n");
-                        fp = fopen("mc1:/PS2BBL/CONFIG.INI", "r");
-                        if (fp == NULL) {
-                            DPRINTF("Cant load config from mc1\n");
-                            config_source = SOURCE_INVALID;
-                        } else {
-                            config_source = SOURCE_MC1;
-                        }
-                    } else {
-                        config_source = SOURCE_MC0;
-                    }
-#ifdef PSX
-                } else {
-                    config_source = PSX_CONF[2] - '0'; /* since the enumerators for SOURCE_MC0 and SOURCE_MC1 have values of 0 and 1
-                                                        we can substract '0' to the MC index and still get the proper value */
-
-                }
-
-#endif
-#ifdef MX4SIO
-            } else {
-                config_source = SOURCE_MX4SIO;
-                
-            }
-#endif
-#ifdef HDD
-        } else {
-            config_source = SOURCE_HDD;
-            
+    for (x = SOURCE_CWD; x >= SOURCE_MC0; x--) {
+        char* T = CheckPath(CONFIG_PATHS[x]);
+        fp = fopen(T, "r");
+        if (fp != NULL) {
+            config_source = x;
+            break;
         }
-#endif
-    } else {
-        config_source = SOURCE_MASS;
     }
-
+    
     if (config_source != SOURCE_INVALID) {
         DPRINTF("valid config on device '%s', reading now\n", SOURCES[config_source]);
         pad_button = 0x0001; // on valid config, change the value of `pad_button` so the pad detection loop iterates all the buttons instead of only those configured on default paths
@@ -547,7 +494,6 @@ int main(int argc, char *argv[])
     while (Timer() <= (tstart + GLOBCFG.DELAY)) {
         button = pad_button; // reset the value so we can iterate (bit-shift) again
         PAD = ReadCombinedPadStatus_raw();
-        DPRINTF("PAD %x\n", PAD);
         for (x = 0; x < num_buttons; x++) { // check all pad buttons
             if (PAD & button) {
                 DPRINTF("PAD detected\n");

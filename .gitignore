@@ -21,3 +21,4 @@ asm/
 *.7z
 *.XLF
 *.dat
+bin/CONFIG.INI
