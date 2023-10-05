@@ -9,12 +9,20 @@ here you will learn all the configurable aspects of PS2BBL.
 PS2BBL looks for it's config file on the following paths, on this specific order:
 
 ```
+./CONFIG.INI
+
+mx4sio:/PS2BBL/CONFIG.INI
+
+hdd0:/__sysconf/PS2BBL/CONFIG.INI
+
 mass:/PS2BBL/CONFIG.INI
 
 mc0:/PS2BBL/CONFIG.INI
 
 mc1:/PS2BBL/CONFIG.INI
 ```
+> note that hdd and mx4sio paths are only sesrched if you use a version of PS2BBL compatible with those devices
+
 
 ## Launch keys
 
@@ -49,6 +57,13 @@ the program supports the following config entries
 - `KEY_READ_WAIT_TIME`: time (in miliseconds) that the program should wait for a key press before arbitrarly loading the `AUTO` launch keys
 - `OSDHISTORY_READ`: wether to change or not the program logo color (color is calculated with OSD play history record from memory card)
 - `EJECT_TRAY`: wether to eject the console tray or not the first time the disc handler detects the tray is empty
+- `LOGO_DISPLAY`: config for logo Display:
+  + `0`: don't display logo and console info
+  + `1`: display console info
+  + `2`: display logo and console info
+
+
+
 ## supported commands
 
 - `$CDVD`: execute disc respecting the value passed to `SKIP_PS2LOGO` on config
@@ -67,6 +82,7 @@ SKIP_PS2LOGO = 0
 EJECT_TRAY = 1
 OSDHISTORY_READ = 1
 KEY_READ_WAIT_TIME = 4000
+LOGO_DISPLAY = 2
 # applications:
 LK_AUTO_E1 = mc?:/APPS/OPNPS2LD.ELF
 LK_AUTO_E2 = mc?:/OPL/OPNPS2LD.ELF
@@ -90,6 +106,8 @@ EJECT_TRAY = 1
 OSDHISTORY_READ = 1
 KEY_READ_WAIT_TIME = 4000
 SKIP_PS2LOGO = 1
+LOGO_DISPLAY = 2
+
 LK_AUTO_E1 = ...
 LK_AUTO_E2 = ...
 LK_AUTO_E3 = ...
