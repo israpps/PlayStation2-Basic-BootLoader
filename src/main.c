@@ -214,31 +214,31 @@ int main(int argc, char *argv[])
 #endif
 
 #ifdef USE_ROM_SIO2MAN
-    j = SifLoadModule("rom0:SIO2MAN", 0, NULL);
-    DPRINTF(" [SIO2MAN]: %d\n", j);
+    j = SifLoadStartModule("rom0:SIO2MAN", 0, NULL, &x);
+    DPRINTF(" [SIO2MAN]: ID=%d, ret=%d\n", j, x);
 #else
     j = SifExecModuleBuffer(sio2man_irx, size_sio2man_irx, 0, NULL, &x);
-    DPRINTF(" [SIO2MAN]: ret=%d, ID=%d\n", j, x);
+    DPRINTF(" [SIO2MAN]: ID=%d, ret=%d\n", j, x);
 #endif
 #ifdef USE_ROM_MCMAN
-    j = SifLoadModule("rom0:MCMAN", 0, NULL);
-    DPRINTF(" [MCMAN]: %d\n", j);
-    j = SifLoadModule("rom0:MCSERV", 0, NULL);
-    DPRINTF(" [MCSERV]: %d\n", j);
+    j = SifLoadStartModule("rom0:MCMAN", 0, NULL, &x);
+    DPRINTF(" [MCMAN]: ID=%d, ret=%d\n", j, x);
+    j = SifLoadStartModule("rom0:MCSERV", 0, NULL, &x);
+    DPRINTF(" [MCSERV]: ID=%d, ret=%d\n", j, x);
     mcInit(MC_TYPE_MC);
 #else
     j = SifExecModuleBuffer(mcman_irx, size_mcman_irx, 0, NULL, &x);
-    DPRINTF(" [MCMAN]: ret=%d, ID=%d\n", j, x);
+    DPRINTF(" [MCMAN]: ID=%d, ret=%d\n", j, x);
     j = SifExecModuleBuffer(mcserv_irx, size_mcserv_irx, 0, NULL, &x);
-    DPRINTF(" [MCSERV]: ret=%d, ID=%d\n", j, x);
+    DPRINTF(" [MCSERV]: ID=%d, ret=%d\n", j, x);
     mcInit(MC_TYPE_XMC);
 #endif
 #ifdef USE_ROM_PADMAN
-    j = SifLoadModule("rom0:PADMAN", 0, NULL);
-    DPRINTF(" [PADMAN]: %d\n", j);
+    j = SifLoadStartModule("rom0:PADMAN", 0, NULL, &x);
+    DPRINTF(" [PADMAN]: ID=%d, ret=%d\n", j, x);
 #else
     j = SifExecModuleBuffer(padman_irx, size_padman_irx, 0, NULL, &x);
-    DPRINTF(" [PADMAN]: ret=%d, ID=%d\n", j, x);
+    DPRINTF(" [PADMAN]: ID=%d, ret=%d\n", j, x);
 #endif
     j = LoadUSBIRX();
     if (j != 0)
@@ -258,7 +258,7 @@ int main(int argc, char *argv[])
 
 #ifdef MX4SIO
     j = SifExecModuleBuffer(mx4sio_bd_irx, size_mx4sio_bd_irx, 0, NULL, &x);
-    DPRINTF(" [MX4SIO_BD]: ret=%d, ID=%d\n", j, x);
+    DPRINTF(" [MX4SIO_BD]: ID=%d, ret=%d\n", j, x);
 #endif
 
 #ifdef HDD
@@ -421,7 +421,7 @@ int main(int argc, char *argv[])
                     }
                     if (!strncmp("LOAD_IRX_E", name, 10)) {
                         j = SifLoadStartModule(CheckPath(value), 0, NULL, &x);
-                        DPRINTF("# Loaded IRX from config entry [%s] -> [%s]: ret=%d, ID=%d\n", name, value, j, x);
+                        DPRINTF("# Loaded IRX from config entry [%s] -> [%s]: ID=%d, ret=%d\n", name, value, j, x);
                         continue;
                     }
                     if (!strcmp("SKIP_PS2LOGO", name)) {
