@@ -14,12 +14,29 @@ enum
 #ifdef XFROM
     SOURCE_XFROM,
 #endif
+    SOURCE_XCONFIG,
     SOURCE_INVALID,
     SOURCE_COUNT,
 } CONFIG_SOURCES_ID;
 
-static const char* SOURCES[SOURCE_COUNT] =
-{
+char* CONFIG_PATHS[SOURCE_COUNT] = {
+    "mc0:/PS2BBL/CONFIG.INI",
+    "mc1:/PS2BBL/CONFIG.INI",
+    "mass:/PS2BBL/CONFIG.INI",
+#ifdef MX4SIO
+    "massX:/PS2BBL/CONFIG.INI",
+#endif
+#ifdef HDD
+    "hdd0:__sysconf:pfs:/PS2BBL/CONFIG.INI",
+#endif
+#ifdef XFROM
+    "xfrom:/PS2BBL/CONFIG.INI",
+#endif
+    "mc?:/PS2BBL/XCONFIG.INI",
+    "",
+};
+
+static const char* SOURCES[SOURCE_COUNT] = {
     "mc0",
     "mc1",
     "usb",
@@ -32,6 +49,7 @@ static const char* SOURCES[SOURCE_COUNT] =
 #ifdef XFROM
     "xfrom",
 #endif
+    "XCONF",
     "NOT FOUND",
 };
 
