@@ -15,6 +15,7 @@ enum
     SOURCE_XFROM,
 #endif
     SOURCE_XCONFIG,
+    SOURCE_CWD,
     SOURCE_INVALID,
     SOURCE_COUNT,
 } CONFIG_SOURCES_ID;
@@ -33,6 +34,7 @@ char* CONFIG_PATHS[SOURCE_COUNT] = {
     "xfrom:/PS2BBL/CONFIG.INI",
 #endif
     "mc?:/PS2BBL/XCONFIG.INI",
+    "CONFIG.INI",
     "",
 };
 
@@ -50,6 +52,7 @@ static const char* SOURCES[SOURCE_COUNT] = {
     "xfrom",
 #endif
     "XCONF",
+    "CWD",
     "NOT FOUND",
 };
 
