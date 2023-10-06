@@ -1,7 +1,7 @@
 title: PS2BBL
 description: A Basic bootloader for PS2 and PSX-DESR
 markdown: GFM
-remote_theme: israpps/dark-jekyll-rtd-theme
+remote_theme: rundocs/jekyll-rtd-theme
 # debug:
 #   compress: true
 #   dist: false
