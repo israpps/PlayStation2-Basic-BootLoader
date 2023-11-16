@@ -254,7 +254,7 @@ int main(int argc, char *argv[])
 
 #ifdef FILEXIO
     if (LoadFIO() < 0)
-        	{scr_setbgcolor(0xff0000); scr_clear(); sleep(4);}
+            {scr_setbgcolor(0xff0000); scr_clear(); sleep(4);}
 #endif
 
 #ifdef MX4SIO
@@ -264,7 +264,7 @@ int main(int argc, char *argv[])
 
 #ifdef HDD
     else if (LoadHDDIRX() < 0) // only load HDD crap if filexio and iomanx are up and running
-        	{scr_setbgcolor(0x0000ff); scr_clear(); sleep(4);}
+            {scr_setbgcolor(0x0000ff); scr_clear(); sleep(4);}
 #endif
 
     if ((fd = open("rom0:ROMVER", O_RDONLY)) >= 0) {
@@ -479,15 +479,19 @@ int main(int argc, char *argv[])
     scr_setfontcolor(0xffffff);
     if (GLOBCFG.LOGO_DISP > 1)
         scr_printf(BANNER_FOOTER);
-    if (GLOBCFG.LOGO_DISP > 0)
+    if (GLOBCFG.LOGO_DISP > 0) {
         scr_printf("\n\n\tModel:\t\t%s\n"
-                                 "\tPlayStation Driver:\t%s\n"
-                                 "\tDVD Player:\t%s\n"
-                                 "\tConfig source:\t%s\n",
+                   "\tPlayStation Driver:\t%s\n"
+                   "\tDVD Player:\t%s\n"
+                   "\tConfig source:\t%s\n",
                    ModelNameGet(),
                    PS1DRVGetVersion(),
                    DVDPlayerGetVersion(),
                    SOURCES[config_source]);
+#ifndef NO_TEMP_DISP
+        PrintTemperature();
+#endif
+    }
     DPRINTF("Timer starts!\n");
     TimerInit();
     tstart = Timer();
@@ -698,7 +702,7 @@ int LoadUSBIRX(void)
 int LookForBDMDevice(void)
 {
     static char mass_path[] = "massX:";
-	static char DEVID[5];
+    static char DEVID[5];
     int dd;
     int x = 0;
     for (x = 0; x < 5; x++)
@@ -708,11 +712,11 @@ int LookForBDMDevice(void)
             int *intptr_ctl = (int *)DEVID;
             *intptr_ctl = fileXioIoctl(dd, USBMASS_IOCTL_GET_DRIVERNAME, "");
             close(dd);
-	        if (!strncmp(DEVID, "sdc", 3))
-	        {
-	        	DPRINTF("%s: Found MX4SIO device at mass%d:/\n", __func__, x);
-	        	return x;
-	        }
+            if (!strncmp(DEVID, "sdc", 3))
+            {
+                DPRINTF("%s: Found MX4SIO device at mass%d:/\n", __func__, x);
+                return x;
+            }
         }
     }
     return -1;
@@ -787,7 +791,7 @@ int LoadHDDIRX(void)
 {
     int ID, RET, HDDSTAT;
     static const char hddarg[] = "-o" "\0" "4" "\0" "-n" "\0" "20";
-	//static const char pfsarg[] = "-n\0" "24\0" "-o\0" "8";
+    //static const char pfsarg[] = "-n\0" "24\0" "-o\0" "8";
 
     if (!loadDEV9())
         return -1;
@@ -879,21 +883,21 @@ void HDDChecker()
     scr_clear();
     scr_printf("\n\n%*s%s\n", ((80 - strlen(HEADING)) / 2), "", HEADING);
     scr_setfontcolor(0x0000FF);
-	ret = fileXioDevctl("hdd0:", HDIOC_STATUS, NULL, 0, NULL, 0);
+    ret = fileXioDevctl("hdd0:", HDIOC_STATUS, NULL, 0, NULL, 0);
     if (ret == 0 || ret == 1) scr_setfontcolor(0x00FF00);
     if (ret != 3)
     {
         scr_printf("\t\t - HDD CONNECTION STATUS: %d\n", ret);
-	    /* Check ATA device S.M.A.R.T. status. */
-	    ret = fileXioDevctl("hdd0:", HDIOC_SMARTSTAT, NULL, 0, NULL, 0);
+        /* Check ATA device S.M.A.R.T. status. */
+        ret = fileXioDevctl("hdd0:", HDIOC_SMARTSTAT, NULL, 0, NULL, 0);
         if (ret != 0) scr_setfontcolor(0x0000ff); else scr_setfontcolor(0x00FF00);
         scr_printf("\t\t - S.M.A.R.T STATUS: %d\n", ret);
-	    /* Check for unrecoverable I/O errors on sectors. */
-	    ret = fileXioDevctl("hdd0:", HDIOC_GETSECTORERROR, NULL, 0, NULL, 0);
+        /* Check for unrecoverable I/O errors on sectors. */
+        ret = fileXioDevctl("hdd0:", HDIOC_GETSECTORERROR, NULL, 0, NULL, 0);
         if (ret != 0) scr_setfontcolor(0x0000ff); else scr_setfontcolor(0x00FF00);
         scr_printf("\t\t - SECTOR ERRORS: %d\n", ret);
-	    /* Check for partitions that have errors. */
-	    ret = fileXioDevctl("hdd0:", HDIOC_GETERRORPARTNAME, NULL, 0, ErrorPartName, sizeof(ErrorPartName));
+        /* Check for partitions that have errors. */
+        ret = fileXioDevctl("hdd0:", HDIOC_GETERRORPARTNAME, NULL, 0, ErrorPartName, sizeof(ErrorPartName));
         if (ret != 0) scr_setfontcolor(0x0000ff); else scr_setfontcolor(0x00FF00);
         scr_printf("\t\t - CORRUPTED PARTITIONS: %d\n", ret);
         if (ret != 0)
@@ -1158,6 +1162,29 @@ void runOSDNoUpdate(void)
     SifExitCmd();
     ExecOSD(3, args);
 }
+
+#ifndef NO_TEMP_DISP
+void PrintTemperature() {
+    // Based on PS2Ident libxcdvd from SP193
+    unsigned char in_buffer[1], out_buffer[16];
+    int stat = 0;
+
+    memset(&out_buffer, 0, 16);
+    
+    in_buffer[0]= 0xEF;
+    if(sceCdApplySCmd(0x03, in_buffer, sizeof(in_buffer), out_buffer/*, sizeof(out_buffer)*/)!=0)
+    {
+        stat=out_buffer[0];
+    }
+    
+    if(!stat) {
+        unsigned short temp = out_buffer[1] * 256 + out_buffer[2];
+        scr_printf("\tTemp: %02d.%02dC\n",  (temp - (temp%128) ) / 128, (temp%128));
+    } else {
+        DPRINTF("Failed 0x03 0xEF command. stat=%x \n", stat);
+    }
+}
+#endif
 
 /* BELOW THIS POINT ALL MACROS and MISC STUFF MADE TO REDUCE BINARY SIZE WILL BE PLACED */
 
