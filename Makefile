@@ -45,6 +45,9 @@ BASENAME ?= PS2BBL
 EE_BIN = $(BINDIR)$(BASENAME).ELF
 EE_BIN_STRIPPED = $(BINDIR)stripped_$(BASENAME).ELF
 EE_BIN_PACKED = $(BINDIR)COMPRESSED_$(BASENAME).ELF
+MBR_BOOTSTRAP_STRIPPED = $(BINDIR)MBR.ELF
+MBR_BOOTSTRAP_HEADERLESS = $(BINDIR)MBR.RAW
+MBR_BOOTSTRAP_FINAL = $(BINDIR)MBR.KELF
 KELFTYPE ?= MC
 EE_BIN_ENCRYPTED = $(BINDIR)$(BASENAME)_$(KELFTYPE).KELF
 
@@ -153,6 +156,13 @@ ifeq ($(HDD), 1)
   FILEXIO_NEED = 1
   DEV9_NEED = 1
   KELFTYPE = HDD
+endif
+
+ifeq ($(BUILDING_MBR), 1)
+  $(info --- compiling PS2BBL as MBR BOOSTRAP)
+	EE_CFLAGS += -DMBR_KELF -G0
+	LOADADDR = 0x100000
+	EE_LDFLAGS += -Wl,--gc-sections -Wl,-Ttext -Wl,$(LOADADDR)
 endif
 
 ifeq ($(UDPTTY), 1)
@@ -303,6 +313,19 @@ analize:
 celan: clean # a repetitive typo when quicktyping
 kelf: $(EE_BIN_ENCRYPTED) # alias of KELF creation
 
+mbr:
+	$(MAKE) all DEV9_NEED=1 HDD=1 HOMEBREW_IRX=1 BUILDING_MBR=1 $(MBR_BOOTSTRAP_FINAL)
+
+$(MBR_BOOTSTRAP_STRIPPED): $(EE_BIN)
+	$(EE_STRIP) -s -R .comment -R .gnu.version --strip-unneeded -o $@ $<
+
+$(MBR_BOOTSTRAP_HEADERLESS): $(MBR_BOOTSTRAP_STRIPPED)
+	$(EE_OBJCOPY)  -O binary -v $< $@ 
+
+$(MBR_BOOTSTRAP_FINAL): $(MBR_BOOTSTRAP_HEADERLESS)
+	thirdparty/kelftool_dnasload.exe encrypt mbr $< $@
+	@echo -- MBR Boostrap creation finished. please check the load adress below is $(LOADADDR) $(EE_READELF)
+	mips64r5900el-ps2-elf-readelf -l '$(EE_BIN)' | grep "Program Headers:" -A 3
 
 banner:
 	@echo "$$HEADER"
