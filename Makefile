@@ -159,12 +159,12 @@ ifeq ($(HDD), 1)
 endif
 
 ifeq ($(BUILDING_MBR), 1)
-  $(info --- compiling PS2BBL as MBR BOOSTRAP)
-	HDD=1
-	HOMEBREW_IRX=1
-	DEV9_NEED=1
-	EE_CFLAGS += -DMBR_KELF -G0
-	EE_LDFLAGS += -Wl,--gc-sections -Wl,-Ttext -Wl,$(MBR_KELF_LOAD_ADDR)
+ $(info --- compiling PS2BBL as MBR BOOSTRAP)
+ HDD=1
+ HOMEBREW_IRX=1
+ DEV9_NEED=1
+ EE_CFLAGS += -DMBR_KELF -G0
+ EE_LDFLAGS += -Wl,--gc-sections -Wl,-Ttext -Wl,$(MBR_KELF_LOAD_ADDR)
 endif
 
 ifeq ($(UDPTTY), 1)
@@ -318,15 +318,18 @@ analize:
 celan: clean # a repetitive typo when quicktyping
 kelf: $(EE_BIN_ENCRYPTED) # alias of KELF creation
 
-mbr: clean
-	@$(MAKE) HDD=1 HOMEBREW_IRX=1 DEV9_NEED=1 clean $(MBR_BOOTSTRAP_FINAL) banner
+mbr:
+ifneq ($(BUILDING_MBR), 1)
+	$(error define BUILDING_MBR=1 on make)
+endif
+	@$(MAKE) HDD=1 HOMEBREW_IRX=1 DEV9_NEED=1 $(MBR_BOOTSTRAP_FINAL) banner
 
 mbr_info: mbr
 	@echo "--- MBR ELF info: (load adress must be $(MBR_KELF_LOAD_ADDR))"
 	mips64r5900el-ps2-elf-readelf -l '$(EE_BIN)' | grep "Program Headers:" -A 3 | grep --color=always -e "^" -e "$(MBR_KELF_LOAD_ADDR)"
 	@echo "--- MBR KELF info:"
 	$(KELFTOOL_DNAS) decrypt $(MBR_BOOTSTRAP_FINAL) $(MBR_BOOTSTRAP_FINAL).DUMMY
-	@rm -f dummy_$(MBR_BOOTSTRAP_FINAL).DUMMY
+	@rm -f $(MBR_BOOTSTRAP_FINAL).DUMMY
 
 $(MBR_BOOTSTRAP_STRIPPED): $(EE_BIN)
 	$(EE_STRIP) -s -R .comment -R .gnu.version --strip-unneeded -o $@ $<
