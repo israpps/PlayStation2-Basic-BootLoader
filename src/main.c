@@ -244,9 +244,9 @@ int main(int argc, char *argv[])
     j = LoadUSBIRX();
     if (j != 0)
     {
-        scr_setfontcolor(0x0000ff);
+        scr_setfontcolor(BGR_RED);
         scr_printf("ERROR: could not load USB modules (%d)\n", j);
-        scr_setfontcolor(0xffffff);
+        scr_setfontcolor(BGR_WHITE);
 #ifdef HAS_EMBEDDED_IRX //we have embedded IRX... something bad is going on if this condition executes. add a wait time for user to know something is wrong
         sleep(1);
 #endif
@@ -264,7 +264,7 @@ int main(int argc, char *argv[])
 
 #ifdef HDD
     else if (LoadHDDIRX() < 0) // only load HDD crap if filexio and iomanx are up and running
-            {scr_setbgcolor(0x0000ff); scr_clear(); sleep(4);}
+            {scr_setbgcolor(BGR_RED); scr_clear(); sleep(4);}
 #endif
 
     if ((fd = open("rom0:ROMVER", O_RDONLY)) >= 0) {
@@ -297,9 +297,9 @@ int main(int argc, char *argv[])
 
     if (OSDConfigLoad() != 0) // Load OSD configuration
     {                         // OSD configuration not initialized. Defaults loaded.
-        scr_setfontcolor(0x00ffff);
+        scr_setfontcolor(BGR_YELLOW);
         DPRINTF("OSD Configuration not initialized. Defaults loaded.\n");
-        scr_setfontcolor(0xffffff);
+        scr_setfontcolor(BGR_WHITE);
     }
     DPRINTF("Saving OSD configuration\n");
     OSDConfigApply();
@@ -405,15 +405,15 @@ int main(int argc, char *argv[])
                 fclose(fp);
                 DPRINTF("\tERROR: could not read %d bytes of config file, only %d readed\n", cnf_size, temp);
 #ifdef REPORT_FATAL_ERRORS
-                scr_setfontcolor(0x0000ff);
+                scr_setfontcolor(BGR_RED);
                 scr_printf("\tERROR: could not read %d bytes of config file, only %d readed\n", cnf_size, temp);
-                scr_setfontcolor(0xffffff);
+                scr_setfontcolor(BGR_WHITE);
 #endif
             }
         } else {
             DPRINTF("\tFailed to allocate %d+1 bytes!\n", cnf_size);
 #ifdef REPORT_FATAL_ERRORS
-            scr_setbgcolor(0x0000ff);
+            scr_setbgcolor(BGR_RED);
             scr_clear();
             scr_printf("\tFailed to allocate %d+1 bytes!\n", cnf_size);
             sleep(3);
@@ -476,7 +476,7 @@ int main(int argc, char *argv[])
     scr_clear();
     if (GLOBCFG.LOGO_DISP > 1)
         scr_printf("\n\n\n\n%s", BANNER);
-    scr_setfontcolor(0xffffff);
+    scr_setfontcolor(BGR_WHITE);
     if (GLOBCFG.LOGO_DISP > 1)
         scr_printf(BANNER_FOOTER);
     if (GLOBCFG.LOGO_DISP > 0) {
@@ -505,15 +505,15 @@ int main(int argc, char *argv[])
                 for (j = 0; j < 3; j++) {
                     EXECPATHS[j] = CheckPath(GLOBCFG.KEYPATHS[x + 1][j]);
                     if (exist(EXECPATHS[j])) {
-                        scr_setfontcolor(0x00ff00);
+                        scr_setfontcolor(BGR_GREEN);
                         scr_printf("\tLoading %s\n", EXECPATHS[j]);
                         if (!is_PCMCIA)
                             PadDeinitPads();
                         RunLoaderElf(EXECPATHS[j], MPART);
                     } else {
-                        scr_setfontcolor(0x00ffff);
+                        scr_setfontcolor(BGR_YELLOW);
                         DPRINTF("%s not found\n", EXECPATHS[j]);
-                        scr_setfontcolor(0xffffff);
+                        scr_setfontcolor(BGR_WHITE);
                     }
                 }
                 break;
@@ -526,7 +526,7 @@ int main(int argc, char *argv[])
     for (j = 0; j < 3; j++) {
         EXECPATHS[j] = CheckPath(GLOBCFG.KEYPATHS[0][j]);
         if (exist(EXECPATHS[j])) {
-            scr_setfontcolor(0x00ff00);
+            scr_setfontcolor(BGR_GREEN);
             scr_printf("\tLoading %s\n", EXECPATHS[j]);
             if (!is_PCMCIA)
                 PadDeinitPads();
@@ -537,9 +537,9 @@ int main(int argc, char *argv[])
     }
 
     scr_clear();
-    scr_setfontcolor(0x00ffff);
+    scr_setfontcolor(BGR_YELLOW);
     scr_printf("\n\n\tEND OF EXECUTION REACHED\nCould not find any of the default applications\nCheck your config file for the LK_AUTO_E# entries\nOr press a key while logo displays to run the bound application\npress R1+START to enter emergency mode");
-    scr_setfontcolor(0xffffff);
+    scr_setfontcolor(BGR_WHITE);
     while (1) {
         sleep(1);
         PAD = ReadCombinedPadStatus_raw();
@@ -554,7 +554,7 @@ void EMERGENCY(void)
 {
     scr_clear();
     scr_printf("\n\n\n\tEmergency mode\n\n\t doing infinite attempts to boot\n\t\tmass:/RESCUE.ELF\n");
-    scr_setfontcolor(0xffffff);
+    scr_setfontcolor(BGR_WHITE);
     while (1) {
         scr_printf(".");
         sleep(1);
@@ -953,9 +953,9 @@ int dischandler()
                             sceCdTrayReq(0, NULL);
                         first_run = 0;
                     }
-                    scr_setfontcolor(0x0000ff);
+                    scr_setfontcolor(BGR_RED);
                     scr_printf("No Disc\n");
-                    scr_setfontcolor(0xffffff);
+                    scr_setfontcolor(BGR_WHITE);
                     break;
 
                 case SCECdDETCT:
@@ -967,37 +967,37 @@ int dischandler()
 
                 case SCECdPSCD:
                 case SCECdPSCDDA:
-                    scr_setfontcolor(0x00ff00);
+                    scr_setfontcolor(BGR_GREEN);
                     scr_printf("PlayStation\n");
-                    scr_setfontcolor(0xffffff);
+                    scr_setfontcolor(BGR_WHITE);
                     ValidDiscInserted = 1;
                     break;
 
                 case SCECdPS2CD:
                 case SCECdPS2CDDA:
                 case SCECdPS2DVD:
-                    scr_setfontcolor(0x00ff00);
+                    scr_setfontcolor(BGR_GREEN);
                     scr_printf("PlayStation 2\n");
-                    scr_setfontcolor(0xffffff);
+                    scr_setfontcolor(BGR_WHITE);
                     ValidDiscInserted = 1;
                     break;
 
                 case SCECdCDDA:
                     scr_setfontcolor(0xffff00);
                     scr_printf("Audio Disc (not supported by this program)\n");
-                    scr_setfontcolor(0xffffff);
+                    scr_setfontcolor(BGR_WHITE);
                     break;
 
                 case SCECdDVDV:
-                    scr_setfontcolor(0x00ff00);
+                    scr_setfontcolor(BGR_GREEN);
                     scr_printf("DVD Video\n");
-                    scr_setfontcolor(0xffffff);
+                    scr_setfontcolor(BGR_WHITE);
                     ValidDiscInserted = 1;
                     break;
                 default:
-                    scr_setfontcolor(0x0000ff);
+                    scr_setfontcolor(BGR_RED);
                     scr_printf("Unknown (%d)\n", DiscType);
-                    scr_setfontcolor(0xffffff);
+                    scr_setfontcolor(BGR_WHITE);
             }
         }
 
@@ -1106,9 +1106,9 @@ void CDVDBootCertify(u8 romver[16])
         // Do not check for success/failure. Early consoles do not support (and do not require) boot-certification.
         sceCdBootCertify(RomName);
     } else {
-        scr_setfontcolor(0x0000ff);
+        scr_setfontcolor(BGR_RED);
         scr_printf("\tERROR: Could not certify CDVD Boot. ROMVER was NULL\n");
-        scr_setfontcolor(0xffffff);
+        scr_setfontcolor(BGR_WHITE);
     }
 
     // This disables DVD Video Disc playback. This functionality is restored by loading a DVD Player KELF.
