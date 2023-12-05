@@ -337,7 +337,7 @@ int main(int argc, char *argv[])
     }
     TimerEnd();
 #ifdef MBR_KELF
-    HDDChecker(false);
+    HDDChecker(0);
 #endif
     DPRINTF("load default settings\n");
     SetDefaultSettings();
@@ -595,7 +595,7 @@ char *CheckPath(char *path)
         }
 #ifdef HDD
         if (!strcmp("$HDDCHECKER", path))
-            HDDChecker(true);
+            HDDChecker(1);
 #endif
         if (!strcmp("$CREDITS", path))
             credits();
@@ -882,7 +882,7 @@ int mnt(const char* path)
     } else DPRINTF("mount successfull on first attemp\n");
     return 0;
 }
-
+#define HDDCHECKER_PRINTF(x...) scr_printf(x);
 void HDDChecker(int verbose)
 {
     char ErrorPartName[64];
@@ -890,61 +890,70 @@ void HDDChecker(int verbose)
     int ret = -1;
     int success;
 #ifdef MBR_KELF
-    int found_at_least_1_err = false;
-#define ERR_FOUND() if (!verbose) found_at_least_1_err = true
+    int found_at_least_1_err = 0;
+#define ERR_FOUND() if (!verbose) found_at_least_1_err = 1
 #else
 #define ERR_FOUND()
 #endif
     scr_clear();
-    if (verbose) scr_printf("\n\n%*s%s\n", ((80 - strlen(HEADING)) / 2), "", HEADING);
+    if (verbose) {
+        HDDCHECKER_PRINTF("\n\n%*s%s\n", ((80 - strlen(HEADING)) / 2), "", HEADING);
+    }
     scr_setfontcolor(BGR_RED);
     ret = fileXioDevctl("hdd0:", HDIOC_STATUS, NULL, 0, NULL, 0);
+    DPRINTF("\t\t - HDD CONNECTION STATUS: %d\n", ret);
     success = (ret == 0 || ret == 1);
-    if (success) scr_setfontcolor(BGR_GREEN); else if (ret == 3) scr_setfontcolor(BGR_YELLOW); else scr_setfontcolor(BGR_RED);
+    if (success) {scr_setfontcolor(BGR_GREEN);} else if (ret == 3) {scr_setfontcolor(BGR_YELLOW);} else {scr_setfontcolor(BGR_RED);}
     if (verbose || !success) {
-        scr_printf("\t\t - HDD CONNECTION STATUS: %d\n", ret);
+        DPRINTF("\t\t - HDD CONNECTION STATUS: %d\n", ret);
         ERR_FOUND();
     }
     if (ret == 0)
     {
         /* Check ATA device S.M.A.R.T. status. */
         ret = fileXioDevctl("hdd0:", HDIOC_SMARTSTAT, NULL, 0, NULL, 0);
+        DPRINTF(" - S.M.A.R.T STATUS: %d\n", ret);
         success = ret == 0;
         if (success) scr_setfontcolor(BGR_GREEN); else scr_setfontcolor(BGR_RED);
         if (verbose || !success) {
-            scr_printf("\t\t - S.M.A.R.T STATUS: %d\n", ret);
+            HDDCHECKER_PRINTF("\t\t - S.M.A.R.T STATUS: %d\n", ret);
             ERR_FOUND();
         }
         /* Check for unrecoverable I/O errors on sectors. */
         ret = fileXioDevctl("hdd0:", HDIOC_GETSECTORERROR, NULL, 0, NULL, 0);
+        DPRINTF(" - SECTOR ERRORS: %d\n", ret);
         success = ret == 0;
         if (success) scr_setfontcolor(BGR_GREEN); else scr_setfontcolor(BGR_RED);
         if (verbose || !success) {
-            scr_printf("\t\t - SECTOR ERRORS: %d\n", ret);
+            HDDCHECKER_PRINTF("\t\t - SECTOR ERRORS: %d\n", ret);
             ERR_FOUND();
         }
         /* Check for partitions that have errors. */
         ret = fileXioDevctl("hdd0:", HDIOC_GETERRORPARTNAME, NULL, 0, ErrorPartName, sizeof(ErrorPartName));
+        DPRINTF(" - CORRUPTED PARTITIONS: %d\n", ret);
         success = ret == 0;
         if (success) scr_setfontcolor(BGR_GREEN); else scr_setfontcolor(BGR_RED);
         if (verbose || !success) {
-            scr_printf("\t\t - CORRUPTED PARTITIONS: %d\n", ret);
+            HDDCHECKER_PRINTF(" - CORRUPTED PARTITIONS: %d\n", ret);
             ERR_FOUND();
         }
         if (!success)
         {
-            scr_printf("\t\tpartition: %s\n", ErrorPartName);
+            HDDCHECKER_PRINTF("\t\tpartition: %s\n", ErrorPartName);
+            DPRINTF("  partition: %s\n", ErrorPartName);
         }
     } else {
-        scr_printf("Skipping HDD diagnosis, HDD is not usable\n");
+        HDDCHECKER_PRINTF("Skipping HDD diagnosis, HDD is not usable\n");
         ERR_FOUND();
     }
     scr_setfontcolor(BGR_WHITE);
 #ifdef MBR_KELF // when building MBR, we have two behaviours...
-    if (found_at_least_1_err || verbose) // verbose waits anyway, so user can read, because he manually asked for this!
+    if (found_at_least_1_err || verbose) sleep(5);// verbose waits anyway, so user can read, because he manually asked for this!
     // if not verbose, we only wait if something is wrong
-#endif
+#else
     sleep(5);
+#endif
+    if (verbose) scr_clear();
 }
 /// @brief poweroff callback function
 /// @note only expansion bay models will properly make use of this. the other models will run the callback but will poweroff themselves before reaching function end...
