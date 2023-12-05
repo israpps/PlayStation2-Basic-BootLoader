@@ -8,6 +8,7 @@ TARGET="PS2BBL_KELF-[$DATE]-[$SHA8]"
 rm -rf kelf
 rm -f PS2BBL_KELF.7z
 mkdir -p kelf/MX4SIO
+mkdir -p kelf/MBR
 
 echo -- PS2
 make clean kelf $* --silent
@@ -33,6 +34,11 @@ echo -- PSX + MX4SIO
 make clean kelf PSX=1 MX4SIO=1 $* --silent
 mv bin/PSXBBL_MC.KELF kelf/MX4SIO/XSYSTEM.XLF
 make clean PSX=1 $* --silent
+
+echo -- MBR
+make mbr_info $* --silent
+mv bin/MBR.KELF kelf/MBR/MBR.XLF
+make clean BUILDING_MBR=1 $* --silent
 
 cp LICENSE kelf/LICENSE.TXT
 cp README.md kelf/README.md
