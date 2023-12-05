@@ -34,7 +34,12 @@ int HDD_USABLE = 0;
 int LoadHDDIRX(void); // Load HDD IRXes
 int MountParty(const char* path); ///processes strings in the format `hdd0:/$PARTITION:pfs:$PATH_TO_FILE/` to mount partition
 int mnt(const char* path); ///mount partition specified on path
-void HDDChecker();
+
+/** @brief performs the same integrity checks to the HDD than sony MBR Bootstrap would
+ * @param verbose wether to run on verbose or not. non verbose only prints the test results that fail
+ * 
+*/
+void HDDChecker(int verbose);
 void poweroffCallback(void *arg);
 #else //this ensures that when HDD support is not available, loaded ELFs dont have any extra arg...
 #define MPART NULL
@@ -78,8 +83,7 @@ int loadDEV9(void);
 void loadUDPTTY();
 #endif
 
-// For avoiding define NEWLIB_AWARE
-void fioInit();
+void fioInit(); // For avoiding define NEWLIB_AWARE
 
 #define RBG2INT(R, G, B) ((0 << 24) + (R << 16) + (G << 8) + B)
 #define IMPORT_BIN2C(_n)       \
@@ -152,6 +156,7 @@ void credits(void);
 void CleanUp(void);
 int LoadUSBIRX(void);
 void runOSDNoUpdate(void);
+void PrintTemperature();
 #ifdef PSX
 static void InitPSX();
 #endif
@@ -331,6 +336,9 @@ int main(int argc, char *argv[])
             EMERGENCY();
     }
     TimerEnd();
+#ifdef MBR_KELF
+    HDDChecker(false);
+#endif
     DPRINTF("load default settings\n");
     SetDefaultSettings();
     FILE *fp;
@@ -587,7 +595,7 @@ char *CheckPath(char *path)
         }
 #ifdef HDD
         if (!strcmp("$HDDCHECKER", path))
-            HDDChecker();
+            HDDChecker(true);
 #endif
         if (!strcmp("$CREDITS", path))
             credits();
@@ -875,39 +883,68 @@ int mnt(const char* path)
     return 0;
 }
 
-void HDDChecker()
+void HDDChecker(int verbose)
 {
     char ErrorPartName[64];
     const char* HEADING = "HDD Diagnosis routine";
     int ret = -1;
+    int success;
+#ifdef MBR_KELF
+    int found_at_least_1_err = false;
+#define ERR_FOUND() if (!verbose) found_at_least_1_err = true
+#else
+#define ERR_FOUND()
+#endif
     scr_clear();
-    scr_printf("\n\n%*s%s\n", ((80 - strlen(HEADING)) / 2), "", HEADING);
-    scr_setfontcolor(0x0000FF);
+    if (verbose) scr_printf("\n\n%*s%s\n", ((80 - strlen(HEADING)) / 2), "", HEADING);
+    scr_setfontcolor(BGR_RED);
     ret = fileXioDevctl("hdd0:", HDIOC_STATUS, NULL, 0, NULL, 0);
-    if (ret == 0 || ret == 1) scr_setfontcolor(0x00FF00);
-    if (ret != 3)
-    {
+    success = (ret == 0 || ret == 1);
+    if (success) scr_setfontcolor(BGR_GREEN); else if (ret == 3) scr_setfontcolor(BGR_YELLOW); else scr_setfontcolor(BGR_RED);
+    if (verbose || !success) {
         scr_printf("\t\t - HDD CONNECTION STATUS: %d\n", ret);
+        ERR_FOUND();
+    }
+    if (ret == 0)
+    {
         /* Check ATA device S.M.A.R.T. status. */
         ret = fileXioDevctl("hdd0:", HDIOC_SMARTSTAT, NULL, 0, NULL, 0);
-        if (ret != 0) scr_setfontcolor(0x0000ff); else scr_setfontcolor(0x00FF00);
-        scr_printf("\t\t - S.M.A.R.T STATUS: %d\n", ret);
+        success = ret == 0;
+        if (success) scr_setfontcolor(BGR_GREEN); else scr_setfontcolor(BGR_RED);
+        if (verbose || !success) {
+            scr_printf("\t\t - S.M.A.R.T STATUS: %d\n", ret);
+            ERR_FOUND();
+        }
         /* Check for unrecoverable I/O errors on sectors. */
         ret = fileXioDevctl("hdd0:", HDIOC_GETSECTORERROR, NULL, 0, NULL, 0);
-        if (ret != 0) scr_setfontcolor(0x0000ff); else scr_setfontcolor(0x00FF00);
-        scr_printf("\t\t - SECTOR ERRORS: %d\n", ret);
+        success = ret == 0;
+        if (success) scr_setfontcolor(BGR_GREEN); else scr_setfontcolor(BGR_RED);
+        if (verbose || !success) {
+            scr_printf("\t\t - SECTOR ERRORS: %d\n", ret);
+            ERR_FOUND();
+        }
         /* Check for partitions that have errors. */
         ret = fileXioDevctl("hdd0:", HDIOC_GETERRORPARTNAME, NULL, 0, ErrorPartName, sizeof(ErrorPartName));
-        if (ret != 0) scr_setfontcolor(0x0000ff); else scr_setfontcolor(0x00FF00);
-        scr_printf("\t\t - CORRUPTED PARTITIONS: %d\n", ret);
-        if (ret != 0)
+        success = ret == 0;
+        if (success) scr_setfontcolor(BGR_GREEN); else scr_setfontcolor(BGR_RED);
+        if (verbose || !success) {
+            scr_printf("\t\t - CORRUPTED PARTITIONS: %d\n", ret);
+            ERR_FOUND();
+        }
+        if (!success)
         {
             scr_printf("\t\tpartition: %s\n", ErrorPartName);
         }
-    } else scr_setfontcolor(0x00FFFF), scr_printf("Skipping test, HDD is not connected\n");
-    scr_setfontcolor(0xFFFFFF);
-    scr_printf("\t\tWaiting for 10 seconds...\n");
-    sleep(10);
+    } else {
+        scr_printf("Skipping HDD diagnosis, HDD is not usable\n");
+        ERR_FOUND();
+    }
+    scr_setfontcolor(BGR_WHITE);
+#ifdef MBR_KELF // when building MBR, we have two behaviours...
+    if (found_at_least_1_err || verbose) // verbose waits anyway, so user can read, because he manually asked for this!
+    // if not verbose, we only wait if something is wrong
+#endif
+    sleep(5);
 }
 /// @brief poweroff callback function
 /// @note only expansion bay models will properly make use of this. the other models will run the callback but will poweroff themselves before reaching function end...
