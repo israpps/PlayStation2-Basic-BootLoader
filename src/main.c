@@ -196,6 +196,11 @@ int main(int argc, char *argv[])
     init_scr();
     scr_setCursor(0); // get rid of annoying that cursor.
     DPRINTF_INIT()
+#ifdef DEBUG_F_PRINT_IOPTBL
+    DPRINTF("IOP Contents after fresh reboot:\n");
+    print_iop_modules();
+    DPRINTF("\n");
+#endif
 #ifndef NO_DPRINTF
     DPRINTF("PS2BBL: starting with %d argumments:\n", argc);
     for (x = 0; x < argc; x++)
@@ -1186,6 +1191,49 @@ void PrintTemperature() {
 }
 #endif
 
+#ifdef DEBUG_F_PRINT_IOPTBL
+#define NDW -20
+#define HDW -9
+#include <smod.h>
+#ifdef NO_DPRINTF
+#error 'print_iop_modules()' is useless if 'DPRINTF()' is disabled
+#endif
+void print_iop_modules()
+{
+    smod_mod_info_t info;
+    smod_mod_info_t *curr = NULL;
+    char sName[21];
+    int iPage = 1;
+    int iModsPerPage = 0;
+    int rv = -1;
+    int i;
+    u32 txtsz_total = 0;
+    u32 dtasz_total = 0;
+    u32 bsssz_total = 0;
+
+    while (rv != 0) {
+        DPRINTF("%*s   %*s %*s %*s %*s %*s\n", NDW, "name", HDW, "txtst", HDW, "txtsz", HDW, "dtasz", HDW, "bsssz", HDW, "version");
+        DPRINTF("-----------------------------------------------------------------------\n");
+        while ((rv = smod_get_next_mod(curr, &info)) != 0) {
+            smem_read(info.name, sName, 20);
+            sName[20] = 0;
+            txtsz_total += info.text_size;
+            dtasz_total += info.data_size;
+            bsssz_total += info.bss_size;
+
+            DPRINTF("%*s | 0x%05x | 0x%05x | 0x%05x | 0x%05x | 0x%05x\n", NDW, sName, info.text_start, info.text_size, info.data_size, info.bss_size, info.version);
+            curr = &info;
+
+        }
+    }
+
+    u32 total = txtsz_total + dtasz_total + bsssz_total;
+    DPRINTF("-----------------------------------------------------------\n");
+    DPRINTF("%*s |         | 0x%05x | 0x%05x | 0x%05x\n", NDW, "subtotal:", txtsz_total, dtasz_total, bsssz_total);
+    DPRINTF("%*s | 0x%05x (%dKiB)\n", NDW, "total:", total, total / 1024);
+    DPRINTF("-----------------------------------------------------------\n");
+}
+#endif
 /* BELOW THIS POINT ALL MACROS and MISC STUFF MADE TO REDUCE BINARY SIZE WILL BE PLACED */
 
 #if defined(DUMMY_TIMEZONE)
