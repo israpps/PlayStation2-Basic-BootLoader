@@ -49,19 +49,19 @@ jobs:
 
       - name: Compile PS2 build
         run: |
-          make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PS2/ ${{ env.DEBUG }} PRINTF=${{ github.event.inputs.name }}
+          make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PS2/ ${{ env.DEBUG }} PRINTF=${{ github.event.inputs.printf }}
 
       - name: Compile PS2 MX4SIO build
         run: |
-          make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PS2_MX4SIO/ MX4SIO=1 ${{ env.DEBUG }} PRINTF=${{ github.event.inputs.name }}
+          make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PS2_MX4SIO/ MX4SIO=1 ${{ env.DEBUG }} PRINTF=${{ github.event.inputs.printf }}
 
       - name: Compile PSX build
         run: |
-          make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PSX/ PSX=1 ${{ env.DEBUG }} PRINTF=${{ github.event.inputs.name }}
+          make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PSX/ PSX=1 ${{ env.DEBUG }} PRINTF=${{ github.event.inputs.printf }}
 
       - name: Compile PS2 HDD build
         run: |
-          make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PS2_HDD/ HDD=1 ${{ env.DEBUG }} PRINTF=${{ github.event.inputs.name }}
+          make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PS2_HDD/ HDD=1 ${{ env.DEBUG }} PRINTF=${{ github.event.inputs.printf }}
 
       - name: list
         run: |
