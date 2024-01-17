@@ -43,7 +43,7 @@ jobs:
           git fetch --prune --unshallow
 
       - name: compilation opts
-        if: github.event.inputs.debug == true
+        if: github.event.inputs.debug == 'true'
         run: |
           echo "DEBUG=$(echo DEBUG=1)" >> $GITHUB_ENV
 
