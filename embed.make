@@ -74,11 +74,11 @@ $(EE_ASM_DIR)smap_irx.c: smap.irx | $(EE_ASM_DIR)
 
 
 # ---{ EMBEDDED RESOURCES }--- #
-$(EE_ASM_DIR)icon_sys_A.c : embed/icons/icon_A.sys | $(EE_ASM_DIR)
+$(EE_ASM_DIR)icon_sys_A.c: embed/icons/icon_A.sys | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ icon_sys_A
 
-$(EE_ASM_DIR)icon_sys_J.c : embed/icons/icon_J.sys | $(EE_ASM_DIR)
+$(EE_ASM_DIR)icon_sys_J.c: embed/icons/icon_J.sys | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ icon_sys_J
 
-$(EE_ASM_DIR)icon_sys_C.c : embed/icons/icon_C.sys | $(EE_ASM_DIR)
+$(EE_ASM_DIR)icon_sys_C.c: embed/icons/icon_C.sys | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ icon_sys_C
