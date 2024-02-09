@@ -284,6 +284,7 @@ $(EE_ASM_DIR):
 $(BINDIR):
 	@mkdir -p $@
 
+vpath %.c $(EE_ASM_DIR)
 $(EE_OBJS_DIR)%.o: $(EE_SRC_DIR)%.c | $(EE_OBJS_DIR)
 ifneq ($(VERBOSE),1)
 	@echo "  - $@"
