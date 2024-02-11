@@ -23,6 +23,9 @@ const char* BANNER =
 #ifdef DEBUG
 " - DEBUG"
 #endif
+#ifdef COH
+" - COH-H"
+#endif
     "\n"
     "\n";
 #define BANNER_FOOTER \
