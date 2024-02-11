@@ -1046,7 +1046,7 @@ int dischandler()
 void ResetIOP(void)
 {
     SifInitRpc(0); // Initialize SIFCMD & SIFRPC
-#ifndef PSX
+#ifndef IOPRP
     while (!SifIopReset("", 0)) {};
 #else
     /* sp193: on PSX We need some of the PSX's CDVDMAN facilities, but we do not want to use its (too-)new FILEIO module.
