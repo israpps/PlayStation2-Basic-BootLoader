@@ -92,8 +92,8 @@ IMPORT_BIN2C(mcman_irx);
 IMPORT_BIN2C(mcserv_irx);
 IMPORT_BIN2C(padman_irx);
 
-#ifdef PSX
-IMPORT_BIN2C(psx_ioprp);
+#ifdef IOPRP
+IMPORT_BIN2C(ioprp);
 #endif
 
 #ifdef FILEXIO
@@ -226,7 +226,11 @@ int main(int argc, char *argv[])
     DPRINTF(" [MCMAN]: ID=%d, ret=%d\n", j, x);
     j = SifLoadStartModule("rom0:MCSERV", 0, NULL, &x);
     DPRINTF(" [MCSERV]: ID=%d, ret=%d\n", j, x);
+#ifdef COH
+    mcInit(MC_TYPE_XMC); //because on COH models rom0:MCMAN (aka: DONGLEMAN) has the same RPC than retail rom9:XMCMAN
+#else
     mcInit(MC_TYPE_MC);
+#endif
 #else
     j = SifExecModuleBuffer(mcman_irx, size_mcman_irx, 0, NULL, &x);
     DPRINTF(" [MCMAN]: ID=%d, ret=%d\n", j, x);
@@ -1045,11 +1049,12 @@ void ResetIOP(void)
 #ifndef PSX
     while (!SifIopReset("", 0)) {};
 #else
-    /* sp193: We need some of the PSX's CDVDMAN facilities, but we do not want to use its (too-)new FILEIO module.
+    /* sp193: on PSX We need some of the PSX's CDVDMAN facilities, but we do not want to use its (too-)new FILEIO module.
        This special IOPRP image contains a IOPBTCONF list that lists PCDVDMAN instead of CDVDMAN.
        PCDVDMAN is the board-specific CDVDMAN module on all PSX, which can be used to switch the CD/DVD drive operating mode.
        Usually, I would discourage people from using board-specific modules, but I do not have a proper replacement for this. */
-    while (!SifIopRebootBuffer(psx_ioprp, size_psx_ioprp)) {};
+    /* isra: on COH we need homebrew FILEIO/IOMAN so replace them with an IOPRP */
+    while (!SifIopRebootBuffer(ioprp, size_ioprp)) {};
 #endif
     while (!SifIopSync()) {};
 
