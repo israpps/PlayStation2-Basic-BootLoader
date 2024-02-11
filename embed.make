@@ -4,8 +4,8 @@ vpath %.irx $(PS2SDK)/iop/irx/
 IRXTAG = $(notdir $(addsuffix _irx, $(basename $<)))
 
 # ---{ IOP BINARIES }--- #
-$(EE_ASM_DIR)ioprp.c: embed/ioprp.img | $(EE_ASM_DIR)
-	$(BIN2S) $< $@ psx_ioprp
+$(EE_ASM_DIR)ioprp.c: $(IOPRP_SOURCE) | $(EE_ASM_DIR)
+	$(BIN2S) $< $@ ioprp
 
 $(EE_ASM_DIR)sio2man_irx.c: sio2man.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ sio2man_irx
