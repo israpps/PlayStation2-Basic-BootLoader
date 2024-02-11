@@ -80,7 +80,7 @@ jobs:
           mv PS2_HDD/ release/PS2_HDD/
           mv PS2_MX4SIO/ release/PS2_MX4SIO/
           mv NAMCO_ARCADE_2x6/ release/NAMCO_ARCADE_2x6/
-          echo The executables found inside this folder are specifically crafted to boot in a namco arcade system 246 or 256 (COH-H PS2 model) running these on any other PS2 type will result in a black scren!>release/NAMCO_ARCADE_2x6/WARNING.TXT
+          echo "The executables found inside this folder are specifically crafted to boot in a namco arcade system 246 or 256 (COH-H PS2 model) running these on any other PS2 type will result in a black scren!">release/NAMCO_ARCADE_2x6/WARNING.TXT
 
       - name: pack release
         run: |
