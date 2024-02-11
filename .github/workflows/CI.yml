@@ -63,6 +63,10 @@ jobs:
         run: |
           make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PS2_HDD/ HDD=1 ${{ env.DEBUG }} PRINTF=${{ github.event.inputs.name }}
 
+      - name: Compile system 2x6 build
+        run: |
+          make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=NAMCO_ARCADE_2x6/ COH=1 ${{ env.DEBUG }} PRINTF=${{ github.event.inputs.name }}
+
       - name: list
         run: |
           git ls-files -i --exclude-standard -c
