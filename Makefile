@@ -119,6 +119,11 @@ ifeq ($(COH), 1)
 endif
 
 ifeq ($(IOPRP), 1)
+  ifeq (_$(IOPRP_SOURCE),_)
+    $(error IOPRP requested but no image was specified)
+  else
+    $(info IOPRP image requested, using $(IOPRP_SOURCE))
+  endif
   EE_CFLAGS += -DIOPRP=1
   EE_OBJS += ioprp.o
   EE_LIBS += -liopreboot
