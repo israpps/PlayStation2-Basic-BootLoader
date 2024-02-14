@@ -80,7 +80,7 @@ jobs:
           mv PSX/ release/PSX/
           mv PS2_HDD/ release/PS2_HDD/
           mv PS2_MX4SIO/ release/PS2_MX4SIO/
-          mc PS2_BOOTDISK/ release/PS2_BOOTDISK/
+          mv PS2_BOOTDISK/ release/PS2_BOOTDISK/
 
       - name: pack release
         run: |
