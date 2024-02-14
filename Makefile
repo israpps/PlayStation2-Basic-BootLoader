@@ -20,6 +20,7 @@ PROHBIT_DVD_0100 ?= 0 # prohibit the DVD Players v1.00 and v1.01 from being boot
 XCDVD_READKEY ?= 0 # Enable the newer sceCdReadKey checks, which are only supported by a newer CDVDMAN module.
 UDPTTY ?= 0 # printf ove UDP
 PRINTF ?= NONE
+DISC_STOP_AT_BOOT ?= 0
 
 HOMEBREW_IRX ?= 0 # if we need homebrew SIO2MAN, MCMAN, MCSERV & PADMAN embedded, else, builtin console drivers are used
 FILEXIO_NEED ?= 0 # if we need filexio and imanx loaded for other features (HDD, mx4sio, etc)
@@ -74,6 +75,10 @@ EE_CFLAGS += -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DPATCHLEVE
 
 ifneq ($(VERBOSE), 1)
    .SILENT:
+endif
+
+ifeq ($(DISC_STOP_AT_BOOT, 1)
+   EE_CFLAGS += -DDISC_STOP_AT_BOOT
 endif
 
 ifeq ($(MX4SIO), 1)
