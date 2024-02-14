@@ -77,7 +77,7 @@ ifneq ($(VERBOSE), 1)
    .SILENT:
 endif
 
-ifeq ($(DISC_STOP_AT_BOOT, 1)
+ifeq ($(DISC_STOP_AT_BOOT), 1)
    EE_CFLAGS += -DDISC_STOP_AT_BOOT
 endif
 
