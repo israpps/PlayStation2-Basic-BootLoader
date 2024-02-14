@@ -63,6 +63,11 @@ jobs:
         run: |
           make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PS2_HDD/ HDD=1 ${{ env.DEBUG }} PRINTF=${{ github.event.inputs.name }}
 
+      - name: Compile PS2 discboot build
+        run: |
+          make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PS2_BOOTDISK/ DISC_STOP_AT_BOOT=1 ${{ env.DEBUG }} PRINTF=${{ github.event.inputs.name }}
+          echo "the executables on this folder are the same than normal PS2BBL, but they try to stop disc spinning as soon as possible, ideal for freedv">PS2_BOOTDISK/README.TXT
+          
       - name: list
         run: |
           git ls-files -i --exclude-standard -c
@@ -75,6 +80,7 @@ jobs:
           mv PSX/ release/PSX/
           mv PS2_HDD/ release/PS2_HDD/
           mv PS2_MX4SIO/ release/PS2_MX4SIO/
+          mc PS2_BOOTDISK/ release/PS2_BOOTDISK/
 
       - name: pack release
         run: |
