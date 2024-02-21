@@ -65,7 +65,6 @@ int LoadFIO(void); // Load FileXio and it´s dependencies
 #include "banner.h"
 
 #ifdef PSX
-#include <iopcontrol_special.h>
 #include "psx/plibcdvd_add.h"
 #endif
 
@@ -88,11 +87,15 @@ void fioInit();
 
 // --------------- IRX/IOPRP extern --------------- //
 IMPORT_BIN2C(sio2man_irx);
-IMPORT_BIN2C(mcman_irx);
-IMPORT_BIN2C(mcserv_irx);
 IMPORT_BIN2C(padman_irx);
 
+#if !defined(COH) || !defined(USE_ROM_MCMAN)
+IMPORT_BIN2C(mcman_irx);
+IMPORT_BIN2C(mcserv_irx);
+#endif
+
 #ifdef IOPRP
+#include <iopcontrol_special.h>
 IMPORT_BIN2C(ioprp);
 #endif
 
