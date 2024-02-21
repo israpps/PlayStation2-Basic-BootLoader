@@ -116,6 +116,9 @@ ifeq ($(COH), 1)
   IOPRP_SOURCE = embed/ioman_ioprp.img
   IOPRP = 1
   EE_CFLAGS += -DCOH=1
+  USE_ROM_PADMAN = 0
+  USE_ROM_MCMAN = 1
+  USE_ROM_SIO2MAN = 0
 endif
 
 ifeq ($(IOPRP), 1)
