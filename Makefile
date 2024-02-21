@@ -101,11 +101,35 @@ endif
 ifeq ($(PSX), 1)
    $(info --- building with PSX-DESR support)
   BASENAME = PSXBBL
+  IOPRP_SOURCE = embed/ioprp.img
+  IOPRP = 1
   EE_CFLAGS += -DPSX=1
-  EE_OBJS += scmd_add.o ioprp.o
-  EE_LIBS += -lxcdvd -liopreboot
+  EE_OBJS += scmd_add.o
+  EE_LIBS += -lxcdvd
 else
   EE_LIBS += -lcdvd
+endif
+
+ifeq ($(COH), 1)
+   $(info --- building for COH-H arcades)
+  BASENAME = SYS2x6BBL
+  IOPRP_SOURCE = embed/ioman_ioprp.img
+  IOPRP = 1
+  EE_CFLAGS += -DCOH=1 #-DNO_TEMP_DISP
+  USE_ROM_PADMAN = 1
+  USE_ROM_MCMAN = 1
+  USE_ROM_SIO2MAN = 1
+endif
+
+ifeq ($(IOPRP), 1)
+  ifeq (_$(IOPRP_SOURCE),_)
+    $(error IOPRP requested but no image was specified)
+  else
+    $(info IOPRP image requested, using $(IOPRP_SOURCE))
+  endif
+  EE_CFLAGS += -DIOPRP=1
+  EE_OBJS += ioprp.o
+  EE_LIBS += -liopreboot
 endif
 
 ifeq ($(DEBUG), 1)
@@ -120,7 +144,11 @@ endif
 
 ifeq ($(USE_ROM_PADMAN), 1)
   EE_CFLAGS += -DUSE_ROM_PADMAN
-  EE_LIBS += -lpad
+  ifeq ($(COH), 1)
+    EE_LIBS += -lpadx
+  else
+    EE_LIBS += -lpad
+  endif
   EE_OBJS += pad.o
 else
   EE_OBJS += pad.o padman_irx.o
@@ -130,6 +158,9 @@ endif
 ifeq ($(USE_ROM_MCMAN), 1)
   EE_CFLAGS += -DUSE_ROM_MCMAN
 else
+  ifeq ($(COH), 1)
+    $(error COH models need rom MCMAN to work)
+  endif
   EE_OBJS += mcman_irx.o mcserv_irx.o
 endif
 
@@ -177,6 +208,9 @@ ifeq ($(DUMMY_TIMEZONE), 1)
 endif
 
 ifeq ($(DEV9_NEED), 1)
+  ifeq ($(COH),1)
+  $(warning COH models have custom DEV9 drivers listed at IOP boot. homebrew DEV9 must be loaded via IOPRP on these models)
+  endif
   EE_CFLAGS += -DDEV9
   EE_OBJS += ps2dev9_irx.o
 endif

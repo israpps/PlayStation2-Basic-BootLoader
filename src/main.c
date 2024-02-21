@@ -65,7 +65,6 @@ int LoadFIO(void); // Load FileXio and it´s dependencies
 #include "banner.h"
 
 #ifdef PSX
-#include <iopcontrol_special.h>
 #include "psx/plibcdvd_add.h"
 #endif
 
@@ -88,12 +87,16 @@ void fioInit();
 
 // --------------- IRX/IOPRP extern --------------- //
 IMPORT_BIN2C(sio2man_irx);
-IMPORT_BIN2C(mcman_irx);
-IMPORT_BIN2C(mcserv_irx);
 IMPORT_BIN2C(padman_irx);
 
-#ifdef PSX
-IMPORT_BIN2C(psx_ioprp);
+#if !defined(COH) || !defined(USE_ROM_MCMAN)
+IMPORT_BIN2C(mcman_irx);
+IMPORT_BIN2C(mcserv_irx);
+#endif
+
+#ifdef IOPRP
+#include <iopcontrol_special.h>
+IMPORT_BIN2C(ioprp);
 #endif
 
 #ifdef FILEXIO
@@ -163,6 +166,9 @@ int MountParty(const char* path); ///processes strings in the format `hdd0:/$PAR
 int mnt(const char* path); ///mount partition specified on path
 #endif
 
+#ifndef NO_TEMP_DISP
+void PrintTemperature();
+#endif
 // --------------- glob stuff --------------- //
 typedef struct
 {
@@ -214,6 +220,11 @@ int main(int argc, char *argv[])
         loadUDPTTY();
 #endif
 
+#ifdef COH
+    j = SifLoadStartModule("rom0:CDVDFSV", 0, NULL, &x);
+    DPRINTF(" [CDVDFSV]: ID=%d, ret=%d\n", j, x);
+#endif
+
 #ifdef USE_ROM_SIO2MAN
     j = SifLoadStartModule("rom0:SIO2MAN", 0, NULL, &x);
     DPRINTF(" [SIO2MAN]: ID=%d, ret=%d\n", j, x);
@@ -226,7 +237,11 @@ int main(int argc, char *argv[])
     DPRINTF(" [MCMAN]: ID=%d, ret=%d\n", j, x);
     j = SifLoadStartModule("rom0:MCSERV", 0, NULL, &x);
     DPRINTF(" [MCSERV]: ID=%d, ret=%d\n", j, x);
+#ifdef COH
+    mcInit(MC_TYPE_XMC); //because on COH models rom0:MCMAN (aka: DONGLEMAN) has the same RPC than retail rom9:XMCMAN
+#else
     mcInit(MC_TYPE_MC);
+#endif
 #else
     j = SifExecModuleBuffer(mcman_irx, size_mcman_irx, 0, NULL, &x);
     DPRINTF(" [MCMAN]: ID=%d, ret=%d\n", j, x);
@@ -278,10 +293,11 @@ int main(int argc, char *argv[])
     OSDInitSystemPaths();
 
     // Initialize libcdvd & supplement functions (which are not part of the ancient libcdvd library we use).
+    DPRINTF("sceCdInit(SCECdINoD);\n");
     sceCdInit(SCECdINoD);
     cdInitAdd();
 
-#ifndef PSX
+#if !defined(PSX) //&& !defined(COH)
     DPRINTF("Certifying CDVD Boot\n");
     CDVDBootCertify(ROMVER); /* This is not required for the PSX, as its OSDSYS will do it before booting the update. */
 #endif
@@ -291,19 +307,20 @@ int main(int argc, char *argv[])
 
     DPRINTF("init ROMVER, model name ps1dvr and dvdplayer ver\n");
     OSDInitROMVER(); // Initialize ROM version (must be done first).
+
     ModelNameInit(); // Initialize model name
     PS1DRVInit();    // Initialize PlayStation Driver (PS1DRV)
     DVDPlayerInit(); // Initialize ROM DVD player. It is normal for this to fail on consoles that have no DVD ROM chip (i.e. DEX or the SCPH-10000/SCPH-15000).
 
+#ifndef COH
+    DPRINTF("OSDConfigLoad()\n");
     if (OSDConfigLoad() != 0) // Load OSD configuration
     {                         // OSD configuration not initialized. Defaults loaded.
-        scr_setfontcolor(0x00ffff);
         DPRINTF("OSD Configuration not initialized. Defaults loaded.\n");
-        scr_setfontcolor(0xffffff);
     }
     DPRINTF("Saving OSD configuration\n");
     OSDConfigApply();
-
+#endif
     /*  Try to enable the remote control, if it is enabled.
         Indicate no hardware support for it, if it cannot be enabled. */
     DPRINTF("trying to enable remote control\n");
@@ -482,11 +499,15 @@ int main(int argc, char *argv[])
     if (GLOBCFG.LOGO_DISP > 0) {
         scr_printf("\n\n\tModel:\t\t%s\n"
                    "\tPlayStation Driver:\t%s\n"
+#ifndef COH
                    "\tDVD Player:\t%s\n"
+#endif
                    "\tConfig source:\t%s\n",
                    ModelNameGet(),
                    PS1DRVGetVersion(),
+#ifndef COH
                    DVDPlayerGetVersion(),
+#endif
                    SOURCES[config_source]);
 #ifndef NO_TEMP_DISP
         PrintTemperature();
@@ -1042,14 +1063,15 @@ int dischandler()
 void ResetIOP(void)
 {
     SifInitRpc(0); // Initialize SIFCMD & SIFRPC
-#ifndef PSX
+#ifndef IOPRP
     while (!SifIopReset("", 0)) {};
 #else
-    /* sp193: We need some of the PSX's CDVDMAN facilities, but we do not want to use its (too-)new FILEIO module.
+    /* sp193: on PSX We need some of the PSX's CDVDMAN facilities, but we do not want to use its (too-)new FILEIO module.
        This special IOPRP image contains a IOPBTCONF list that lists PCDVDMAN instead of CDVDMAN.
        PCDVDMAN is the board-specific CDVDMAN module on all PSX, which can be used to switch the CD/DVD drive operating mode.
        Usually, I would discourage people from using board-specific modules, but I do not have a proper replacement for this. */
-    while (!SifIopRebootBuffer(psx_ioprp, size_psx_ioprp)) {};
+    /* isra: on COH we need homebrew FILEIO/IOMAN so replace them with an IOPRP */
+    while (!SifIopRebootBuffer(ioprp, size_ioprp)) {};
 #endif
     while (!SifIopSync()) {};
 

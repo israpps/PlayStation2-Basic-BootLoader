@@ -36,7 +36,12 @@ static int ReadModelName(char *name)
             Oddly, the console models that come with v1.01, like the SCPH-15000 and DTL-H10000,
             will always be identified as "SCPH-10000" by their ROM OSDSYS programs.
     */
-    if (ConsoleROMVER[0] == '0' && ConsoleROMVER[1] == '1' && ConsoleROMVER[2] == '0') {
+#ifdef COH
+#define CHECK_CONSOLE_IS_NOT_COH && (ConsoleROMVER[4] != 'T' && ConsoleROMVER[5] != 'Z')
+#else
+#define CHECK_CONSOLE_IS_NOT_COH
+#endif
+    if ((ConsoleROMVER[0] == '0' && ConsoleROMVER[1] == '1' && ConsoleROMVER[2] == '0') CHECK_CONSOLE_IS_NOT_COH) {
         if (ConsoleROMVER[3] == '0') // For ROM v1.00 (Early SCPH-10000 units).
             strcpy(name, "SCPH-10000");
         else { // For ROM v1.01 (Late SCPH-10000, and all SCPH-15000 units).
