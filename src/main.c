@@ -166,6 +166,9 @@ int MountParty(const char* path); ///processes strings in the format `hdd0:/$PAR
 int mnt(const char* path); ///mount partition specified on path
 #endif
 
+#ifndef NO_TEMP_DISP
+void PrintTemperature();
+#endif
 // --------------- glob stuff --------------- //
 typedef struct
 {
@@ -215,6 +218,11 @@ int main(int argc, char *argv[])
 #ifdef UDPTTY
     if (loadDEV9())
         loadUDPTTY();
+#endif
+
+#ifdef COH
+    j = SifLoadStartModule("rom0:CDVDFSV", 0, NULL, &x);
+    DPRINTF(" [CDVDFSV]: ID=%d, ret=%d\n", j, x);
 #endif
 
 #ifdef USE_ROM_SIO2MAN
@@ -285,10 +293,11 @@ int main(int argc, char *argv[])
     OSDInitSystemPaths();
 
     // Initialize libcdvd & supplement functions (which are not part of the ancient libcdvd library we use).
+    DPRINTF("sceCdInit(SCECdINoD);\n");
     sceCdInit(SCECdINoD);
     cdInitAdd();
 
-#ifndef PSX
+#if !defined(PSX) //&& !defined(COH)
     DPRINTF("Certifying CDVD Boot\n");
     CDVDBootCertify(ROMVER); /* This is not required for the PSX, as its OSDSYS will do it before booting the update. */
 #endif
@@ -298,19 +307,20 @@ int main(int argc, char *argv[])
 
     DPRINTF("init ROMVER, model name ps1dvr and dvdplayer ver\n");
     OSDInitROMVER(); // Initialize ROM version (must be done first).
+
     ModelNameInit(); // Initialize model name
     PS1DRVInit();    // Initialize PlayStation Driver (PS1DRV)
     DVDPlayerInit(); // Initialize ROM DVD player. It is normal for this to fail on consoles that have no DVD ROM chip (i.e. DEX or the SCPH-10000/SCPH-15000).
 
+#ifndef COH
+    DPRINTF("OSDConfigLoad()\n");
     if (OSDConfigLoad() != 0) // Load OSD configuration
     {                         // OSD configuration not initialized. Defaults loaded.
-        scr_setfontcolor(0x00ffff);
         DPRINTF("OSD Configuration not initialized. Defaults loaded.\n");
-        scr_setfontcolor(0xffffff);
     }
     DPRINTF("Saving OSD configuration\n");
     OSDConfigApply();
-
+#endif
     /*  Try to enable the remote control, if it is enabled.
         Indicate no hardware support for it, if it cannot be enabled. */
     DPRINTF("trying to enable remote control\n");
@@ -489,11 +499,15 @@ int main(int argc, char *argv[])
     if (GLOBCFG.LOGO_DISP > 0) {
         scr_printf("\n\n\tModel:\t\t%s\n"
                    "\tPlayStation Driver:\t%s\n"
+#ifndef COH
                    "\tDVD Player:\t%s\n"
+#endif
                    "\tConfig source:\t%s\n",
                    ModelNameGet(),
                    PS1DRVGetVersion(),
+#ifndef COH
                    DVDPlayerGetVersion(),
+#endif
                    SOURCES[config_source]);
 #ifndef NO_TEMP_DISP
         PrintTemperature();

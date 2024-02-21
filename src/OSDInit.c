@@ -7,7 +7,7 @@
 #include <osd_config.h>
 #include "OSDInit.h"
 #include <unistd.h>
-
+#include "debugprintf.h"
 /*  Parsing of values from the EEPROM and setting them into the EE kernel
     was done in different ways, across different browser versions.
 
@@ -503,6 +503,7 @@ static void WriteConfigToNVM(const u8 *buffer)
 
 int OSDLoadConfigFromNVM(OSDConfig1_t *osdConfigPS1, OSDConfig2_t *osdConfigPS2)
 {
+    DPRINTF("%s\n", __FUNCTION__);
     int result;
 
     ReadConfigFromNVM(OSDConfigBuffer);

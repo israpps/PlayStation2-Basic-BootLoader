@@ -115,10 +115,10 @@ ifeq ($(COH), 1)
   BASENAME = SYS2x6BBL
   IOPRP_SOURCE = embed/ioman_ioprp.img
   IOPRP = 1
-  EE_CFLAGS += -DCOH=1
-  USE_ROM_PADMAN = 0
+  EE_CFLAGS += -DCOH=1 #-DNO_TEMP_DISP
+  USE_ROM_PADMAN = 1
   USE_ROM_MCMAN = 1
-  USE_ROM_SIO2MAN = 0
+  USE_ROM_SIO2MAN = 1
 endif
 
 ifeq ($(IOPRP), 1)
@@ -159,7 +159,7 @@ ifeq ($(USE_ROM_MCMAN), 1)
   EE_CFLAGS += -DUSE_ROM_MCMAN
 else
   ifeq ($(COH), 1)
-    $(error COH models need rom0:MCMAN to work appropiately)
+    $(error COH models need rom MCMAN to work)
   endif
   EE_OBJS += mcman_irx.o mcserv_irx.o
 endif
@@ -208,6 +208,9 @@ ifeq ($(DUMMY_TIMEZONE), 1)
 endif
 
 ifeq ($(DEV9_NEED), 1)
+  ifeq ($(COH),1)
+  $(warning COH models have custom DEV9 drivers listed at IOP boot. homebrew DEV9 must be loaded via IOPRP on these models)
+  endif
   EE_CFLAGS += -DDEV9
   EE_OBJS += ps2dev9_irx.o
 endif
