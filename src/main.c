@@ -274,12 +274,12 @@ int main(int argc, char *argv[])
     j = SifLoadModule("rom0:ADDDRV", 0, NULL); // Load ADDDRV. The OSD has it listed in rom0:OSDCNF/IOPBTCONF, but it is otherwise not loaded automatically.
     DPRINTF(" [ADDDRV]: %d\n", j);
 
-    DPRINTF("init OSD system paths\n");
-    OSDInitSystemPaths();
-
     // Initialize libcdvd & supplement functions (which are not part of the ancient libcdvd library we use).
     sceCdInit(SCECdINoD);
     cdInitAdd();
+
+    DPRINTF("init OSD system paths\n");
+    OSDInitSystemPaths();
 
 #ifndef PSX
     DPRINTF("Certifying CDVD Boot\n");
