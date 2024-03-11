@@ -1195,7 +1195,6 @@ void PrintTemperature() {
 #if defined(DUMMY_LIBC_INIT)
    void _libcglue_init() {}
    void _libcglue_deinit() {}
-   void _libcglue_args_parse() {}
 #endif
 
 #if defined(KERNEL_NOPATCH)
