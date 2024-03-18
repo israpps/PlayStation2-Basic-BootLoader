@@ -1,5 +1,9 @@
 #ifndef COMMONDEF
 #define COMMONDEF
+#define BGR_RED 0x0000FF
+#define BGR_WHITE 0xFFFFFF
+#define BGR_GREEN 0x00FF00
+#define BGR_YELLOW 0x00FFFF
 enum
 {
     SOURCE_MC0 = 0,
