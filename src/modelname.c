@@ -17,7 +17,6 @@ extern char ConsoleROMVER[];
 
 static int ReadModelName(char *name)
 {
-    int result;
     u32 stat;
 
     /*  This function is a hybrid between the late ROM browser program and the HDD Browser.
@@ -51,7 +50,7 @@ static int ReadModelName(char *name)
 
         return 0; // Original returned -1
     } else {
-        if ((result = sceCdRM(name, &stat)) == 1) { // Command issued successfully.
+        if (sceCdRM(name, &stat) == 1) { // Command issued successfully.
             if (stat & 0x80)
                 return -2;
             if ((stat & 0x40) || name[0] == '\0')

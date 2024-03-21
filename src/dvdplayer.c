@@ -54,9 +54,8 @@ static int readMCFile(int fd, void *buffer, int len)
 static int ReadFileFromMC(int port, int slot, const char *file, void *buffer, int len)
 {
     int fd, bytesRead;
-    int result;
 
-    if ((result = getStatMC(port, slot, NULL, NULL, NULL)) >= -2) {
+    if (getStatMC(port, slot, NULL, NULL, NULL) >= -2) {
         if ((fd = openMCFile(port, slot, file, 1)) >= 0) {
             if ((bytesRead = readMCFile(fd, buffer, len)) < 0)
                 return -1;
@@ -208,9 +207,7 @@ static int DVDPlayerUpdateCheck(int *pPort, int *pSlot, char *pVersion)
 
 static int DVDPlayerGetUpdateVersion(const char *file, int *pPort, int *pSlot)
 {
-    int result;
-
-    if ((result = DVDPlayerUpdateCheck(pPort, pSlot, NULL)) == 0) { // DVD Player update of the right region exists and is newer.
+    if (DVDPlayerUpdateCheck(pPort, pSlot, NULL) == 0) { // DVD Player update of the right region exists and is newer.
         return (CheckFileFromMC(*pPort, *pSlot, file) == 0 ? 0 : -1);
     }
 
