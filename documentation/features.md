@@ -20,7 +20,42 @@ where PS2BBL will try to boot `RESCUE.ELF` from USB device Root on an endless lo
 
 ## Compatibility 
 
-PS2BBL is capable of properly operating on almost all ps2 systems around. even on PSX DESR, and soon even on `COH-H` Models!
+✔️: Works  
+❓: not confirmed  
+❔: not explicitly confirmed but SHOULD work  
+❌: Incompatible    
+⚙️: In development
+
+
+| Model | Status | Notes |
+| ----- | ------ | ----- |
+| SCPH-10000 (1.00 boot rom) | ✔️ | Needs kernel patch update |
+| SCPH-10000 (1.01 boot rom) | ✔️ | Needs kernel patch update |
+| SCPH-15000 | ✔️ ||
+| SCPH-18000 | ✔️ ||
+| SCPH-30xxx | ✔️ ||
+| SCPH-30xxxR| ✔️ ||
+| SCPH-35xxx | ✔️ ||
+| SCPH-37000 | ✔️ ||
+| SCPH-390xx | ✔️ ||
+| SCPH-500xx | ✔️ ||
+| SCPH-550xx | ✔️ ||
+| SCPH-70xxx | ✔️ ||
+| SCPH-750xx | ✔️ ||
+| SCPH-770xx | ✔️ ||
+| SCPH-790xx | ✔️ ||
+| SCPH-900xx (2.20 boot rom) | ✔️ ||
+| SCPH-900xx (2.30 boot rom) | ✔️ | will work, but you cannot auto boot as system update |
+| PX-300 (PS2TV) | ❔ | should work, but you cannot auto boot as system update |
+| DESR-xxxx (PSX) | ✔️ | |
+| DTL-H10000 | ❓ | should work, but this model is invulnerable to every digital exploit |
+| DTL-Hxxxxx | ❔ | |
+| Namco system 246 (COH-Hxxxxx) | ⚙️ || 
+| Namco system 256 (COH-Hxxxxx) | ⚙️ || 
+| Konami python | ❓ || 
+| DTL-T10000 (TOOL) | ❓ || 
+| DTL-T15000 (TOOL w/ perf analyzer)  | ❓ || 
+
 
 ## Proper sistem initialization
 
