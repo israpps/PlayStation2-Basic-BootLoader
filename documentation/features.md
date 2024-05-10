@@ -20,12 +20,7 @@ where PS2BBL will try to boot `RESCUE.ELF` from USB device Root on an endless lo
 
 ## Compatibility 
 
-PS2BBL is capable of properly operating on almost all ps2 systems around. even on PSX DESR!
-
-the following systems have not been tested, and therefore, compatibility with them cannot be guaranteed:
-
-- Namco arcade systems `COH-H` models
-- Chinese PS2 (`SCPH-xxx09`)
+PS2BBL is capable of properly operating on almost all ps2 systems around. even on PSX DESR, and soon even on `COH-H` Models!
 
 ## Proper sistem initialization
 
