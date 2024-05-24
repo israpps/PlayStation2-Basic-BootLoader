@@ -295,6 +295,11 @@ int main(int argc, char *argv[])
     DPRINTF(" [ADDDRV]: %d\n", j);
 #endif
 
+#ifdef COH 
+// namco arcades dont have DVDPlayer ROM. after loading ACDEV module, rom1: points to the flash memory on the namco arcade board (if it was flashed with data in a format acceptable to ROMDRV)
+    j = SifLoadModule("rom0:ACDEV", 0, NULL);
+    DPRINTF(" [ACDEV]: %d\n", j);
+#endif
 
     DPRINTF("init OSD system paths\n");
     OSDInitSystemPaths();
