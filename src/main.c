@@ -518,7 +518,7 @@ int main(int argc, char *argv[])
 #ifndef NO_PS1
                    "\tPlayStation Driver:\t%s\n"
 #endif
-#ifndef COH
+#ifndef NO_DVDPLAYER
                    "\tDVD Player:\t%s\n"
 #endif
                    "\tConfig source:\t%s\n",
@@ -526,7 +526,7 @@ int main(int argc, char *argv[])
 #ifndef NO_PS1
                    PS1DRVGetVersion(),
 #endif
-#ifndef COH
+#ifndef NO_DVDPLAYER
                    DVDPlayerGetVersion(),
 #endif
                    SOURCES[config_source]);
