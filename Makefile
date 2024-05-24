@@ -25,6 +25,10 @@ HOMEBREW_IRX ?= 0 # if we need homebrew SIO2MAN, MCMAN, MCSERV & PADMAN embedded
 FILEXIO_NEED ?= 0 # if we need filexio and imanx loaded for other features (HDD, mx4sio, etc)
 DEV9_NEED ?= 0    # if we need DEV9 loaded for other features (HDD, UDPTTY, etc)
 
+# toggles to disable features that some PS2 dont have (eg: COH-H)
+DVDPLAYER = 1
+PS1 = 1
+
 # Related to binary size reduction
 KERNEL_NOPATCH = 1 
 NEWLIB_NANO = 1
@@ -55,7 +59,7 @@ EE_SRC_DIR = src/
 EE_ASM_DIR = asm/
 
 EE_OBJS = main.o \
-          util.o elf.o timer.o ps2.o ps1.o dvdplayer.o \
+          util.o elf.o timer.o ps2.o \
           modelname.o libcdvd_add.o OSDHistory.o OSDInit.o OSDConfig.o \
           $(EMBEDDED_STUFF) \
 		      $(IOP_OBJS)
@@ -115,10 +119,13 @@ ifeq ($(COH), 1)
   BASENAME = SYS2x6BBL
   IOPRP_SOURCE = embed/ioman_ioprp.img
   IOPRP = 1
-  EE_CFLAGS += -DCOH=1 #-DNO_TEMP_DISP
+  EE_CFLAGS += -DCOH=1
+  DVDPLAYER = 0
+  PS1 = 0
   USE_ROM_PADMAN = 1
   USE_ROM_MCMAN = 1
   USE_ROM_SIO2MAN = 1
+  EE_OBJS += mcman_irx.o
 endif
 
 ifeq ($(IOPRP), 1)
@@ -158,9 +165,6 @@ endif
 ifeq ($(USE_ROM_MCMAN), 1)
   EE_CFLAGS += -DUSE_ROM_MCMAN
 else
-  ifeq ($(COH), 1)
-    $(error COH models need rom MCMAN to work)
-  endif
   EE_OBJS += mcman_irx.o mcserv_irx.o
 endif
 
@@ -252,6 +256,19 @@ endif
 ifeq ($(PROHBIT_DVD_0100),1)
   EE_CFLAGS += -DPROHBIT_DVD_0100=1
 endif
+
+ifeq ($(DVDPLAYER),1)
+  EE_OBJS += dvdplayer.o
+else
+  EE_CFLAGS += -DNO_DVDPLAYER
+endif
+
+ifeq ($(PS1),1)
+  EE_OBJS += ps1.o
+else
+  EE_CFLAGS += -DNO_PS1
+endif
+
 
 # ---{ RECIPES }--- #
 .PHONY: greeting debug all clean kelf packed release

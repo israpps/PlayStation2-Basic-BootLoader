@@ -10,7 +10,8 @@ $(EE_ASM_DIR)ioprp.c: $(IOPRP_SOURCE) | $(EE_ASM_DIR)
 $(EE_ASM_DIR)sio2man_irx.c: sio2man.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ sio2man_irx
 
-$(EE_ASM_DIR)mcman_irx.c: mcman.irx | $(EE_ASM_DIR)
+$(EE_ASM_DIR)mcman_irx.c: dongleman.irx | $(EE_ASM_DIR)
+	echo $(BIN2S) $< $@ mcman_irx
 	$(BIN2S) $< $@ mcman_irx
 
 $(EE_ASM_DIR)mcserv_irx.c: mcserv.irx | $(EE_ASM_DIR)

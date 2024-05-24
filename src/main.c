@@ -89,8 +89,11 @@ void fioInit();
 IMPORT_BIN2C(sio2man_irx);
 IMPORT_BIN2C(padman_irx);
 
-#if !defined(COH) || !defined(USE_ROM_MCMAN)
+#if defined(COH) || !defined(USE_ROM_MCMAN)
 IMPORT_BIN2C(mcman_irx);
+#endif
+
+#if !defined(USE_ROM_MCMAN)
 IMPORT_BIN2C(mcserv_irx);
 #endif
 
@@ -233,8 +236,8 @@ int main(int argc, char *argv[])
     DPRINTF(" [SIO2MAN]: ID=%d, ret=%d\n", j, x);
 #endif
 #ifdef USE_ROM_MCMAN
-    j = SifLoadStartModule("rom0:MCMAN", 0, NULL, &x);
-    DPRINTF(" [MCMAN]: ID=%d, ret=%d\n", j, x);
+    j = SifExecModuleBuffer(mcman_irx, size_mcman_irx, 0, NULL, &x);
+    DPRINTF(" [DONGLEMAN]: ID=%d, ret=%d\n", j, x);
     j = SifLoadStartModule("rom0:MCSERV", 0, NULL, &x);
     DPRINTF(" [MCSERV]: ID=%d, ret=%d\n", j, x);
 #ifdef COH
@@ -245,7 +248,8 @@ int main(int argc, char *argv[])
 #else
     j = SifExecModuleBuffer(mcman_irx, size_mcman_irx, 0, NULL, &x);
     DPRINTF(" [MCMAN]: ID=%d, ret=%d\n", j, x);
-    j = SifExecModuleBuffer(mcserv_irx, size_mcserv_irx, 0, NULL, &x);
+    //j = SifExecModuleBuffer(mcserv_irx, size_mcserv_irx, 0, NULL, &x);
+    j = SifLoadStartModule("rom0:MCSERV", 0, NULL, &x);
     DPRINTF(" [MCSERV]: ID=%d, ret=%d\n", j, x);
     mcInit(MC_TYPE_XMC);
 #endif
@@ -286,8 +290,11 @@ int main(int argc, char *argv[])
         read(fd, ROMVER, sizeof(ROMVER));
         close(fd);
     }
+#if !defined(NO_DVDPLAYER) || !defined(COH) //on most PS2s, rom1: is reserved for DVDPlayer ROM
     j = SifLoadModule("rom0:ADDDRV", 0, NULL); // Load ADDDRV. The OSD has it listed in rom0:OSDCNF/IOPBTCONF, but it is otherwise not loaded automatically.
     DPRINTF(" [ADDDRV]: %d\n", j);
+#endif
+
 
     DPRINTF("init OSD system paths\n");
     OSDInitSystemPaths();
@@ -309,9 +316,12 @@ int main(int argc, char *argv[])
     OSDInitROMVER(); // Initialize ROM version (must be done first).
 
     ModelNameInit(); // Initialize model name
+#ifndef NO_PS1
     PS1DRVInit();    // Initialize PlayStation Driver (PS1DRV)
+#endif
+#ifndef NO_DVDPLAYER
     DVDPlayerInit(); // Initialize ROM DVD player. It is normal for this to fail on consoles that have no DVD ROM chip (i.e. DEX or the SCPH-10000/SCPH-15000).
-
+#endif
 #ifndef COH
     DPRINTF("OSDConfigLoad()\n");
     if (OSDConfigLoad() != 0) // Load OSD configuration
@@ -456,6 +466,7 @@ int main(int argc, char *argv[])
     if (RAM_p != NULL)
         free(RAM_p);
     int R = 0x80, G = 0x80, B = 0x80;
+#ifndef COH
     if (GLOBCFG.OSDHISTORY_READ && (GLOBCFG.LOGO_DISP > 1)) {
         j = 1;
         // Try to load the history file from memory card slot 1
@@ -489,6 +500,7 @@ int main(int argc, char *argv[])
             DPRINTF("can't find any osd history for banner color\n");
         }
     }
+#endif
     // Stores last key during DELAY msec
     scr_clear();
     if (GLOBCFG.LOGO_DISP > 1)
@@ -498,13 +510,17 @@ int main(int argc, char *argv[])
         scr_printf(BANNER_FOOTER);
     if (GLOBCFG.LOGO_DISP > 0) {
         scr_printf("\n\n\tModel:\t\t%s\n"
+#ifndef NO_PS1
                    "\tPlayStation Driver:\t%s\n"
+#endif
 #ifndef COH
                    "\tDVD Player:\t%s\n"
 #endif
                    "\tConfig source:\t%s\n",
                    ModelNameGet(),
+#ifndef NO_PS1
                    PS1DRVGetVersion(),
+#endif
 #ifndef COH
                    DVDPlayerGetVersion(),
 #endif
@@ -557,6 +573,16 @@ int main(int argc, char *argv[])
         }
     }
 
+#if defined(DEBUG) && defined(COH)
+    int mctype, mem, format, ret;
+    mcGetInfo(0, 0, &mctype, &mem, &format);
+    ret = mcSync(0, NULL, NULL);
+    DPRINTF("\tDONGLE: %d %d %d - sync: %d\n", mctype, mem, format, ret);
+
+    mcGetInfo(1, 0, &mctype, &mem, &format);
+    ret = mcSync(0, NULL, NULL);
+    DPRINTF("\tPSCARD: %d %d %d - sync: %d\n", mctype, mem, format, ret);
+#endif
     scr_clear();
     scr_setfontcolor(0x00ffff);
     scr_printf("\n\n\tEND OF EXECUTION REACHED\nCould not find any of the default applications\nCheck your config file for the LK_AUTO_E# entries\nOr press a key while logo displays to run the bound application\npress R1+START to enter emergency mode");
@@ -1031,19 +1057,20 @@ int dischandler()
     // Now that a valid disc is inserted, do something.
     // CleanUp() will be called, to deinitialize RPCs. SIFRPC will be deinitialized by the respective disc-handlers.
     switch (DiscType) {
+#ifndef NO_PS1
         case SCECdPSCD:
         case SCECdPSCDDA:
             // Boot PlayStation disc
             PS1DRVBoot();
             break;
-
+#endif
         case SCECdPS2CD:
         case SCECdPS2CDDA:
         case SCECdPS2DVD:
             // Boot PlayStation 2 disc
             PS2DiscBoot(GLOBCFG.SKIPLOGO);
             break;
-
+#ifndef NO_DVDPLAYER
         case SCECdDVDV:
             /*  If the user chose to disable the DVD Player progressive scan setting,
                 it is disabled here because Sony probably wanted the setting to only bind if the user played a DVD.
@@ -1056,6 +1083,7 @@ int dischandler()
                 Play history is automatically updated. */
             DVDPlayerBoot();
             break;
+#endif
     }
     return 0;
 }
@@ -1163,7 +1191,7 @@ void credits(void)
                "\n"
                "\tThis project is heavily based on SP193 OSD initialization libraries.\n"
                "\t\tall credits go to him\n"
-               "\tThanks to: fjtrujy, uyjulian, asmblur and AKuHAK\n"
+               "\tThanks to: fjtrujy, uyjulian, asmblur, AKuHAK and krHACKen\n"
                "\tthis build corresponds to the hash [" COMMIT_HASH "]\n"
                "\t\tcompiled on "__DATE__" "__TIME__"\n"
 #ifdef MX4SIO
@@ -1172,9 +1200,27 @@ void credits(void)
 #ifdef HDD
 " HDD "
 #endif
-    
+    "\n"
                );
-    while (1) {};
+#ifdef COH
+    scr_setfontcolor(0xff00ff);
+    int mctype, mem, format, ret;
+    mcGetInfo(0, 0, &mctype, &mem, &format);
+    ret = mcSync(0, NULL, NULL);
+    scr_printf("\tDONGLE: %d %d %d - sync: %d\n", mctype, mem, format, ret);
+
+    mcGetInfo(1, 0, &mctype, &mem, &format);
+    ret = mcSync(0, NULL, NULL);
+    scr_printf("\tPSCARD: %d %d %d - sync: %d\n", mctype, mem, format, ret);
+    scr_setfontcolor(0xffffff);
+#endif
+    scr_printf("\tpress start to quit credits");
+    while (1) {
+        sleep(1);
+        PAD = ReadCombinedPadStatus_raw();
+        if (PAD & PAD_START)
+            EMERGENCY();
+    };
 }
 
 void runOSDNoUpdate(void)
@@ -1217,7 +1263,7 @@ void PrintTemperature() {
 #if defined(DUMMY_LIBC_INIT)
    void _libcglue_init() {}
    void _libcglue_deinit() {}
-   void _libcglue_args_parse() {}
+   //void _libcglue_args_parse() {}
 #endif
 
 #if defined(KERNEL_NOPATCH)
