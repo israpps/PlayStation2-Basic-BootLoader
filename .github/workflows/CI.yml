@@ -65,7 +65,7 @@ jobs:
 
       - name: Compile PS2 MBR build
         run: |
-          make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PS2_HDD/MBR/ HDD=1 BUILDING_MBR=1 HOMEBREW_IRX=1 ${{ env.DEBUG }} PRINTF=${{ github.event.inputs.name }}
+          make release mbr COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PS2_HDD/MBR/ HDD=1 BUILDING_MBR=1 HOMEBREW_IRX=1 ${{ env.DEBUG }} PRINTF=${{ github.event.inputs.name }}
 
       - name: list
         run: |
