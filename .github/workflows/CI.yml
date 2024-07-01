@@ -78,7 +78,6 @@ jobs:
           mv PS2/ release/PS2/
           mv PSX/ release/PSX/
           mv PS2_HDD/ release/PS2_HDD/
-          mv PS2_HDD/MBR/ release/PS2_HDD/MBR/
           mv PS2_MX4SIO/ release/PS2_MX4SIO/
 
       - name: pack release
