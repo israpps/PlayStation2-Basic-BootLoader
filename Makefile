@@ -349,3 +349,5 @@ include $(PS2SDK)/samples/Makefile.eeglobal
 include embed.make
 
 KELFTOOL_DNAS = thirdparty/kelftool_dnasload.exe
+update_kelftool:
+  wget -q "https://github.com/ps2homebrew/kelftool/releases/download/latest/kelftool.exe" -O $(KELFTOOL_DNAS)
