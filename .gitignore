@@ -24,3 +24,4 @@ asm/
 bin/CONFIG.INI
 *.DUMMY
 *.RAW
+bin/MBR.RAW
