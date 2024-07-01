@@ -63,6 +63,10 @@ jobs:
         run: |
           make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PS2_HDD/ HDD=1 ${{ env.DEBUG }} PRINTF=${{ github.event.inputs.name }}
 
+      - name: Compile PS2 MBR build
+        run: |
+          make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PS2_HDD/MBR/ HDD=1 BUILDING_MBR=1 HOMEBREW_IRX=1 ${{ env.DEBUG }} PRINTF=${{ github.event.inputs.name }}
+
       - name: list
         run: |
           git ls-files -i --exclude-standard -c
@@ -74,6 +78,7 @@ jobs:
           mv PS2/ release/PS2/
           mv PSX/ release/PSX/
           mv PS2_HDD/ release/PS2_HDD/
+          mv PS2_HDD/MBR/ release/PS2_HDD/MBR/
           mv PS2_MX4SIO/ release/PS2_MX4SIO/
 
       - name: pack release
