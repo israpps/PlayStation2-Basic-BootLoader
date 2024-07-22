@@ -155,7 +155,9 @@ void runOSDNoUpdate(void);
 #ifdef PSX
 static void InitPSX();
 #endif
-
+#ifndef NO_TEMP_DISP
+void PrintTemperature();
+#endif
 #ifdef HDD
 int LoadHDDIRX(void); // Load HDD IRXes
 int LoadFIO(void); // Load FileXio and it´s dependencies
