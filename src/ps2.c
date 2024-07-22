@@ -296,7 +296,7 @@ int PS2DiscBoot(int skip_PS2LOGO)
         BootError();
     }
 
-    args[0] = ps2disc_boot;
+    args[0] = line;
 
 
     DPRINTF("%s updating play history\n", __func__);
