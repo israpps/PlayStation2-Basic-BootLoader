@@ -22,3 +22,6 @@ asm/
 *.XLF
 *.dat
 bin/CONFIG.INI
+*.DUMMY
+*.RAW
+bin/MBR.RAW

@@ -34,7 +34,12 @@ int HDD_USABLE = 0;
 int LoadHDDIRX(void); // Load HDD IRXes
 int MountParty(const char* path); ///processes strings in the format `hdd0:/$PARTITION:pfs:$PATH_TO_FILE/` to mount partition
 int mnt(const char* path); ///mount partition specified on path
-void HDDChecker();
+
+/** @brief performs the same integrity checks to the HDD than sony MBR Bootstrap would
+ * @param verbose wether to run on verbose or not. non verbose only prints the test results that fail
+ * 
+*/
+void HDDChecker(int verbose);
 void poweroffCallback(void *arg);
 #else //this ensures that when HDD support is not available, loaded ELFs dont have any extra arg...
 #define MPART NULL
@@ -78,8 +83,7 @@ int loadDEV9(void);
 void loadUDPTTY();
 #endif
 
-// For avoiding define NEWLIB_AWARE
-void fioInit();
+void fioInit(); // For avoiding define NEWLIB_AWARE
 
 #define RBG2INT(R, G, B) ((0 << 24) + (R << 16) + (G << 8) + B)
 #define IMPORT_BIN2C(_n)       \
@@ -152,6 +156,7 @@ void credits(void);
 void CleanUp(void);
 int LoadUSBIRX(void);
 void runOSDNoUpdate(void);
+void PrintTemperature();
 #ifdef PSX
 static void InitPSX();
 #endif
@@ -246,9 +251,9 @@ int main(int argc, char *argv[])
     j = LoadUSBIRX();
     if (j != 0)
     {
-        scr_setfontcolor(0x0000ff);
+        scr_setfontcolor(BGR_RED);
         scr_printf("ERROR: could not load USB modules (%d)\n", j);
-        scr_setfontcolor(0xffffff);
+        scr_setfontcolor(BGR_WHITE);
 #ifdef HAS_EMBEDDED_IRX //we have embedded IRX... something bad is going on if this condition executes. add a wait time for user to know something is wrong
         sleep(1);
 #endif
@@ -266,7 +271,7 @@ int main(int argc, char *argv[])
 
 #ifdef HDD
     else if (LoadHDDIRX() < 0) // only load HDD crap if filexio and iomanx are up and running
-            {scr_setbgcolor(0x0000ff); scr_clear(); sleep(4);}
+            {scr_setbgcolor(BGR_RED); scr_clear(); sleep(4);}
 #endif
 
     if ((fd = open("rom0:ROMVER", O_RDONLY)) >= 0) {
@@ -299,9 +304,9 @@ int main(int argc, char *argv[])
 
     if (OSDConfigLoad() != 0) // Load OSD configuration
     {                         // OSD configuration not initialized. Defaults loaded.
-        scr_setfontcolor(0x00ffff);
+        scr_setfontcolor(BGR_YELLOW);
         DPRINTF("OSD Configuration not initialized. Defaults loaded.\n");
-        scr_setfontcolor(0xffffff);
+        scr_setfontcolor(BGR_WHITE);
     }
     DPRINTF("Saving OSD configuration\n");
     OSDConfigApply();
@@ -333,6 +338,9 @@ int main(int argc, char *argv[])
             EMERGENCY();
     }
     TimerEnd();
+#ifdef MBR_KELF
+    HDDChecker(0);
+#endif
     DPRINTF("load default settings\n");
     SetDefaultSettings();
     FILE *fp;
@@ -407,15 +415,15 @@ int main(int argc, char *argv[])
                 fclose(fp);
                 DPRINTF("\tERROR: could not read %d bytes of config file, only %d readed\n", cnf_size, temp);
 #ifdef REPORT_FATAL_ERRORS
-                scr_setfontcolor(0x0000ff);
+                scr_setfontcolor(BGR_RED);
                 scr_printf("\tERROR: could not read %d bytes of config file, only %d readed\n", cnf_size, temp);
-                scr_setfontcolor(0xffffff);
+                scr_setfontcolor(BGR_WHITE);
 #endif
             }
         } else {
             DPRINTF("\tFailed to allocate %d+1 bytes!\n", cnf_size);
 #ifdef REPORT_FATAL_ERRORS
-            scr_setbgcolor(0x0000ff);
+            scr_setbgcolor(BGR_RED);
             scr_clear();
             scr_printf("\tFailed to allocate %d+1 bytes!\n", cnf_size);
             sleep(3);
@@ -478,7 +486,7 @@ int main(int argc, char *argv[])
     scr_clear();
     if (GLOBCFG.LOGO_DISP > 1)
         scr_printf("\n\n\n\n%s", BANNER);
-    scr_setfontcolor(0xffffff);
+    scr_setfontcolor(BGR_WHITE);
     if (GLOBCFG.LOGO_DISP > 1)
         scr_printf(BANNER_FOOTER);
     if (GLOBCFG.LOGO_DISP > 0) {
@@ -507,15 +515,15 @@ int main(int argc, char *argv[])
                 for (j = 0; j < 3; j++) {
                     EXECPATHS[j] = CheckPath(GLOBCFG.KEYPATHS[x + 1][j]);
                     if (exist(EXECPATHS[j])) {
-                        scr_setfontcolor(0x00ff00);
+                        scr_setfontcolor(BGR_GREEN);
                         scr_printf("\tLoading %s\n", EXECPATHS[j]);
                         if (!is_PCMCIA)
                             PadDeinitPads();
                         RunLoaderElf(EXECPATHS[j], MPART);
                     } else {
-                        scr_setfontcolor(0x00ffff);
+                        scr_setfontcolor(BGR_YELLOW);
                         DPRINTF("%s not found\n", EXECPATHS[j]);
-                        scr_setfontcolor(0xffffff);
+                        scr_setfontcolor(BGR_WHITE);
                     }
                 }
                 break;
@@ -528,7 +536,7 @@ int main(int argc, char *argv[])
     for (j = 0; j < 3; j++) {
         EXECPATHS[j] = CheckPath(GLOBCFG.KEYPATHS[0][j]);
         if (exist(EXECPATHS[j])) {
-            scr_setfontcolor(0x00ff00);
+            scr_setfontcolor(BGR_GREEN);
             scr_printf("\tLoading %s\n", EXECPATHS[j]);
             if (!is_PCMCIA)
                 PadDeinitPads();
@@ -539,9 +547,9 @@ int main(int argc, char *argv[])
     }
 
     scr_clear();
-    scr_setfontcolor(0x00ffff);
+    scr_setfontcolor(BGR_YELLOW);
     scr_printf("\n\n\tEND OF EXECUTION REACHED\nCould not find any of the default applications\nCheck your config file for the LK_AUTO_E# entries\nOr press a key while logo displays to run the bound application\npress R1+START to enter emergency mode");
-    scr_setfontcolor(0xffffff);
+    scr_setfontcolor(BGR_WHITE);
     while (1) {
         sleep(1);
         PAD = ReadCombinedPadStatus_raw();
@@ -556,7 +564,7 @@ void EMERGENCY(void)
 {
     scr_clear();
     scr_printf("\n\n\n\tEmergency mode\n\n\t doing infinite attempts to boot\n\t\tmass:/RESCUE.ELF\n");
-    scr_setfontcolor(0xffffff);
+    scr_setfontcolor(BGR_WHITE);
     while (1) {
         scr_printf(".");
         sleep(1);
@@ -589,7 +597,7 @@ char *CheckPath(char *path)
         }
 #ifdef HDD
         if (!strcmp("$HDDCHECKER", path))
-            HDDChecker();
+            HDDChecker(1);
 #endif
         if (!strcmp("$CREDITS", path))
             credits();
@@ -876,40 +884,78 @@ int mnt(const char* path)
     } else DPRINTF("mount successfull on first attemp\n");
     return 0;
 }
-
-void HDDChecker()
+#define HDDCHECKER_PRINTF(x...) scr_printf(x);
+void HDDChecker(int verbose)
 {
     char ErrorPartName[64];
     const char* HEADING = "HDD Diagnosis routine";
     int ret = -1;
+    int success;
+#ifdef MBR_KELF
+    int found_at_least_1_err = 0;
+#define ERR_FOUND() if (!verbose) found_at_least_1_err = 1
+#else
+#define ERR_FOUND()
+#endif
     scr_clear();
-    scr_printf("\n\n%*s%s\n", ((80 - strlen(HEADING)) / 2), "", HEADING);
-    scr_setfontcolor(0x0000FF);
+    if (verbose) {
+        HDDCHECKER_PRINTF("\n\n%*s%s\n", ((80 - strlen(HEADING)) / 2), "", HEADING);
+    }
+    scr_setfontcolor(BGR_RED);
     ret = fileXioDevctl("hdd0:", HDIOC_STATUS, NULL, 0, NULL, 0);
-    if (ret == 0 || ret == 1) scr_setfontcolor(0x00FF00);
-    if (ret != 3)
+    DPRINTF("\t\t - HDD CONNECTION STATUS: %d\n", ret);
+    success = (ret == 0 || ret == 1);
+    if (success) {scr_setfontcolor(BGR_GREEN);} else if (ret == 3) {scr_setfontcolor(BGR_YELLOW);} else {scr_setfontcolor(BGR_RED);}
+    if (verbose || !success) {
+        DPRINTF("\t\t - HDD CONNECTION STATUS: %d\n", ret);
+        ERR_FOUND();
+    }
+    if (ret == 0)
     {
-        scr_printf("\t\t - HDD CONNECTION STATUS: %d\n", ret);
         /* Check ATA device S.M.A.R.T. status. */
         ret = fileXioDevctl("hdd0:", HDIOC_SMARTSTAT, NULL, 0, NULL, 0);
-        if (ret != 0) scr_setfontcolor(0x0000ff); else scr_setfontcolor(0x00FF00);
-        scr_printf("\t\t - S.M.A.R.T STATUS: %d\n", ret);
+        DPRINTF(" - S.M.A.R.T STATUS: %d\n", ret);
+        success = ret == 0;
+        if (success) scr_setfontcolor(BGR_GREEN); else scr_setfontcolor(BGR_RED);
+        if (verbose || !success) {
+            HDDCHECKER_PRINTF("\t\t - S.M.A.R.T STATUS: %d\n", ret);
+            ERR_FOUND();
+        }
         /* Check for unrecoverable I/O errors on sectors. */
         ret = fileXioDevctl("hdd0:", HDIOC_GETSECTORERROR, NULL, 0, NULL, 0);
-        if (ret != 0) scr_setfontcolor(0x0000ff); else scr_setfontcolor(0x00FF00);
-        scr_printf("\t\t - SECTOR ERRORS: %d\n", ret);
+        DPRINTF(" - SECTOR ERRORS: %d\n", ret);
+        success = ret == 0;
+        if (success) scr_setfontcolor(BGR_GREEN); else scr_setfontcolor(BGR_RED);
+        if (verbose || !success) {
+            HDDCHECKER_PRINTF("\t\t - SECTOR ERRORS: %d\n", ret);
+            ERR_FOUND();
+        }
         /* Check for partitions that have errors. */
         ret = fileXioDevctl("hdd0:", HDIOC_GETERRORPARTNAME, NULL, 0, ErrorPartName, sizeof(ErrorPartName));
-        if (ret != 0) scr_setfontcolor(0x0000ff); else scr_setfontcolor(0x00FF00);
-        scr_printf("\t\t - CORRUPTED PARTITIONS: %d\n", ret);
-        if (ret != 0)
-        {
-            scr_printf("\t\tpartition: %s\n", ErrorPartName);
+        DPRINTF(" - CORRUPTED PARTITIONS: %d\n", ret);
+        success = ret == 0;
+        if (success) scr_setfontcolor(BGR_GREEN); else scr_setfontcolor(BGR_RED);
+        if (verbose || !success) {
+            HDDCHECKER_PRINTF(" - CORRUPTED PARTITIONS: %d\n", ret);
+            ERR_FOUND();
         }
-    } else scr_setfontcolor(0x00FFFF), scr_printf("Skipping test, HDD is not connected\n");
-    scr_setfontcolor(0xFFFFFF);
-    scr_printf("\t\tWaiting for 10 seconds...\n");
-    sleep(10);
+        if (!success)
+        {
+            HDDCHECKER_PRINTF("\t\tpartition: %s\n", ErrorPartName);
+            DPRINTF("  partition: %s\n", ErrorPartName);
+        }
+    } else {
+        HDDCHECKER_PRINTF("Skipping HDD diagnosis, HDD is not usable\n");
+        ERR_FOUND();
+    }
+    scr_setfontcolor(BGR_WHITE);
+#ifdef MBR_KELF // when building MBR, we have two behaviours...
+    if (found_at_least_1_err || verbose) sleep(5);// verbose waits anyway, so user can read, because he manually asked for this!
+    // if not verbose, we only wait if something is wrong
+#else
+    sleep(5);
+#endif
+    if (verbose) scr_clear();
 }
 /// @brief poweroff callback function
 /// @note only expansion bay models will properly make use of this. the other models will run the callback but will poweroff themselves before reaching function end...
@@ -955,9 +1001,9 @@ int dischandler()
                             sceCdTrayReq(0, NULL);
                         first_run = 0;
                     }
-                    scr_setfontcolor(0x0000ff);
+                    scr_setfontcolor(BGR_RED);
                     scr_printf("No Disc\n");
-                    scr_setfontcolor(0xffffff);
+                    scr_setfontcolor(BGR_WHITE);
                     break;
 
                 case SCECdDETCT:
@@ -969,37 +1015,37 @@ int dischandler()
 
                 case SCECdPSCD:
                 case SCECdPSCDDA:
-                    scr_setfontcolor(0x00ff00);
+                    scr_setfontcolor(BGR_GREEN);
                     scr_printf("PlayStation\n");
-                    scr_setfontcolor(0xffffff);
+                    scr_setfontcolor(BGR_WHITE);
                     ValidDiscInserted = 1;
                     break;
 
                 case SCECdPS2CD:
                 case SCECdPS2CDDA:
                 case SCECdPS2DVD:
-                    scr_setfontcolor(0x00ff00);
+                    scr_setfontcolor(BGR_GREEN);
                     scr_printf("PlayStation 2\n");
-                    scr_setfontcolor(0xffffff);
+                    scr_setfontcolor(BGR_WHITE);
                     ValidDiscInserted = 1;
                     break;
 
                 case SCECdCDDA:
                     scr_setfontcolor(0xffff00);
                     scr_printf("Audio Disc (not supported by this program)\n");
-                    scr_setfontcolor(0xffffff);
+                    scr_setfontcolor(BGR_WHITE);
                     break;
 
                 case SCECdDVDV:
-                    scr_setfontcolor(0x00ff00);
+                    scr_setfontcolor(BGR_GREEN);
                     scr_printf("DVD Video\n");
-                    scr_setfontcolor(0xffffff);
+                    scr_setfontcolor(BGR_WHITE);
                     ValidDiscInserted = 1;
                     break;
                 default:
-                    scr_setfontcolor(0x0000ff);
+                    scr_setfontcolor(BGR_RED);
                     scr_printf("Unknown (%d)\n", DiscType);
-                    scr_setfontcolor(0xffffff);
+                    scr_setfontcolor(BGR_WHITE);
             }
         }
 
@@ -1108,9 +1154,9 @@ void CDVDBootCertify(u8 romver[16])
         // Do not check for success/failure. Early consoles do not support (and do not require) boot-certification.
         sceCdBootCertify(RomName);
     } else {
-        scr_setfontcolor(0x0000ff);
+        scr_setfontcolor(BGR_RED);
         scr_printf("\tERROR: Could not certify CDVD Boot. ROMVER was NULL\n");
-        scr_setfontcolor(0xffffff);
+        scr_setfontcolor(BGR_WHITE);
     }
 
     // This disables DVD Video Disc playback. This functionality is restored by loading a DVD Player KELF.

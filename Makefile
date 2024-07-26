@@ -45,6 +45,9 @@ BASENAME ?= PS2BBL
 EE_BIN = $(BINDIR)$(BASENAME).ELF
 EE_BIN_STRIPPED = $(BINDIR)stripped_$(BASENAME).ELF
 EE_BIN_PACKED = $(BINDIR)COMPRESSED_$(BASENAME).ELF
+MBR_BOOTSTRAP_STRIPPED = $(BINDIR)MBR.ELF
+MBR_BOOTSTRAP_HEADERLESS = $(BINDIR)MBR.RAW
+MBR_BOOTSTRAP_FINAL = $(BINDIR)MBR.KELF
 KELFTYPE ?= MC
 EE_BIN_ENCRYPTED = $(BINDIR)$(BASENAME)_$(KELFTYPE).KELF
 
@@ -69,7 +72,7 @@ EE_LDFLAGS += -Wl,--gc-sections -Wno-sign-compare
 EE_LIBS += -ldebug -lmc -lpatches
 EE_INCS += -Iinclude -I$(PS2SDK)/ports/include
 EE_CFLAGS += -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DPATCHLEVEL=\"$(PATCHLEVEL)\" -DSTATUS=\"$(STATUS)\"
-
+MBR_KELF_LOAD_ADDR = 0x00100000# DONT TOUCH!
 # ---{ CONDITIONS }--- #
 
 ifneq ($(VERBOSE), 1)
@@ -155,6 +158,15 @@ ifeq ($(HDD), 1)
   KELFTYPE = HDD
 endif
 
+ifeq ($(BUILDING_MBR), 1)
+ $(info --- compiling PS2BBL as MBR BOOSTRAP)
+ HDD=1
+ HOMEBREW_IRX=1
+ DEV9_NEED=1
+ EE_CFLAGS += -DMBR_KELF -G0
+ EE_LDFLAGS += -Wl,--gc-sections -Wl,-Ttext -Wl,$(MBR_KELF_LOAD_ADDR)
+endif
+
 ifeq ($(UDPTTY), 1)
   $(info --- UDPTTY enabled)
   EE_CFLAGS += -DUDPTTY
@@ -220,7 +232,7 @@ ifeq ($(PROHBIT_DVD_0100),1)
 endif
 
 # ---{ RECIPES }--- #
-.PHONY: greeting debug all clean kelf packed release
+.PHONY: greeting debug all clean kelf packed release banner mbr
 
 all: $(EE_BIN)
 ifeq (DEBUG, 1)
@@ -248,6 +260,9 @@ clean:
 	@rm -rf $(EE_BIN) $(EE_BIN_STRIPPED) $(EE_BIN_ENCRYPTED) $(EE_BIN_PACKED)
 	@echo - Object folders 
 	@rm -rf $(EE_OBJS_DIR) $(EE_ASM_DIR)
+ifeq ($(BUILDING_MBR), 1)
+	@rm -rf $(MBR_GARBAGE) $(MBR_BOOTSTRAP_STRIPPED) $(MBR_BOOTSTRAP_HEADERLESS) $(MBR_BOOTSTRAP_FINAL)
+endif
 	@echo  "\n"
 
 $(EE_BIN_STRIPPED): $(EE_BIN)
@@ -265,9 +280,9 @@ endif
 $(EE_BIN_ENCRYPTED): $(EE_BIN_PACKED)
 	@echo " -- Encrypting ($(KELFTYPE))"
 ifeq ($(KELFTYPE), MC)
-	thirdparty/kelftool_dnasload.exe encrypt dnasload $< $@
+	$(KELFTOOL_DNAS) encrypt dnasload $< $@
 else ifeq ($(KELFTYPE), HDD)
-	thirdparty/kelftool_dnasload.exe encrypt fhdb $< $@
+	$(KELFTOOL_DNAS) encrypt fhdb $< $@
 else
 	$(error UNKNOWN KELF TYPE: '$(KELFTYPE)')
 endif
@@ -310,6 +325,27 @@ analize:
 celan: clean # a repetitive typo when quicktyping
 kelf: $(EE_BIN_ENCRYPTED) # alias of KELF creation
 
+mbr:
+ifneq ($(BUILDING_MBR), 1)
+	$(error define BUILDING_MBR=1 on make)
+endif
+	@$(MAKE) HDD=1 HOMEBREW_IRX=1 DEV9_NEED=1 $(MBR_BOOTSTRAP_FINAL) banner
+
+mbr_info: mbr
+	@echo "--- MBR ELF info: (load adress must be $(MBR_KELF_LOAD_ADDR))"
+	mips64r5900el-ps2-elf-readelf -l '$(EE_BIN)' | grep "Program Headers:" -A 3 | grep --color=always -e "^" -e "$(MBR_KELF_LOAD_ADDR)"
+	@echo "--- MBR KELF info:"
+	$(KELFTOOL_DNAS) decrypt $(MBR_BOOTSTRAP_FINAL) $(MBR_BOOTSTRAP_FINAL).DUMMY
+	@rm -f $(MBR_BOOTSTRAP_FINAL).DUMMY
+
+$(MBR_BOOTSTRAP_STRIPPED): $(EE_BIN)
+	$(EE_STRIP) -s -R .comment -R .gnu.version --strip-unneeded -o $@ $<
+
+$(MBR_BOOTSTRAP_HEADERLESS): $(MBR_BOOTSTRAP_STRIPPED)
+	$(EE_OBJCOPY)  -O binary -v $< $@ 
+
+$(MBR_BOOTSTRAP_FINAL): $(MBR_BOOTSTRAP_HEADERLESS)
+	$(KELFTOOL_DNAS) encrypt mbr $< $@
 
 banner:
 	@echo "$$HEADER"
@@ -318,3 +354,7 @@ banner:
 include $(PS2SDK)/samples/Makefile.pref
 include $(PS2SDK)/samples/Makefile.eeglobal
 include embed.make
+
+KELFTOOL_DNAS = thirdparty/kelftool_dnasload.exe
+update_kelftool:
+  wget -q "https://github.com/ps2homebrew/kelftool/releases/download/latest/kelftool.exe" -O $(KELFTOOL_DNAS)
