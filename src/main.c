@@ -211,6 +211,10 @@ int main(int argc, char *argv[])
     DPRINTF("disabling MODLOAD device blacklist/whitelist\n");
     sbv_patch_disable_prefix_check(); /* disable the MODLOAD module black/white list, allowing executables to be freely loaded from any device. */
 
+#ifdef DISC_STOP_AT_BOOT
+    sceCdStop();
+    sceCdSync(0);
+#endif
 #ifdef UDPTTY
     if (loadDEV9())
         loadUDPTTY();
