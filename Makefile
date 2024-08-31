@@ -291,7 +291,7 @@ ifneq ($(VERBOSE),1)
 endif
 	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
 
-$(EE_OBJS_DIR)%.o: $(EE_ASN_DIR)%.c | $(EE_OBJS_DIR)
+$(EE_OBJS_DIR)%.o: $(EE_ASM_DIR)%.c | $(EE_OBJS_DIR)
 ifneq ($(VERBOSE),1)
 	@echo "  - $@"
 endif
