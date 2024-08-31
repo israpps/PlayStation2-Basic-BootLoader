@@ -43,6 +43,10 @@ IMPORT_BIN2C(mx4sio_bd_irx);
 #endif
 #endif
 
+#ifdef PPCTTY
+IMPORT_BIN2C(ppctty_irx);
+#endif
+
 #ifdef DEV9
 IMPORT_BIN2C(ps2dev9_irx);
 #endif

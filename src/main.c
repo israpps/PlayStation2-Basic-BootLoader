@@ -45,6 +45,10 @@ int main(int argc, char *argv[])
     DPRINTF("disabling MODLOAD device blacklist/whitelist\n");
     sbv_patch_disable_prefix_check(); /* disable the MODLOAD module black/white list, allowing executables to be freely loaded from any device. */
 
+#ifdef PPCTTY
+    //no error handling bc nothing to do in this case
+    SifExecModuleBuffer(ppctty_irx, size_ppctty_irx, 0, NULL, NULL);
+#endif
 #ifdef UDPTTY
     if (loadDEV9())
         loadUDPTTY();
