@@ -80,7 +80,7 @@ endif
 ifeq ($(MX4SIO), 1)
   HOMEBREW_IRX = 1
   FILEXIO_NEED = 1
-  EE_OBJS += mx4sio_bd.o
+  EE_OBJS += mx4sio_bd_irx.o
   EE_CFLAGS += -DMX4SIO
   ifeq ($(USE_ROM_SIO2MAN), 1)
     $(error MX4SIO needs Homebrew SIO2MAN to work)
