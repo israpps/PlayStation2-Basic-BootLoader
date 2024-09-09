@@ -26,11 +26,11 @@ HOMEBREW_IRX ?= 0 # if we need homebrew SIO2MAN, MCMAN, MCSERV & PADMAN embedded
 FILEXIO_NEED ?= 0 # if we need filexio and imanx loaded for other features (HDD, mx4sio, etc)
 DEV9_NEED ?= 0    # if we need DEV9 loaded for other features (HDD, UDPTTY, etc)
 
-# Related to binary size reduction
+# Related to binary size reduction (it disables some features, please be sure you won't disable something you need)
 KERNEL_NOPATCH = 1 
 NEWLIB_NANO = 1
-DUMMY_TIMEZONE = 0
-DUMMY_LIBC_INIT = 1
+DUMMY_TIMEZONE = 1
+DUMMY_LIBC_INIT = 0
 
 # ---{ VERSIONING }--- #
 
@@ -80,7 +80,7 @@ endif
 ifeq ($(MX4SIO), 1)
   HOMEBREW_IRX = 1
   FILEXIO_NEED = 1
-  EE_OBJS += mx4sio_bd.o
+  EE_OBJS += mx4sio_bd_irx.o
   EE_CFLAGS += -DMX4SIO
   ifeq ($(USE_ROM_SIO2MAN), 1)
     $(error MX4SIO needs Homebrew SIO2MAN to work)
