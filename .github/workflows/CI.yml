@@ -12,6 +12,7 @@ on:
       - '**.MD'
       - '**.gitkeep'
       - '**.gitignore'
+  pull_request:
   workflow_dispatch:
     inputs:
       debug:
