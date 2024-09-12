@@ -23,6 +23,13 @@ mc1:/PS2BBL/CONFIG.INI
 ```
 > note that hdd and mx4sio paths are only sesrched if you use a version of PS2BBL compatible with those devices
 
+### PSX Configuration
+
+Users of PSX (`DESR` models) will be capable of using a PSX-dedicated configuration file wich will be looked for in this path:
+```
+mc?:/PS2BBL/XCONFIG.INI
+```
+this config file has level 2 priority. this means that it will be always prioritized unless you have a dedicated config file on the japanese system update folder (`mc?:/BIEXEC-SYSTEM/CONFIG.INI`)
 
 ## Launch keys
 
