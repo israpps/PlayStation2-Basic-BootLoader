@@ -20,41 +20,36 @@ where PS2BBL will try to boot `RESCUE.ELF` from USB device Root on an endless lo
 
 ## Compatibility 
 
-:heavy_check_mark: : Works  
-:question: : not confirmed  
-:grey_question: : not explicitly confirmed but SHOULD work  
-:negative_squared_cross_mark: : Incompatible    
-:gear: : In development
 
 
 | Model | Status | Notes |
 | ----- | ------ | ----- |
-| SCPH-10000 (1.00 boot rom) | :heavy_check_mark: | Needs kernel patch update |
-| SCPH-10000 (1.01 boot rom) | :heavy_check_mark: | Needs kernel patch update |
-| SCPH-15000 | :heavy_check_mark: ||
-| SCPH-18000 | :heavy_check_mark: ||
-| SCPH-30xxx | :heavy_check_mark: ||
-| SCPH-30xxxR| :heavy_check_mark: ||
-| SCPH-35xxx | :heavy_check_mark: ||
-| SCPH-37000 | :heavy_check_mark: ||
-| SCPH-390xx | :heavy_check_mark: ||
-| SCPH-500xx | :heavy_check_mark: ||
-| SCPH-550xx | :heavy_check_mark: ||
-| SCPH-70xxx | :heavy_check_mark: ||
-| SCPH-750xx | :heavy_check_mark: ||
-| SCPH-770xx | :heavy_check_mark: ||
-| SCPH-790xx | :heavy_check_mark: ||
-| SCPH-900xx (2.20 boot rom) | :heavy_check_mark: ||
-| SCPH-900xx (2.30 boot rom) | :heavy_check_mark: | will work, but you cannot auto boot as system update |
-| PX-300 (PS2TV) | :grey_question: | should work, but you cannot auto boot as system update |
-| DESR-xxxx (PSX) | :heavy_check_mark: | |
-| DTL-H10000 | :question: | should work, but this model is invulnerable to every digital exploit |
-| DTL-Hxxxxx | :grey_question: | |
-| Namco system 246 (COH-Hxxxxx) | :gear: || 
-| Namco system 256 (COH-Hxxxxx) | :gear: || 
-| Konami python | :question: || 
-| DTL-T10000 (TOOL) | :question: || 
-| DTL-T15000 (TOOL w/ perf analyzer)  | :question: || 
+| SCPH-10000 (1.00 boot rom) | WORKING | Needs kernel patch update |
+| SCPH-10000 (1.01 boot rom) | WORKING | Needs kernel patch update |
+| SCPH-15000 | WORKING ||
+| SCPH-18000 | WORKING ||
+| SCPH-30xxx | WORKING ||
+| SCPH-30xxxR| WORKING ||
+| SCPH-35xxx | WORKING ||
+| SCPH-37000 | WORKING ||
+| SCPH-390xx | WORKING ||
+| SCPH-500xx | WORKING ||
+| SCPH-550xx | WORKING ||
+| SCPH-70xxx | WORKING ||
+| SCPH-750xx | WORKING ||
+| SCPH-770xx | WORKING ||
+| SCPH-790xx | WORKING ||
+| SCPH-900xx (2.20 boot rom) | WORKING ||
+| SCPH-900xx (2.30 boot rom) | WORKING | will work, but you cannot auto boot as system update |
+| PX-300 (PS2TV) | NOT CONFIRMED | should work, but you cannot auto boot as system update |
+| DESR-xxxx (PSX) | WORKING | |
+| DTL-H10000 | UNKNOWN | should work, but this model is invulnerable to every digital exploit |
+| DTL-H301xx | WORKING | |
+| Namco system 246 (COH-Hxxxxx) | **IN PROGRESS** || 
+| Namco system 256 (COH-Hxxxxx) | **IN PROGRESS** || 
+| Konami python | UNKNOWN || 
+| DTL-T10000 (TOOL) | UNKNOWN || 
+| DTL-T15000 (TOOL w/ perf analyzer)  | UNKNOWN || 
 
 
 ## Proper sistem initialization
@@ -124,6 +119,6 @@ High compatibility with modchips | Low compatibility with modchip due to `rom0:O
 Loads apps from mc usb on the default build. but it can also support iLink and MX4SIO by using the appropiate versions | loads apps from mc and usb
 Has Variants that support PSX DESR | Has Variants that support PSX DESR
 Has Variants that support namco system 2x6 | does not support system 2x6
-space usage of aproximately 80/83kb (normal version) | space usage of aproximately 80kb
+space usage of aproximately 90kb (at best) | space usage of aproximately 80kb
 Provides ready to use package for Consoles that need OpenTuna | Fusing it with OpenTuna can be a bit complicated and leaves FreeMcBoot prone to execute itself endlessly on some situations
 Loads config from usb, mc or the path where the program is located | Loads config from usb or mc
