@@ -26,7 +26,7 @@ where PS2BBL will try to boot `RESCUE.ELF` from USB device Root on an endless lo
 | ----- | ------ | ----- |
 | SCPH-10000 (1.00 boot rom) | WORKING | Needs kernel patch update |
 | SCPH-10000 (1.01 boot rom) | WORKING | Needs kernel patch update |
-| SCPH-15000 | WORKING ||
+| SCPH-15000 | WORKING | Needs kernel patch update |
 | SCPH-18000 | WORKING ||
 | SCPH-30xxx | WORKING ||
 | SCPH-30xxxR| WORKING ||
