@@ -11,14 +11,14 @@ static unsigned char MECHACON_CMD_S36_supported = 0, MECHACON_CMD_S27_supported 
 // Initialize add-on functions. Currently only retrieves the MECHACON's version to determine what sceCdAltGetRegionParams() should do.
 int cdInitAdd(void)
 {
-    int result, i;
+    int i;
     u32 status;
     u8 MECHA_version_data[3];
     unsigned int MECHA_version;
 
     // Like how CDVDMAN checks sceCdMV(), do not continuously attempt to get the MECHACON version because some consoles (e.g. DTL-H301xx) can't return one.
     for (i = 0; i <= 100; i++) {
-        if ((result = sceCdMV(MECHA_version_data, &status)) != 0 && ((status & 0x80) == 0)) {
+        if ((sceCdMV(MECHA_version_data, &status) != 0) && ((status & 0x80) == 0)) {
             MECHA_version = MECHA_version_data[2] | ((unsigned int)MECHA_version_data[1] << 8) | ((unsigned int)MECHA_version_data[0] << 16);
             MECHACON_CMD_S36_supported = (0x5FFFF < MECHA_version); // v6.0 and later
             MECHACON_CMD_S27_supported = (0x501FF < MECHA_version); // v5.2 and later
@@ -26,9 +26,6 @@ int cdInitAdd(void)
             return 0;
         }
     }
-
-    // printf("Failed to get MECHACON version: %d 0x%x\n", result, status);
-
     return -1;
 }
 
