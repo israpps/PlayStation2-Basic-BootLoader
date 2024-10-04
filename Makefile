@@ -18,8 +18,8 @@ HDD ?= 0 #wether to add internal HDD support
 MX4SIO ?= 0
 PROHBIT_DVD_0100 ?= 0 # prohibit the DVD Players v1.00 and v1.01 from being booted.
 XCDVD_READKEY ?= 0 # Enable the newer sceCdReadKey checks, which are only supported by a newer CDVDMAN module.
-UDPTTY ?= 0 # printf ove UDP
-PPCTTY ?= 0 # printf ove UDP
+UDPTTY ?= 0 # printf over UDP
+PPCTTY ?= 0 # printf over PowerPC UART
 PRINTF ?= NONE
 
 HOMEBREW_IRX ?= 0 # if we need homebrew SIO2MAN, MCMAN, MCSERV & PADMAN embedded, else, builtin console drivers are used
