@@ -33,8 +33,8 @@ void PadDeinitPads(void)
         padPortClose(1, 0);
         padEnd();
         pad_inited = 0;
+        DPRINTF("done\n");
     }
-    DPRINTF("done\n");
 }
 
 int ReadPadStatus_raw(int port, int slot)
