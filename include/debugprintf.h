@@ -1,6 +1,6 @@
 #ifndef DEBUG_PRINTF
 #define DEBUG_PRINTF
-
+// clang-format off
 #ifdef EE_SIO_DEBUG
 void sio_printf(const char *fmt, ...);
     #include <SIOCookie.h>

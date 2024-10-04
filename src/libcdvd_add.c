@@ -4,11 +4,11 @@
 #include <stdio.h>
 #include <libcdvd.h>
 
+#include "debugprintf.h"
 #include "libcdvd_add.h"
 
 static unsigned char MECHACON_CMD_S36_supported = 0, MECHACON_CMD_S27_supported = 0, MECHACON_CMD_S24_supported = 0;
 
-// Initialize add-on functions. Currently only retrieves the MECHACON's version to determine what sceCdAltGetRegionParams() should do.
 int cdInitAdd(void)
 {
     int result, i;
@@ -32,10 +32,6 @@ int cdInitAdd(void)
     return -1;
 }
 
-/*
-    This function provides an equivalent of the sceCdGetRegionParams function from the newer CDVDMAN modules. The old CDVDFSV and CDVDMAN modules don't support this S-command.
-    It's supported by only slimline consoles, and returns regional information (e.g. MECHACON version, MG region mask, DVD player region letter etc.).
-*/
 int custom_sceCdReadRegionParams(u8 *data, u32 *stat)
 {
     unsigned char RegionData[15];
@@ -56,7 +52,6 @@ int custom_sceCdReadRegionParams(u8 *data, u32 *stat)
     return result;
 }
 
-// This function provides an equivalent of the sceCdBootCertify function from the newer CDVDMAN modules. The old CDVDFSV and CDVDMAN modules don't support this S-command.
 int sceCdBootCertify(const u8 *data)
 {
     int result;

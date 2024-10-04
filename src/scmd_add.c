@@ -24,7 +24,8 @@
 #include "psx/plibcdvd_add.h"
 #include <string.h>
 
-enum PSX_CD_SCMD_CMDS {
+enum PSX_CD_SCMD_CMDS
+{
     CD_SCMD_CHG_SYS = 0x2D,          // PSX-only
     CD_SCMD_NOTICE_GAME_START = 0x2F // PSX-only
 };

@@ -131,21 +131,19 @@ start_line:
 
 #ifdef HDD
 //By fjtrujy
-char** str_split(char* a_str, const char a_delim)
+char **str_split(char *a_str, const char a_delim)
 {
-    char** result    = 0;
-    size_t count     = 0;
-    char* tmp        = a_str;
-    char* last_comma = 0;
+    char **result = 0;
+    size_t count = 0;
+    char *tmp = a_str;
+    char *last_comma = 0;
     char delim[2];
     delim[0] = a_delim;
     delim[1] = 0;
 
     /* Count how many elements will be extracted. */
-    while (*tmp)
-    {
-        if (a_delim == *tmp)
-        {
+    while (*tmp) {
+        if (a_delim == *tmp) {
             count++;
             last_comma = tmp;
         }
@@ -159,15 +157,13 @@ char** str_split(char* a_str, const char a_delim)
        knows where the list of returned strings ends. */
     count++;
 
-    result = malloc(sizeof(char*) * count);
+    result = malloc(sizeof(char *) * count);
 
-    if (result)
-    {
-        size_t idx  = 0;
-        char* token = strtok(a_str, delim);
+    if (result) {
+        size_t idx = 0;
+        char *token = strtok(a_str, delim);
 
-        while (token)
-        {
+        while (token) {
             assert(idx < count);
             *(result + idx++) = strdup(token);
             token = strtok(0, delim);
@@ -194,22 +190,22 @@ int getMountInfo(char *path, char *mountString, char *mountPoint, char *newCWD)
     int expected_items = 4;
     int i = 0;
     char *items[expected_items];
-    char** tokens = str_split(path, ':');
+    char **tokens = str_split(path, ':');
 
     if (!tokens)
         return 0;
-    
+
     for (i = 0; *(tokens + i); i++) {
         if (i < expected_items) {
             items[i] = *(tokens + i);
         } else {
-            free(*(tokens + i));    
+            free(*(tokens + i));
         }
     }
 
-    if (i < 3 )
+    if (i < 3)
         return 0;
-    
+
     if (mountPoint != NULL)
         sprintf(mountPoint, "%s:%s", items[0], items[1]);
 
@@ -218,7 +214,7 @@ int getMountInfo(char *path, char *mountString, char *mountPoint, char *newCWD)
 
     if (newCWD != NULL)
         sprintf(newCWD, "%s:%s", items[2], i > 3 ? items[3] : "");
-    
+
     free(items[0]);
     free(items[1]);
     free(items[2]);

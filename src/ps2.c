@@ -112,7 +112,7 @@ static int CNFCheckBootFile(const char *value, const char *key)
 // The TRUE way (but not the only way!) to get the boot file. Read the comment above PS2DiscBoot().
 static int PS2GetBootFile(char *boot)
 {
-	DPRINTF("%s: start\n", __func__);
+    DPRINTF("%s: start\n", __func__);
     u32 k32;
     u8 key1[16];
 #ifdef XCDVD_READKEY
@@ -225,7 +225,7 @@ static int PS2GetBootFile(char *boot)
     Lots of homebrew software do that. */
 int PS2DiscBoot(int skip_PS2LOGO)
 {
-	DPRINTF("%s: start\n skip_ps2_logo=%d\n", __func__, skip_PS2LOGO);
+    DPRINTF("%s: start\n skip_ps2_logo=%d\n", __func__, skip_PS2LOGO);
     char ps2disc_boot[CNF_PATH_LEN_MAX] = "";             // This was originally static/global.
     char system_cnf[CNF_LEN_MAX], line[CNF_PATH_LEN_MAX]; // These were originally globals/static.
     char *args[1];
@@ -234,13 +234,13 @@ int PS2DiscBoot(int skip_PS2LOGO)
 
     switch (PS2GetBootFile(ps2disc_boot)) {
         case 2:
-			DPRINTF("%s: PS2GetBootFile returned 2\n", __func__);
+            DPRINTF("%s: PS2GetBootFile returned 2\n", __func__);
             return 2;
         case 3:
-			DPRINTF("%s: PS2GetBootFile returned 3\n", __func__);
+            DPRINTF("%s: PS2GetBootFile returned 3\n", __func__);
             return 3;
     }
-	DPRINTF("%s: PS2GetBootFile returned %s\n", __func__, ps2disc_boot);
+    DPRINTF("%s: PS2GetBootFile returned %s\n", __func__, ps2disc_boot);
 
     // The browser uses open mode 5 when a specific thread is created, otherwise mode 4.
     if ((fd = open("cdrom0:\\SYSTEM.CNF;1", O_RDONLY)) < 0) {
@@ -286,7 +286,7 @@ int PS2DiscBoot(int skip_PS2LOGO)
     }
 
     CNFGetKey(pChar, line);
-    DPRINTF("%s line: [%s]\n", __func__,  line);
+    DPRINTF("%s line: [%s]\n", __func__, line);
     DPRINTF("%s ELF:  [%s]\n", __func__, ps2disc_boot);
     if (CNFCheckBootFile(ps2disc_boot, line) == 0) { // Parse error
         scr_setfontcolor(0x0000ff);
@@ -302,7 +302,7 @@ int PS2DiscBoot(int skip_PS2LOGO)
     DPRINTF("%s updating play history\n", __func__);
     DPRINTF("%s:\n\tline:[%s]\n\tps2discboot:[%s]\n", __func__, line, ps2disc_boot);
     UpdatePlayHistory(ps2disc_boot);
-	
+
     CleanUp();
     SifExitCmd();
     if (skip_PS2LOGO) {

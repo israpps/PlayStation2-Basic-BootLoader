@@ -1,8 +1,8 @@
 define HEADER
-__________  _________________   ____________________.____     
-\______   \/   _____/\_____  \  \______   \______   \    |    
- |     ___/\_____  \  /  ____/   |    |  _/|    |  _/    |    
- |    |    /        \/       \   |    |   \|    |   \    |___ 
+__________  _________________   ____________________.____
+\______   \/   _____/\_____  \  \______   \______   \    |
+ |     ___/\_____  \  /  ____/   |    |  _/|    |  _/    |
+ |    |    /        \/       \   |    |   \|    |   \    |___
  |____|   /_______  /\_______ \  |______  /|______  /_______ \\
                   \/         \/         \/        \/        \/
 		PlayStation2 Basic BootLoader - By El_isra
@@ -27,10 +27,9 @@ FILEXIO_NEED ?= 0 # if we need filexio and imanx loaded for other features (HDD,
 DEV9_NEED ?= 0    # if we need DEV9 loaded for other features (HDD, UDPTTY, etc)
 
 # Related to binary size reduction (it disables some features, please be sure you won't disable something you need)
-KERNEL_NOPATCH = 1 
+KERNEL_NOPATCH = 1
 NEWLIB_NANO = 1
 DUMMY_TIMEZONE = 1
-DUMMY_LIBC_INIT = 0
 
 # ---{ VERSIONING }--- #
 
@@ -113,7 +112,7 @@ ifeq ($(DEBUG), 1)
    $(info --- debugging enabled)
   EE_CFLAGS += -DDEBUG -O0 -g
   EE_LIBS += -lelf-loader
-else 
+else
   EE_CFLAGS += -Os
   EE_LDFLAGS += -s
   EE_LIBS += -lelf-loader-nocolour
@@ -251,12 +250,8 @@ release: clean $(EE_BIN_PACKED)
 	@echo "$$HEADER"
 
 clean:
-	@echo cleaning...
-	@echo - Executables
 	@rm -rf $(EE_BIN) $(EE_BIN_STRIPPED) $(EE_BIN_ENCRYPTED) $(EE_BIN_PACKED)
-	@echo - Object folders 
 	@rm -rf $(EE_OBJS_DIR) $(EE_ASM_DIR)
-	@echo  "\n"
 
 $(EE_BIN_STRIPPED): $(EE_BIN)
 	@echo " -- Stripping"

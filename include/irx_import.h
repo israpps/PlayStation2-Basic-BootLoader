@@ -6,8 +6,6 @@
     extern unsigned char _n[]; \
     extern unsigned int size_##_n
 
-
-// --------------- IRX/IOPRP extern --------------- //
 IMPORT_BIN2C(sio2man_irx);
 IMPORT_BIN2C(mcman_irx);
 IMPORT_BIN2C(mcserv_irx);

@@ -14,15 +14,14 @@ CONFIG GLOBCFG;
 char *EXECPATHS[3];
 u8 ROMVER[16];
 int PAD = 0;
-static int  config_source = SOURCE_INVALID;
-
+static int config_source = SOURCE_INVALID;
+unsigned char *config_buf = NULL; // pointer to allocated config file
 int main(int argc, char *argv[])
 {
     u32 STAT;
     u64 tstart;
-    int button, x, j, cnf_size, is_PCMCIA = 0, fd, result;
+    int button, x, j, cnf_size, fd, result;
     static int num_buttons = 4, pad_button = 0x0100; // first pad button is L2
-    unsigned char *RAM_p = NULL;
     char *CNFBUFF, *name, *value;
 
     ResetIOP();
@@ -82,8 +81,7 @@ int main(int argc, char *argv[])
     DPRINTF(" [PADMAN]: ID=%d, ret=%d\n", j, x);
 #endif
     j = LoadUSBIRX();
-    if (j != 0)
-    {
+    if (j != 0) {
         scr_setfontcolor(0x0000ff);
         scr_printf("ERROR: could not load USB modules (%d)\n", j);
         scr_setfontcolor(0xffffff);
@@ -93,8 +91,11 @@ int main(int argc, char *argv[])
     }
 
 #ifdef FILEXIO
-    if (LoadFIO() < 0)
-            {scr_setbgcolor(0xff0000); scr_clear(); sleep(4);}
+    if (LoadFIO() < 0) {
+        scr_setbgcolor(0xff0000);
+        scr_clear();
+        sleep(4);
+    }
 #endif
 
 #ifdef MX4SIO
@@ -104,7 +105,11 @@ int main(int argc, char *argv[])
 
 #ifdef HDD
     else if (LoadHDDIRX() < 0) // only load HDD crap if filexio and iomanx are up and running
-            {scr_setbgcolor(0x0000ff); scr_clear(); sleep(4);}
+    {
+        scr_setbgcolor(0x0000ff);
+        scr_clear();
+        sleep(4);
+    }
 #endif
 
     if ((fd = open("rom0:ROMVER", O_RDONLY)) >= 0) {
@@ -175,14 +180,14 @@ int main(int argc, char *argv[])
     SetDefaultSettings();
     FILE *fp;
     for (x = SOURCE_CWD; x >= SOURCE_MC0; x--) {
-        char* T = CheckPath(CONFIG_PATHS[x]);
+        char *T = CheckPath(CONFIG_PATHS[x]);
         fp = fopen(T, "r");
         if (fp != NULL) {
             config_source = x;
             break;
         }
     }
-    
+
     if (config_source != SOURCE_INVALID) {
         DPRINTF("valid config on device '%s', reading now\n", SOURCES[config_source]);
         pad_button = 0x0001; // on valid config, change the value of `pad_button` so the pad detection loop iterates all the buttons instead of only those configured on default paths
@@ -190,12 +195,12 @@ int main(int argc, char *argv[])
         fseek(fp, 0, SEEK_END);
         cnf_size = ftell(fp);
         fseek(fp, 0, SEEK_SET);
-        DPRINTF("Allocating %d bytes for RAM_p\n", cnf_size);
-        RAM_p = (unsigned char *)malloc(cnf_size + 1);
-        if (RAM_p != NULL) {
-            CNFBUFF = RAM_p;
+        DPRINTF("Allocating %d bytes for config\n", cnf_size);
+        config_buf = (unsigned char *)malloc(cnf_size + 1);
+        if (config_buf != NULL) {
+            CNFBUFF = config_buf;
             int temp;
-            if ((temp = fread(RAM_p, 1, cnf_size, fp)) == cnf_size) {
+            if ((temp = fread(config_buf, 1, cnf_size, fp)) == cnf_size) {
                 DPRINTF("Reading finished... Closing fp*\n");
                 fclose(fp);
                 CNFBUFF[cnf_size] = '\0';
@@ -240,7 +245,6 @@ int main(int argc, char *argv[])
                         }
                     }
                 }
-                free(RAM_p);
             } else {
                 fclose(fp);
                 DPRINTF("\tERROR: could not read %d bytes of config file, only %d readed\n", cnf_size, temp);
@@ -262,8 +266,7 @@ int main(int argc, char *argv[])
 #endif
         }
 #ifdef HDD
-        if (config_source == SOURCE_HDD)
-        {
+        if (config_source == SOURCE_HDD) {
 
             if (fileXioUmount("pfs0:") < 0)
                 DPRINTF("ERROR: Could not unmount 'pfs0:'\n");
@@ -276,8 +279,7 @@ int main(int argc, char *argv[])
                 GLOBCFG.KEYPATHS[x][j] = CheckPath(DEFPATH[3 * x + j]);
         sleep(1);
     }
-    if (RAM_p != NULL)
-        free(RAM_p);
+
     int R = 0x80, G = 0x80, B = 0x80;
     if (GLOBCFG.OSDHISTORY_READ && (GLOBCFG.LOGO_DISP > 1)) {
         j = 1;
@@ -307,8 +309,7 @@ int main(int argc, char *argv[])
             }
             scr_setfontcolor(RBG2INT(B, G, R));
             DPRINTF("New banner color is: #%8x\n", RBG2INT(B, G, R));
-        } else
-        {
+        } else {
             DPRINTF("can't find any osd history for banner color\n");
         }
     }
@@ -341,14 +342,13 @@ int main(int argc, char *argv[])
         for (x = 0; x < num_buttons; x++) { // check all pad buttons
             if (PAD & button) {
                 DPRINTF("PAD detected\n");
-                // if button detected , copy path to corresponding index
+                // if button detected, copy path to corresponding index
                 for (j = 0; j < 3; j++) {
                     EXECPATHS[j] = CheckPath(GLOBCFG.KEYPATHS[x + 1][j]);
                     if (exist(EXECPATHS[j])) {
                         scr_setfontcolor(0x00ff00);
                         scr_printf("\tLoading %s\n", EXECPATHS[j]);
-                        if (!is_PCMCIA)
-                            PadDeinitPads();
+                        CleanUp();
                         RunLoaderElf(EXECPATHS[j], MPART);
                     } else {
                         scr_setfontcolor(0x00ffff);
@@ -368,8 +368,7 @@ int main(int argc, char *argv[])
         if (exist(EXECPATHS[j])) {
             scr_setfontcolor(0x00ff00);
             scr_printf("\tLoading %s\n", EXECPATHS[j]);
-            if (!is_PCMCIA)
-                PadDeinitPads();
+            CleanUp();
             RunLoaderElf(EXECPATHS[j], MPART);
         } else {
             DPRINTF("%s not found\n", EXECPATHS[j]);
@@ -399,7 +398,7 @@ void EMERGENCY(void)
         scr_printf(".");
         sleep(1);
         if (exist("mass:/RESCUE.ELF")) {
-            PadDeinitPads();
+            CleanUp();
             RunLoaderElf("mass:/RESCUE.ELF", NULL);
         }
     }
@@ -448,13 +447,10 @@ char *CheckPath(char *path)
         }
 #ifdef HDD
     } else if (!strncmp("hdd", path, 3)) {
-        if (MountParty(path) < 0)
-        {
+        if (MountParty(path) < 0) {
             DPRINTF("-{%s}-\n", path);
             return path;
-        }
-        else
-        {
+        } else {
             DPRINTF("--{%s}--{%s}\n", path, strstr(path, "pfs:"));
             return strstr(path, "pfs:");
         } // leave path as pfs:/blabla
@@ -467,7 +463,6 @@ char *CheckPath(char *path)
         if (x >= 0)
             path[4] = '0' + x;
 #endif
-
     }
     return path;
 }
@@ -496,7 +491,8 @@ int LoadUSBIRX(void)
     ID = loadIRXFile("mc?:/PS2BBL/BDM.IRX", 0, NULL, &RET);
 #endif
     DPRINTF(" [BDM]: ret=%d, ID=%d\n", RET, ID);
-    if (ID < 0 || RET == 1) return -1;
+    if (ID < 0 || RET == 1)
+        return -1;
 // ------------------------------------------------------------------------------------ //
 #ifdef HAS_EMBEDDED_IRX
     ID = SifExecModuleBuffer(bdmfs_fatfs_irx, size_bdmfs_fatfs_irx, 0, NULL, &RET);
@@ -504,7 +500,8 @@ int LoadUSBIRX(void)
     ID = loadIRXFile("mc?:/PS2BBL/BDMFS_FATFS.IRX", 0, NULL, &RET);
 #endif
     DPRINTF(" [BDMFS_FATFS]: ret=%d, ID=%d\n", RET, ID);
-    if (ID < 0 || RET == 1) return -2;
+    if (ID < 0 || RET == 1)
+        return -2;
 // ------------------------------------------------------------------------------------ //
 #ifdef HAS_EMBEDDED_IRX
     ID = SifExecModuleBuffer(usbd_irx, size_usbd_irx, 0, NULL, &RET);
@@ -513,7 +510,8 @@ int LoadUSBIRX(void)
 #endif
     delay(3);
     DPRINTF(" [USBD]: ret=%d, ID=%d\n", RET, ID);
-    if (ID < 0 || RET == 1) return -3;
+    if (ID < 0 || RET == 1)
+        return -3;
 // ------------------------------------------------------------------------------------ //
 #ifdef HAS_EMBEDDED_IRX
     ID = SifExecModuleBuffer(usbmass_bd_irx, size_usbmass_bd_irx, 0, NULL, &RET);
@@ -521,7 +519,8 @@ int LoadUSBIRX(void)
     ID = loadIRXFile("mc?:/PS2BBL/USBMASS_BD.IRX", 0, NULL, &RET);
 #endif
     DPRINTF(" [USBMASS_BD]: ret=%d, ID=%d\n", RET, ID);
-    if (ID < 0 || RET == 1) return -4;
+    if (ID < 0 || RET == 1)
+        return -4;
     // ------------------------------------------------------------------------------------ //
     struct stat buffer;
     int ret = -1;
@@ -545,15 +544,13 @@ int LookForBDMDevice(void)
     static char DEVID[5];
     int dd;
     int x = 0;
-    for (x = 0; x < 5; x++)
-    {
+    for (x = 0; x < 5; x++) {
         mass_path[4] = '0' + x;
         if ((dd = fileXioDopen(mass_path)) >= 0) {
             int *intptr_ctl = (int *)DEVID;
             *intptr_ctl = fileXioIoctl(dd, USBMASS_IOCTL_GET_DRIVERNAME, "");
             close(dd);
-            if (!strncmp(DEVID, "sdc", 3))
-            {
+            if (!strncmp(DEVID, "sdc", 3)) {
                 DPRINTF("%s: Found MX4SIO device at mass%d:/\n", __func__, x);
                 return x;
             }
@@ -578,7 +575,7 @@ int LoadFIO(void)
     DPRINTF(" [FILEXIO]: ret=%d, ID=%d\n", RET, ID);
     if (ID < 0 || RET == 1)
         return -2;
-    
+
     RET = fileXioInit();
     DPRINTF("fileXioInit: %d\n", RET);
     return 0;
@@ -588,8 +585,7 @@ int LoadFIO(void)
 #ifdef DEV9
 int loadDEV9(void)
 {
-    if (!dev9_loaded)
-    {
+    if (!dev9_loaded) {
         int ID, RET;
         ID = SifExecModuleBuffer(&ps2dev9_irx, size_ps2dev9_irx, 0, NULL, &RET);
         DPRINTF("[DEV9]: ret=%d, ID=%d\n", RET, ID);
@@ -618,7 +614,8 @@ void loadUDPTTY()
 #endif
 
 #ifdef HDD
-static int CheckHDD(void) {
+static int CheckHDD(void)
+{
     int ret = fileXioDevctl("hdd0:", HDIOC_STATUS, NULL, 0, NULL, 0);
     /* 0 = HDD connected and formatted, 1 = not formatted, 2 = HDD not usable, 3 = HDD not connected. */
     DPRINTF("%s: HDD status is %d\n", __func__, ret);
@@ -630,7 +627,13 @@ static int CheckHDD(void) {
 int LoadHDDIRX(void)
 {
     int ID, RET, HDDSTAT;
-    static const char hddarg[] = "-o" "\0" "4" "\0" "-n" "\0" "20";
+    static const char hddarg[] = "-o"
+                                 "\0"
+                                 "4"
+                                 "\0"
+                                 "-n"
+                                 "\0"
+                                 "20";
     //static const char pfsarg[] = "-n\0" "24\0" "-o\0" "8";
 
     if (!loadDEV9())
@@ -657,28 +660,26 @@ int LoadHDDIRX(void)
 
     HDDSTAT = CheckHDD();
     HDD_USABLE = !(HDDSTAT < 0);
-    
+
     /* PS2FS.IRX */
-    if (HDD_USABLE)
-    {
-        ID = SifExecModuleBuffer(&ps2fs_irx, size_ps2fs_irx,  0, NULL,  &RET);
+    if (HDD_USABLE) {
+        ID = SifExecModuleBuffer(&ps2fs_irx, size_ps2fs_irx, 0, NULL, &RET);
         DPRINTF(" [PS2FS]: ret=%d, ID=%d\n", RET, ID);
         if (ID < 0 || RET == 1)
             return -5;
     }
-    
+
     return 0;
 }
 
-int MountParty(const char* path)
+int MountParty(const char *path)
 {
     int ret = -1;
     DPRINTF("%s: %s\n", __func__, path);
-    char* BUF = NULL;
+    char *BUF = NULL;
     BUF = strdup(path); //use strdup, otherwise, path will become `hdd0:`
     char MountPoint[40];
-    if (getMountInfo(BUF, NULL, MountPoint, NULL))
-    {
+    if (getMountInfo(BUF, NULL, MountPoint, NULL)) {
         mnt(MountPoint);
         if (BUF != NULL)
             free(BUF);
@@ -694,57 +695,66 @@ int MountParty(const char* path)
     return ret;
 }
 
-int mnt(const char* path)
+int mnt(const char *path)
 {
     DPRINTF("Mounting '%s'\n", path);
-    if (fileXioMount("pfs0:", path, FIO_MT_RDONLY ) < 0) // mount
+    if (fileXioMount("pfs0:", path, FIO_MT_RDONLY) < 0) // mount
     {
         DPRINTF("Mount failed. unmounting pfs0 and trying again...\n");
         if (fileXioUmount("pfs0:") < 0) //try to unmount then mount again in case it got mounted by something else
         {
             DPRINTF("Unmount failed!!!\n");
         }
-        if (fileXioMount("pfs0:", path, FIO_MT_RDONLY ) < 0)
-        {
+        if (fileXioMount("pfs0:", path, FIO_MT_RDONLY) < 0) {
             DPRINTF("mount failed again!\n");
             return -4;
         } else {
             DPRINTF("Second mount succed!\n");
         }
-    } else DPRINTF("mount successfull on first attemp\n");
+    } else
+        DPRINTF("mount successfull on first attemp\n");
     return 0;
 }
 
 void HDDChecker()
 {
     char ErrorPartName[64];
-    const char* HEADING = "HDD Diagnosis routine";
+    const char *HEADING = "HDD Diagnosis routine";
     int ret = -1;
     scr_clear();
     scr_printf("\n\n%*s%s\n", ((80 - strlen(HEADING)) / 2), "", HEADING);
     scr_setfontcolor(0x0000FF);
     ret = fileXioDevctl("hdd0:", HDIOC_STATUS, NULL, 0, NULL, 0);
-    if (ret == 0 || ret == 1) scr_setfontcolor(0x00FF00);
-    if (ret != 3)
-    {
+    if (ret == 0 || ret == 1)
+        scr_setfontcolor(0x00FF00);
+    if (ret != 3) {
         scr_printf("\t\t - HDD CONNECTION STATUS: %d\n", ret);
         /* Check ATA device S.M.A.R.T. status. */
         ret = fileXioDevctl("hdd0:", HDIOC_SMARTSTAT, NULL, 0, NULL, 0);
-        if (ret != 0) scr_setfontcolor(0x0000ff); else scr_setfontcolor(0x00FF00);
+        if (ret != 0)
+            scr_setfontcolor(0x0000ff);
+        else
+            scr_setfontcolor(0x00FF00);
         scr_printf("\t\t - S.M.A.R.T STATUS: %d\n", ret);
         /* Check for unrecoverable I/O errors on sectors. */
         ret = fileXioDevctl("hdd0:", HDIOC_GETSECTORERROR, NULL, 0, NULL, 0);
-        if (ret != 0) scr_setfontcolor(0x0000ff); else scr_setfontcolor(0x00FF00);
+        if (ret != 0)
+            scr_setfontcolor(0x0000ff);
+        else
+            scr_setfontcolor(0x00FF00);
         scr_printf("\t\t - SECTOR ERRORS: %d\n", ret);
         /* Check for partitions that have errors. */
         ret = fileXioDevctl("hdd0:", HDIOC_GETERRORPARTNAME, NULL, 0, ErrorPartName, sizeof(ErrorPartName));
-        if (ret != 0) scr_setfontcolor(0x0000ff); else scr_setfontcolor(0x00FF00);
-        scr_printf("\t\t - CORRUPTED PARTITIONS: %d\n", ret);
         if (ret != 0)
-        {
+            scr_setfontcolor(0x0000ff);
+        else
+            scr_setfontcolor(0x00FF00);
+        scr_printf("\t\t - CORRUPTED PARTITIONS: %d\n", ret);
+        if (ret != 0) {
             scr_printf("\t\tpartition: %s\n", ErrorPartName);
         }
-    } else scr_setfontcolor(0x00FFFF), scr_printf("Skipping test, HDD is not connected\n");
+    } else
+        scr_setfontcolor(0x00FFFF), scr_printf("Skipping test, HDD is not connected\n");
     scr_setfontcolor(0xFFFFFF);
     scr_printf("\t\tWaiting for 10 seconds...\n");
     sleep(10);
@@ -907,7 +917,7 @@ static void InitPSX()
     sceCdInit(SCECdINoD);
 
     // No need to perform boot certification because rom0:OSDSYS does it.
-    while (custom_sceCdChgSys(2) != 2) {}; // Switch the drive into PS2 mode.
+    while (custom_sceCdChgSys(sceDVRTrayModePS2) != sceDVRTrayModePS2) {}; // Switch the drive into PS2 mode.
 
     do {
         result = custom_sceCdNoticeGameStart(1, &STAT);
@@ -945,10 +955,12 @@ void CDVDBootCertify(u8 romver[16])
 
         // Do not check for success/failure. Early consoles do not support (and do not require) boot-certification.
         sceCdBootCertify(RomName);
+#ifdef REPORT_FATAL_ERRORS
     } else {
         scr_setfontcolor(0x0000ff);
         scr_printf("\tERROR: Could not certify CDVD Boot. ROMVER was NULL\n");
         scr_setfontcolor(0xffffff);
+#endif
     }
 
     // This disables DVD Video Disc playback. This functionality is restored by loading a DVD Player KELF.
@@ -969,6 +981,10 @@ static void AlarmCallback(s32 alarm_id, u16 time, void *common)
 void CleanUp(void)
 {
     sceCdInit(SCECdEXIT);
+    if (config_buf) {
+        free(config_buf);
+        config_buf = NULL;
+    }
     PadDeinitPads();
 }
 
@@ -979,19 +995,21 @@ void credits(void)
     scr_printf("%s%s", BANNER, BANNER_FOOTER);
     scr_printf("\n"
                "\n"
-               "\tThis project is heavily based on SP193 OSD initialization libraries.\n"
+               "\tBased on SP193 OSD Init samples.\n"
                "\t\tall credits go to him\n"
                "\tThanks to: fjtrujy, uyjulian, asmblur and AKuHAK\n"
-               "\tthis build corresponds to the hash [" COMMIT_HASH "]\n"
-               "\t\tcompiled on "__DATE__" "__TIME__"\n"
+               "\tbuild hash [" COMMIT_HASH "]\n"
+               "\t\tcompiled on "__DATE__
+               " "__TIME__
+               "\n"
 #ifdef MX4SIO
-" MX4SIO"
+               " MX4SIO"
 #endif
 #ifdef HDD
-" HDD "
+               " HDD "
 #endif
-    
-               );
+
+    );
     while (1) {};
 }
 
@@ -1004,22 +1022,22 @@ void runOSDNoUpdate(void)
 }
 
 #ifndef NO_TEMP_DISP
-void PrintTemperature() {
+void PrintTemperature()
+{
     // Based on PS2Ident libxcdvd from SP193
     unsigned char in_buffer[1], out_buffer[16];
     int stat = 0;
 
     memset(&out_buffer, 0, 16);
-    
-    in_buffer[0]= 0xEF;
-    if(sceCdApplySCmd(0x03, in_buffer, sizeof(in_buffer), out_buffer/*, sizeof(out_buffer)*/)!=0)
-    {
-        stat=out_buffer[0];
+
+    in_buffer[0] = 0xEF;
+    if (sceCdApplySCmd(0x03, in_buffer, sizeof(in_buffer), out_buffer /*, sizeof(out_buffer)*/) != 0) {
+        stat = out_buffer[0];
     }
-    
-    if(!stat) {
+
+    if (!stat) {
         unsigned short temp = out_buffer[1] * 256 + out_buffer[2];
-        scr_printf("\tTemp: %02d.%02dC\n",  (temp - (temp%128) ) / 128, (temp%128));
+        scr_printf("\tTemp: %02d.%02dC\n", (temp - (temp % 128)) / 128, (temp % 128));
     } else {
         DPRINTF("Failed 0x03 0xEF command. stat=%x \n", stat);
     }
@@ -1029,16 +1047,13 @@ void PrintTemperature() {
 /* BELOW THIS POINT ALL MACROS and MISC STUFF MADE TO REDUCE BINARY SIZE WILL BE PLACED */
 
 #if defined(DUMMY_TIMEZONE)
-   void _libcglue_timezone_update() {}
-#endif
-
-#if defined(DUMMY_LIBC_INIT)
-   void _libcglue_init() {}
-   void _libcglue_deinit() {}
+void _libcglue_timezone_update()
+{
+}
 #endif
 
 #if defined(KERNEL_NOPATCH)
-    DISABLE_PATCHED_FUNCTIONS();
+DISABLE_PATCHED_FUNCTIONS();
 #endif
 
 DISABLE_EXTRA_TIMERS_FUNCTIONS();

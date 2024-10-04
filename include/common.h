@@ -22,7 +22,7 @@ enum
     SOURCE_COUNT,
 } CONFIG_SOURCES_ID;
 
-char* CONFIG_PATHS[SOURCE_COUNT] = {
+char *CONFIG_PATHS[SOURCE_COUNT] = {
     "mc0:/PS2BBL/CONFIG.INI",
     "mc1:/PS2BBL/CONFIG.INI",
     "mass:/PS2BBL/CONFIG.INI",
@@ -42,7 +42,7 @@ char* CONFIG_PATHS[SOURCE_COUNT] = {
     "",
 };
 
-static const char* SOURCES[SOURCE_COUNT] = {
+static const char *SOURCES[SOURCE_COUNT] = {
     "mc0",
     "mc1",
     "usb",
