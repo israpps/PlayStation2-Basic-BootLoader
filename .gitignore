@@ -9,7 +9,7 @@
 #PS2 executables
 *.elf
 *.kelf
-!release/PS2BBL/*.elf
+!release/SYS-CONF/*.elf
 
 # IOP Executable
 *.irx

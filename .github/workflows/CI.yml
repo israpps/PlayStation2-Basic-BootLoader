@@ -38,7 +38,7 @@ jobs:
         run: |
           apk add build-base git p7zip
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git fetch --prune --unshallow
@@ -95,13 +95,25 @@ jobs:
 
       - name: Create release
         if: github.ref == 'refs/heads/main'
-        uses: marvinpinto/action-automatic-releases@latest
+        uses: softprops/action-gh-release@v2
         with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "latest"
-          title: "Latest development build"
+          prerelease: true
+          generate_release_notes: true
+          tag_name: "latest"
+          name: "Latest development build"
           files: |
             PS2BBL.7z
+          body: |
+            "![dl](https://img.shields.io/github/downloads/israpps/PlayStation2-Basic-BootLoader/latest/total?style=for-the-badge&logo=github)  "
+            [![info](https://img.shields.io/badge/not%20sure%20what%20to%20download%3F-Click%20Here-000000?style=for-the-badge&logo=github)](https://israpps.github.io/PlayStation2-Basic-BootLoader/Downloads/)
+
+      - name: notify on discord
+        if: github.ref == 'refs/heads/main'
+        uses: tsickert/discord-webhook@v5.3.0
+        with:
+          webhook-url: ${{ secrets.DISCORD_FEED }}
+          content: "## PS2BBL has been updated!\nread the changelog here: https://github.com/israpps/PlayStation2-Basic-BootLoader/releases/tag/latest\n### [Download Page](https://israpps.github.io/PlayStation2-Basic-BootLoader/Downloads/)"
+
 
   opentuna:
     runs-on: ubuntu-latest
@@ -127,7 +139,7 @@ jobs:
       - name: update binaries
         run: |
           cp PS2BBL/PS2/COMPRESSED_PS2BBL.ELF Funtuna-Fork/installer/INSTALLER_CONTENTS/BOOT/BOOT.ELF
-          cp PS2BBL/PS2BBL/CONFIG.INI Funtuna-Fork/installer/INSTALLER_CONTENTS/PS2BBL/CONFIG.INI
+          cp PS2BBL/SYS-CONF/PS2BBL.INI Funtuna-Fork/installer/INSTALLER_CONTENTS/SYS-CONF/PS2BBL.INI
 
       - name: update bundled software
         run: |
@@ -155,22 +167,26 @@ jobs:
           echo "If you bought this software you have been SCAMMED.">>release/CREDITS.TXT
           echo "https://github.com/israpps/PlayStation2-Basic-BootLoader">>release/CREDITS.TXT
           cp -r release/ $TARGET/
-          7z a -t7z PS2BBL_OpenTuna_Installer.7z $TARGET/* 
+          7z a -t7z PS2BBL_OpenTuna_Installer.7z $TARGET/*
 
       - name: Upload artifacts
         if: ${{ success() }}
         uses: actions/upload-artifact@v3
         with:
-          name: PS2BBL
+          name: PS2BBL_OPENTUNA
           path: |
             release/PS2BBL_OpenTuna_Installer.ELF
 
       - name: Create release
         if: github.ref == 'refs/heads/main'
-        uses: marvinpinto/action-automatic-releases@latest
+        uses: softprops/action-gh-release@v2
         with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "opentuna"
-          title: "Latest PS2BBL + OpenTuna"
+          prerelease: true
+          generate_release_notes: true
+          tag_name: "opentuna"
+          name: "Latest PS2BBL + OpenTuna"
           files: |
             PS2BBL_OpenTuna_Installer.7z
+          body: |
+            ![dl](https://img.shields.io/github/downloads/israpps/PlayStation2-Basic-BootLoader/latest/total?style=for-the-badge&logo=github)
+            [![info](https://img.shields.io/badge/not%20sure%20what%20to%20download%3F-Click%20Here-000000?style=for-the-badge&logo=github)](https://israpps.github.io/PlayStation2-Basic-BootLoader/Downloads/)

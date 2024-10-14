@@ -488,7 +488,7 @@ int LoadUSBIRX(void)
 #ifdef HAS_EMBEDDED_IRX
     ID = SifExecModuleBuffer(bdm_irx, size_bdm_irx, 0, NULL, &RET);
 #else
-    ID = loadIRXFile("mc?:/PS2BBL/BDM.IRX", 0, NULL, &RET);
+    ID = SifLoadStartModule(CheckPath("mc?:/PS2BBL/BDM.IRX"), 0, NULL, &RET);
 #endif
     DPRINTF(" [BDM]: ret=%d, ID=%d\n", RET, ID);
     if (ID < 0 || RET == 1)
@@ -497,7 +497,7 @@ int LoadUSBIRX(void)
 #ifdef HAS_EMBEDDED_IRX
     ID = SifExecModuleBuffer(bdmfs_fatfs_irx, size_bdmfs_fatfs_irx, 0, NULL, &RET);
 #else
-    ID = loadIRXFile("mc?:/PS2BBL/BDMFS_FATFS.IRX", 0, NULL, &RET);
+    ID = SifLoadStartModule(CheckPath("mc?:/PS2BBL/BDMFS_FATFS.IRX"), 0, NULL, &RET);
 #endif
     DPRINTF(" [BDMFS_FATFS]: ret=%d, ID=%d\n", RET, ID);
     if (ID < 0 || RET == 1)
@@ -506,7 +506,7 @@ int LoadUSBIRX(void)
 #ifdef HAS_EMBEDDED_IRX
     ID = SifExecModuleBuffer(usbd_irx, size_usbd_irx, 0, NULL, &RET);
 #else
-    ID = loadIRXFile("mc?:/PS2BBL/USBD.IRX", 0, NULL, &RET);
+    ID = SifLoadStartModule(CheckPath("mc?:/PS2BBL/USBD.IRX"), 0, NULL, &RET);
 #endif
     delay(3);
     DPRINTF(" [USBD]: ret=%d, ID=%d\n", RET, ID);
@@ -516,7 +516,7 @@ int LoadUSBIRX(void)
 #ifdef HAS_EMBEDDED_IRX
     ID = SifExecModuleBuffer(usbmass_bd_irx, size_usbmass_bd_irx, 0, NULL, &RET);
 #else
-    ID = loadIRXFile("mc?:/PS2BBL/USBMASS_BD.IRX", 0, NULL, &RET);
+    ID = SifLoadStartModule(CheckPath("mc?:/PS2BBL/USBMASS_BD.IRX"), 0, NULL, &RET);
 #endif
     DPRINTF(" [USBMASS_BD]: ret=%d, ID=%d\n", RET, ID);
     if (ID < 0 || RET == 1)

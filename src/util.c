@@ -38,44 +38,6 @@ void delay(int count)
     }
 }
 
-#ifdef F_loadIRXFile
-int loadIRXFile(char *path, u32 arg_len, const char *args, int *mod_res)
-{
-    FILE *fp;
-    unsigned char *IRX;
-    int IRX_SIZE, RET = -1;
-    if (!strncmp(path, "mc?", 3)) {
-        path[2] = '0';
-        if (!exist(path)) {
-            path[2] = '1';
-            if (!exist(path))
-                return -1;
-        }
-    } else {
-        if (!exist(path))
-            return -1;
-    }
-    fp = fopen(path, "r");
-    fseek(fp, 0, SEEK_END);
-    IRX_SIZE = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
-    IRX = (unsigned char *)malloc(IRX_SIZE);
-    if (IRX == NULL) {
-        fclose(fp);
-        return -2;
-    }
-
-    if (fread(IRX, 1, IRX_SIZE, fp) == IRX_SIZE) {
-        RET = SifExecModuleBuffer(IRX, IRX_SIZE, arg_len, args, mod_res);
-    } else {
-        RET = -3;
-    }
-    fclose(fp);
-    if (IRX != NULL)
-        free(IRX);
-    return RET;
-}
-#endif
 
 int get_CNF_string(char **CNF_p_p,
                    char **name_p_p,
