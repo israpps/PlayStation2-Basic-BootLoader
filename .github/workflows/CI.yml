@@ -38,7 +38,7 @@ jobs:
         run: |
           apk add build-base git p7zip
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git fetch --prune --unshallow
@@ -127,7 +127,7 @@ jobs:
       - name: update binaries
         run: |
           cp PS2BBL/PS2/COMPRESSED_PS2BBL.ELF Funtuna-Fork/installer/INSTALLER_CONTENTS/BOOT/BOOT.ELF
-          cp PS2BBL/PS2BBL/CONFIG.INI Funtuna-Fork/installer/INSTALLER_CONTENTS/PS2BBL/CONFIG.INI
+          cp PS2BBL/SYS-CONF/PS2BBL.INI Funtuna-Fork/installer/INSTALLER_CONTENTS/SYS-CONF/PS2BBL.INI
 
       - name: update bundled software
         run: |
@@ -155,13 +155,13 @@ jobs:
           echo "If you bought this software you have been SCAMMED.">>release/CREDITS.TXT
           echo "https://github.com/israpps/PlayStation2-Basic-BootLoader">>release/CREDITS.TXT
           cp -r release/ $TARGET/
-          7z a -t7z PS2BBL_OpenTuna_Installer.7z $TARGET/* 
+          7z a -t7z PS2BBL_OpenTuna_Installer.7z $TARGET/*
 
       - name: Upload artifacts
         if: ${{ success() }}
         uses: actions/upload-artifact@v3
         with:
-          name: PS2BBL
+          name: PS2BBL_OPENTUNA
           path: |
             release/PS2BBL_OpenTuna_Installer.ELF
 

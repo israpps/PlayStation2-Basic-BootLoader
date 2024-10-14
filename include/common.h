@@ -23,8 +23,8 @@ enum
 } CONFIG_SOURCES_ID;
 
 char *CONFIG_PATHS[SOURCE_COUNT] = {
-    "mc0:/PS2BBL/CONFIG.INI",
-    "mc1:/PS2BBL/CONFIG.INI",
+    "mc0:/SYS-CONF/PS2BBL.INI",
+    "mc1:/SYS-CONF/PS2BBL.INI",
     "mass:/PS2BBL/CONFIG.INI",
 #ifdef MX4SIO
     "massX:/PS2BBL/CONFIG.INI",
@@ -36,7 +36,7 @@ char *CONFIG_PATHS[SOURCE_COUNT] = {
     "xfrom:/PS2BBL/CONFIG.INI",
 #endif
 #ifdef PSX
-    "mc?:/PS2BBL/XCONFIG.INI",
+    "mc?:/SYS-CONF/PSXBBL.INI",
 #endif
     "CONFIG.INI",
     "",
