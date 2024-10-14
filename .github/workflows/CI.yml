@@ -95,13 +95,17 @@ jobs:
 
       - name: Create release
         if: github.ref == 'refs/heads/main'
-        uses: marvinpinto/action-automatic-releases@latest
+        uses: softprops/action-gh-release@v2
         with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "latest"
-          title: "Latest development build"
+          prerelease: true
+          generate_release_notes: true
+          tag_name: "latest"
+          name: "Latest development build"
           files: |
             PS2BBL.7z
+          body: |
+            "![dl](https://img.shields.io/github/downloads/israpps/system2x6-dongle-dumper/latest/total?style=for-the-badge&logo=github)  "
+            [![info](https://img.shields.io/badge/not%20sure%20what%20to%20download%3F-Click%20Here-000000?style=for-the-badge&logo=github)](https://israpps.github.io/PlayStation2-Basic-BootLoader/Downloads/)
 
       - name: notify on discord
         if: github.ref == 'refs/heads/main'
@@ -175,10 +179,14 @@ jobs:
 
       - name: Create release
         if: github.ref == 'refs/heads/main'
-        uses: marvinpinto/action-automatic-releases@latest
+        uses: softprops/action-gh-release@v2
         with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "opentuna"
-          title: "Latest PS2BBL + OpenTuna"
+          prerelease: true
+          generate_release_notes: true
+          tag_name: "opentuna"
+          name: "Latest PS2BBL + OpenTuna"
           files: |
             PS2BBL_OpenTuna_Installer.7z
+          body: |
+            "![dl](https://img.shields.io/github/downloads/israpps/system2x6-dongle-dumper/latest/total?style=for-the-badge&logo=github)  "
+            [![info](https://img.shields.io/badge/not%20sure%20what%20to%20download%3F-Click%20Here-000000?style=for-the-badge&logo=github)](https://israpps.github.io/PlayStation2-Basic-BootLoader/Downloads/)
