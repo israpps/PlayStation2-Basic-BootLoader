@@ -103,6 +103,14 @@ jobs:
           files: |
             PS2BBL.7z
 
+      - name: notify on discord
+        if: github.ref == 'refs/heads/main'
+        uses: tsickert/discord-webhook@v5.3.0
+        with:
+          webhook-url: ${{ secrets.DISCORD_FEED }}
+          content: "## PS2BBL has been updated!\nread the changelog here: https://github.com/israpps/PlayStation2-Basic-BootLoader/releases/tag/latest\n### [Download Page](https://israpps.github.io/PlayStation2-Basic-BootLoader/Downloads/)"
+
+
   opentuna:
     runs-on: ubuntu-latest
     needs: [build]
