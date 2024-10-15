@@ -93,6 +93,19 @@ jobs:
           path: |
             release/*
 
+#      - name: last week changelog
+#        run: |
+#          git --no-pager log --pretty=format:"- %h:%as %>(18)%an: %s" --since="Last Week">CHANGELOG
+#          echo CHANGELOG=$(cat CHANGELOG) >> $GITHUB_ENV
+#          echo ${{ env.CHANGELOG }}
+
+      - uses: ClementTsang/delete-tag-and-release@v0.3.1
+        with:
+          delete_release: true
+          tag_name: latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create release
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
@@ -104,8 +117,9 @@ jobs:
           files: |
             PS2BBL.7z
           body: |
-            "![dl](https://img.shields.io/github/downloads/israpps/PlayStation2-Basic-BootLoader/latest/total?style=for-the-badge&logo=github)  "
+            ![dl](https://img.shields.io/github/downloads/israpps/PlayStation2-Basic-BootLoader/latest/total?style=for-the-badge&logo=github)
             [![info](https://img.shields.io/badge/not%20sure%20what%20to%20download%3F-Click%20Here-000000?style=for-the-badge&logo=github)](https://israpps.github.io/PlayStation2-Basic-BootLoader/Downloads/)
+            ${{ env.CHANGELOG }}
 
       - name: notify on discord
         if: github.ref == 'refs/heads/main'
@@ -177,6 +191,19 @@ jobs:
           path: |
             release/PS2BBL_OpenTuna_Installer.ELF
 
+#      - name: last week changelog
+#        run: |
+#          git --no-pager log --pretty=format:"- %h:%as %>(18)%an: %s" --since="Last Week">CHANGELOG
+#          echo CHANGELOG=$(cat CHANGELOG) >> $GITHUB_ENV
+#          echo ${{ env.CHANGELOG }}
+
+      - uses: ClementTsang/delete-tag-and-release@v0.3.1
+        with:
+          delete_release: true
+          tag_name: opentuna
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create release
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
@@ -190,3 +217,4 @@ jobs:
           body: |
             ![dl](https://img.shields.io/github/downloads/israpps/PlayStation2-Basic-BootLoader/latest/total?style=for-the-badge&logo=github)
             [![info](https://img.shields.io/badge/not%20sure%20what%20to%20download%3F-Click%20Here-000000?style=for-the-badge&logo=github)](https://israpps.github.io/PlayStation2-Basic-BootLoader/Downloads/)
+            ${{ env.CHANGELOG }}
