@@ -1,5 +1,6 @@
 #ifndef OSDHISTORY_H
 #define OSDHISTORY_H
+#ifdef F_OSD_HISTORY
 #define MAX_HISTORY_ENTRIES 21
 
 /*  If the record is valid, the launch count will be >0.
@@ -58,5 +59,8 @@ void UpdatePlayHistory(const char *name);
 // Low-level functions. Use them for writing your own functions (i.e. writing your own boot animation).
 int LoadHistoryFile(int port);
 int SaveHistoryFile(int port);
-
+#define GOSDHISTORY(x...) x
+#else
+#define GOSDHISTORY(x...)
+#endif
 #endif

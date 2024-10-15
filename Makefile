@@ -11,35 +11,39 @@ export HEADER
 
 
 # ---{BUILD CFG}--- #
-HAS_EMBED_IRX = 1 # whether to embed or not non vital IRX (wich will be loaded from memcard files)
+HAS_EMBED_IRX ?= 1# whether to embed or not non vital IRX (wich will be loaded from memcard files)
 DEBUG ?= 0
 PSX ?= 0 # PSX DESR support
 HDD ?= 0 #wether to add internal HDD support
 MX4SIO ?= 0
 PROHBIT_DVD_0100 ?= 0 # prohibit the DVD Players v1.00 and v1.01 from being booted.
 XCDVD_READKEY ?= 0 # Enable the newer sceCdReadKey checks, which are only supported by a newer CDVDMAN module.
+HOMEBREW_IRX ?= 0 # if we need homebrew SIO2MAN, MCMAN, MCSERV & PADMAN embedded, else, builtin console drivers are used
+FILEXIO_NEED ?= 0 # if we need filexio and imanx loaded for other features (HDD, mx4sio, etc)
+DEV9_NEED ?= 0    # if we need DEV9 loaded for other features (HDD, UDPTTY, etc)
+PS1 ?= 0
+PS2 ?= 0
+DVDPLAYER ?= 0
+OSDHISTORY ?= 0
+
+
+# ---{DEBUG CFG}--- #
 UDPTTY ?= 0 # printf over UDP
 PPCTTY ?= 0 # printf over PowerPC UART
 PRINTF ?= NONE
 
-HOMEBREW_IRX ?= 0 # if we need homebrew SIO2MAN, MCMAN, MCSERV & PADMAN embedded, else, builtin console drivers are used
-FILEXIO_NEED ?= 0 # if we need filexio and imanx loaded for other features (HDD, mx4sio, etc)
-DEV9_NEED ?= 0    # if we need DEV9 loaded for other features (HDD, UDPTTY, etc)
-
-# Related to binary size reduction (it disables some features, please be sure you won't disable something you need)
+# ---{SIZE REDUCTION}--- #
 KERNEL_NOPATCH = 1
 NEWLIB_NANO = 1
 DUMMY_TIMEZONE = 1
 
 # ---{ VERSIONING }--- #
-
 VERSION = 1
 SUBVERSION = 2
 PATCHLEVEL = 0
 STATUS = Beta
 
 # ---{ EXECUTABLES }--- #
-
 BINDIR ?= bin/
 BASENAME ?= PS2BBL
 EE_BIN = $(BINDIR)$(BASENAME).ELF
@@ -49,18 +53,15 @@ KELFTYPE ?= MC
 EE_BIN_ENCRYPTED = $(BINDIR)$(BASENAME)_$(KELFTYPE).KELF
 
 # ---{ OBJECTS & STUFF }--- #
-
 EE_OBJS_DIR = obj/
 EE_SRC_DIR = src/
 EE_ASM_DIR = asm/
 
-EE_OBJS = main.o \
-          util.o elf.o timer.o ps2.o ps1.o dvdplayer.o \
-          modelname.o libcdvd_add.o OSDHistory.o OSDInit.o OSDConfig.o \
+EE_OBJS = main.o util.o elf.o timer.o modelname.o \
+          libcdvd_add.o OSDInit.o OSDConfig.o \
           $(EMBEDDED_STUFF) \
 		      $(IOP_OBJS)
 
-EMBEDDED_STUFF = icon_sys_A.o icon_sys_J.o icon_sys_C.o
 
 EE_CFLAGS = -Wall
 EE_CFLAGS += -fdata-sections -ffunction-sections -DREPORT_FATAL_ERRORS
@@ -71,7 +72,6 @@ EE_INCS += -Iinclude -I$(PS2SDK)/ports/include
 EE_CFLAGS += -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DPATCHLEVEL=\"$(PATCHLEVEL)\" -DSTATUS=\"$(STATUS)\"
 
 # ---{ CONDITIONS }--- #
-
 ifneq ($(VERBOSE), 1)
    .SILENT:
 endif
@@ -139,10 +139,31 @@ else
   EE_OBJS += sio2man_irx.o
 endif
 
-ifneq ($(HAS_EMBED_IRX), 1)
+ifeq ($(HAS_EMBED_IRX), 1)
   $(info --- USB drivers will be embedded)
   EE_OBJS += usbd_irx.o bdm_irx.o bdmfs_fatfs_irx.o usbmass_bd_irx.o
   EE_CFLAGS += -DHAS_EMBEDDED_IRX
+endif
+
+ifeq ($(PS1), 1)
+  EE_OBJS += ps1.o
+  EE_CFLAGS += -DF_PS1
+endif
+
+ifeq ($(PS2), 1)
+  EE_OBJS += ps2.o
+  EE_CFLAGS += -DF_PS2
+endif
+
+ifeq ($(DVDPLAYER), 1)
+  EE_OBJS += dvdplayer.o
+  EE_CFLAGS += -DF_DVDPLAYER
+endif
+
+ifeq ($(OSDHISTORY), 1)
+  EE_OBJS += OSDHistory.o
+  EE_CFLAGS += -DF_OSD_HISTORY
+  EMBEDDED_STUFF += icon_sys_A.o icon_sys_J.o icon_sys_C.o
 endif
 
 ifeq ($(HDD), 1)
