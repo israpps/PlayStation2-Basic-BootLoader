@@ -137,8 +137,8 @@ int main(int argc, char *argv[])
     DPRINTF("init ROMVER, model name ps1dvr and dvdplayer ver\n");
     OSDInitROMVER(); // Initialize ROM version (must be done first).
     ModelNameInit(); // Initialize model name
-    PS1DRVInit();    // Initialize PlayStation Driver (PS1DRV)
-    DVDPlayerInit(); // Initialize ROM DVD player. It is normal for this to fail on consoles that have no DVD ROM chip (i.e. DEX or the SCPH-10000/SCPH-15000).
+    GPS1DISC(PS1DRVInit());    // Initialize PlayStation Driver (PS1DRV)
+    GDVDPLAYER(DVDPlayerInit()); // Initialize ROM DVD player. It is normal for this to fail on consoles that have no DVD ROM chip (i.e. DEX or the SCPH-10000/SCPH-15000).
 
     if (OSDConfigLoad() != 0) // Load OSD configuration
     {                         // OSD configuration not initialized. Defaults loaded.
@@ -279,7 +279,7 @@ int main(int argc, char *argv[])
                 GLOBCFG.KEYPATHS[x][j] = CheckPath(DEFPATH[3 * x + j]);
         sleep(1);
     }
-
+#ifdef F_OSD_HISTORY
     int R = 0x80, G = 0x80, B = 0x80;
     if (GLOBCFG.OSDHISTORY_READ && (GLOBCFG.LOGO_DISP > 1)) {
         j = 1;
@@ -313,6 +313,7 @@ int main(int argc, char *argv[])
             DPRINTF("can't find any osd history for banner color\n");
         }
     }
+#endif
     // Stores last key during DELAY msec
     scr_clear();
     if (GLOBCFG.LOGO_DISP > 1)
@@ -322,12 +323,13 @@ int main(int argc, char *argv[])
         scr_printf(BANNER_FOOTER);
     if (GLOBCFG.LOGO_DISP > 0) {
         scr_printf("\n\n\tModel:\t\t%s\n"
-                   "\tPlayStation Driver:\t%s\n"
-                   "\tDVD Player:\t%s\n"
+                   GPS1DISC("\tPlayStation Driver:\t%s\n")
+                   GDVDPLAYER("\tDVD Player:\t%s\n")
                    "\tConfig source:\t%s\n",
                    ModelNameGet(),
-                   PS1DRVGetVersion(),
-                   DVDPlayerGetVersion(),
+                   GPS1DISC(PS1DRVGetVersion(),)
+                   GDVDPLAYER(DVDPlayerGetVersion(),)
+
                    SOURCES[config_source]);
 #ifndef NO_TEMP_DISP
         PrintTemperature();
@@ -488,7 +490,7 @@ int LoadUSBIRX(void)
 #ifdef HAS_EMBEDDED_IRX
     ID = SifExecModuleBuffer(bdm_irx, size_bdm_irx, 0, NULL, &RET);
 #else
-    ID = SifLoadStartModule(CheckPath("mc?:/PS2BBL/BDM.IRX"), 0, NULL, &RET);
+    ID = SifLoadStartModule(CheckPath("mc?:/SYS-CONF/BDM.IRX"), 0, NULL, &RET);
 #endif
     DPRINTF(" [BDM]: ret=%d, ID=%d\n", RET, ID);
     if (ID < 0 || RET == 1)
@@ -497,7 +499,7 @@ int LoadUSBIRX(void)
 #ifdef HAS_EMBEDDED_IRX
     ID = SifExecModuleBuffer(bdmfs_fatfs_irx, size_bdmfs_fatfs_irx, 0, NULL, &RET);
 #else
-    ID = SifLoadStartModule(CheckPath("mc?:/PS2BBL/BDMFS_FATFS.IRX"), 0, NULL, &RET);
+    ID = SifLoadStartModule(CheckPath("mc?:/SYS-CONF/BDMFS_FATFS.IRX"), 0, NULL, &RET);
 #endif
     DPRINTF(" [BDMFS_FATFS]: ret=%d, ID=%d\n", RET, ID);
     if (ID < 0 || RET == 1)
@@ -506,7 +508,7 @@ int LoadUSBIRX(void)
 #ifdef HAS_EMBEDDED_IRX
     ID = SifExecModuleBuffer(usbd_irx, size_usbd_irx, 0, NULL, &RET);
 #else
-    ID = SifLoadStartModule(CheckPath("mc?:/PS2BBL/USBD.IRX"), 0, NULL, &RET);
+    ID = SifLoadStartModule(CheckPath("mc?:/SYS-CONF/USBD.IRX"), 0, NULL, &RET);
 #endif
     delay(3);
     DPRINTF(" [USBD]: ret=%d, ID=%d\n", RET, ID);
@@ -516,7 +518,7 @@ int LoadUSBIRX(void)
 #ifdef HAS_EMBEDDED_IRX
     ID = SifExecModuleBuffer(usbmass_bd_irx, size_usbmass_bd_irx, 0, NULL, &RET);
 #else
-    ID = SifLoadStartModule(CheckPath("mc?:/PS2BBL/USBMASS_BD.IRX"), 0, NULL, &RET);
+    ID = SifLoadStartModule(CheckPath("mc?:/SYS-CONF/USBMASS_BD.IRX"), 0, NULL, &RET);
 #endif
     DPRINTF(" [USBMASS_BD]: ret=%d, ID=%d\n", RET, ID);
     if (ID < 0 || RET == 1)
@@ -837,13 +839,14 @@ int dischandler()
                     scr_printf("Audio Disc (not supported by this program)\n");
                     scr_setfontcolor(0xffffff);
                     break;
-
+                GDVDPLAYER(
                 case SCECdDVDV:
                     scr_setfontcolor(0x00ff00);
                     scr_printf("DVD Video\n");
                     scr_setfontcolor(0xffffff);
                     ValidDiscInserted = 1;
                     break;
+                )
                 default:
                     scr_setfontcolor(0x0000ff);
                     scr_printf("Unknown (%d)\n", DiscType);
@@ -860,19 +863,22 @@ int dischandler()
     // Now that a valid disc is inserted, do something.
     // CleanUp() will be called, to deinitialize RPCs. SIFRPC will be deinitialized by the respective disc-handlers.
     switch (DiscType) {
+        GPS1DISC(
         case SCECdPSCD:
         case SCECdPSCDDA:
             // Boot PlayStation disc
             PS1DRVBoot();
             break;
-
+        )
+        GPS2DISC(
         case SCECdPS2CD:
         case SCECdPS2CDDA:
         case SCECdPS2DVD:
             // Boot PlayStation 2 disc
             PS2DiscBoot(GLOBCFG.SKIPLOGO);
             break;
-
+        )
+        GDVDPLAYER(
         case SCECdDVDV:
             /*  If the user chose to disable the DVD Player progressive scan setting,
                 it is disabled here because Sony probably wanted the setting to only bind if the user played a DVD.
@@ -885,6 +891,7 @@ int dischandler()
                 Play history is automatically updated. */
             DVDPlayerBoot();
             break;
+        )
     }
     return 0;
 }
@@ -1051,6 +1058,8 @@ void _libcglue_timezone_update()
 {
 }
 #endif
+
+void _libcglue_rtc_update() {}
 
 #if defined(KERNEL_NOPATCH)
 DISABLE_PATCHED_FUNCTIONS();

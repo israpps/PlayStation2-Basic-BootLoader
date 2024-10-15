@@ -1,4 +1,4 @@
-
+#ifdef F_PS1
 /**
  * @brief Initialize the PlayStation driver in ROM
  * @returns 0 on success.
@@ -16,3 +16,7 @@ int PS1DRVBoot(void);
  * @returns a human-readable version number for the PlayStation driver.
 */
 const char *PS1DRVGetVersion(void);
+#define GPS1DISC(x...) x
+#else
+#define GPS1DISC(x...)
+#endif
