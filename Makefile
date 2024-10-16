@@ -310,6 +310,10 @@ analize:
 	$(MAKE) rebuild DEBUG=1
 	python3 thirdparty/elf-size-analize.py $(EE_BIN) -R -t mips64r5900el-ps2-elf-
 
+elfinfo:
+	$(MAKE) rebuild DEBUG=1
+	mips64r5900el-ps2-elf-nm --print-size --size-sort --radix=d --format=sysv $(EE_BIN)>ELF_INFO.TXT
+
 celan: clean # a repetitive typo when quicktyping
 kelf: $(EE_BIN_ENCRYPTED) # alias of KELF creation
 
