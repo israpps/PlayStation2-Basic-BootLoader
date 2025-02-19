@@ -80,6 +80,7 @@ int main(int argc, char *argv[])
     j = SifExecModuleBuffer(padman_irx, size_padman_irx, 0, NULL, &x);
     DPRINTF(" [PADMAN]: ID=%d, ret=%d\n", j, x);
 #endif
+
     j = LoadUSBIRX();
     if (j != 0) {
         scr_setfontcolor(0x0000ff);
@@ -96,6 +97,11 @@ int main(int argc, char *argv[])
         scr_clear();
         sleep(4);
     }
+#endif
+
+#ifdef MMCE
+    j = SifExecModuleBuffer(mmceman_irx, size_mmceman_irx, 0, NULL, &x);
+    DPRINTF(" [MMCEMAN]: ID=%d, ret=%d\n", j, x);
 #endif
 
 #ifdef MX4SIO
@@ -371,7 +377,7 @@ int main(int argc, char *argv[])
             CleanUp();
             RunLoaderElf(EXECPATHS[j], MPART);
         } else {
-            DPRINTF("%s not found\n", EXECPATHS[j]);
+            scr_printf("%s %-15s\r", EXECPATHS[j], "not found");
         }
     }
 
@@ -445,6 +451,17 @@ char *CheckPath(char *path)
             if (exist(path))
                 return path;
         }
+#ifdef MMCE
+    } else if (!strncmp("mmce?", path, 5)) {
+        path[4] = (config_source == SOURCE_MMCE1) ? '1' : '0';
+        if (exist(path)) {
+            return path;
+        } else {
+            path[4] = (config_source == SOURCE_MMCE1) ? '0' : '1';
+            if (exist(path))
+                return path;
+        }
+#endif
 #ifdef HDD
     } else if (!strncmp("hdd", path, 3)) {
         if (MountParty(path) < 0) {
