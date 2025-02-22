@@ -14,6 +14,10 @@ enum
 #ifdef XFROM
     SOURCE_XFROM,
 #endif
+#ifdef MMCE
+    SOURCE_MMCE1,
+    SOURCE_MMCE0,
+#endif
 #ifdef PSX
     SOURCE_XCONFIG,
 #endif
@@ -35,6 +39,10 @@ char *CONFIG_PATHS[SOURCE_COUNT] = {
 #ifdef XFROM
     "xfrom:/PS2BBL/CONFIG.INI",
 #endif
+#ifdef MMCE
+    "mmce0:/PS2BBL/PS2BBL.INI",
+    "mmce1:/PS2BBL/PS2BBL.INI",
+#endif
 #ifdef PSX
     "mc?:/SYS-CONF/PSXBBL.INI",
 #endif
@@ -54,6 +62,10 @@ static const char *SOURCES[SOURCE_COUNT] = {
 #endif
 #ifdef XFROM
     "xfrom",
+#endif
+#ifdef MMCE
+    "mmce0",
+    "mmce1",
 #endif
 #ifdef PSX
     "XCONF",

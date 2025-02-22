@@ -64,6 +64,14 @@ jobs:
         run: |
           make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PS2_HDD/ HDD=1 ${{ env.DEBUG }} PRINTF=${{ github.event.inputs.name }}
 
+      - name: Compile PS2 MMCE build
+        run: |
+          make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PS2_MMCE/ MMCE=1 ${{ env.DEBUG }} PRINTF=${{ github.event.inputs.name }}
+
+      - name: Compile PSX MMCE build
+        run: |
+          make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PSX_MMCE/ PSX=1 MMCE=1 ${{ env.DEBUG }} PRINTF=${{ github.event.inputs.name }}
+
       - name: list
         run: |
           git ls-files -i --exclude-standard -c
@@ -76,6 +84,8 @@ jobs:
           mv PSX/ release/PSX/
           mv PS2_HDD/ release/PS2_HDD/
           mv PS2_MX4SIO/ release/PS2_MX4SIO/
+          mv PS2_MMCE/ release/PS2_MMCE/
+          mv PSX_MMCE/ release/PSX_MMCE/
 
       - name: pack release
         run: |

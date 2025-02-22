@@ -15,6 +15,10 @@ IMPORT_BIN2C(padman_irx);
 IMPORT_BIN2C(psx_ioprp);
 #endif
 
+#ifdef MMCE
+IMPORT_BIN2C(mmceman_irx);
+#endif
+
 #ifdef FILEXIO
 IMPORT_BIN2C(iomanX_irx);
 IMPORT_BIN2C(fileXio_irx);

@@ -15,6 +15,7 @@ HAS_EMBED_IRX = 1 # whether to embed or not non vital IRX (wich will be loaded f
 DEBUG ?= 0
 PSX ?= 0 # PSX DESR support
 HDD ?= 0 #wether to add internal HDD support
+MMCE ?= 0
 MX4SIO ?= 0
 PROHBIT_DVD_0100 ?= 0 # prohibit the DVD Players v1.00 and v1.01 from being booted.
 XCDVD_READKEY ?= 0 # Enable the newer sceCdReadKey checks, which are only supported by a newer CDVDMAN module.
@@ -83,6 +84,19 @@ ifeq ($(MX4SIO), 1)
   EE_CFLAGS += -DMX4SIO
   ifeq ($(USE_ROM_SIO2MAN), 1)
     $(error MX4SIO needs Homebrew SIO2MAN to work)
+  endif
+endif
+
+ifeq ($(MMCE), 1)
+  HOMEBREW_IRX = 1
+  FILEXIO_NEED = 1
+  EE_OBJS += mmceman_irx.o
+  EE_CFLAGS += -DMMCE
+  ifeq ($(USE_ROM_SIO2MAN), 1)
+    $(error MMCE needs Homebrew SIO2MAN to work)
+  endif
+  ifeq ($(MX4SIO), 1)
+    $(error MX4SIO cant coexist with MMCE)
   endif
 endif
 
@@ -268,9 +282,9 @@ endif
 $(EE_BIN_ENCRYPTED): $(EE_BIN_PACKED)
 	@echo " -- Encrypting ($(KELFTYPE))"
 ifeq ($(KELFTYPE), MC)
-	thirdparty/kelftool_dnasload.exe encrypt dnasload $< $@
+	thirdparty/kelftool encrypt dnasload $< $@
 else ifeq ($(KELFTYPE), HDD)
-	thirdparty/kelftool_dnasload.exe encrypt fhdb $< $@
+	thirdparty/kelftool encrypt fhdb $< $@
 else
 	$(error UNKNOWN KELF TYPE: '$(KELFTYPE)')
 endif
