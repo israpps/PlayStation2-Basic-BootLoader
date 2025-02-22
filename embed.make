@@ -9,7 +9,7 @@ $(EE_ASM_DIR)ioprp.c: embed/ioprp.img | $(EE_ASM_DIR)
 
 $(EE_ASM_DIR)padman_irx.c: freepad.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ padman_irx
- 
+
 $(EE_ASM_DIR)iomanx_irx.c: iomanX.irx | $(EE_ASM_DIR)
 	$(BIN2S) $< $@ iomanX_irx
 
@@ -26,6 +26,9 @@ $(EE_ASM_DIR)%_irx.c: %.irx
 	$(DIR_GUARD)
 	$(BIN2S) $< $@ $(IRXTAG)
 
+embed/iop/mmceman.irx:
+	$(info - - Downloading MMCEMAN Driver)
+	wget -q https://github.com/israpps/wLaunchELF_ISR/raw/refs/heads/master/iop/__precompiled/mmceman.irx -O $@
 
 # ---{ EMBEDDED RESOURCES }--- #
 $(EE_ASM_DIR)icon_sys_A.c: embed/icons/icon_A.sys | $(EE_ASM_DIR)
