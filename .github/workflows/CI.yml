@@ -92,7 +92,7 @@ jobs:
           name: PS2BBL
           path: |
             release/*
-            
+
       - name: Create prerelease
         if: github.ref == 'refs/heads/main'
         uses: mathieucarbou/marvinpinto-action-automatic-releases@latest
@@ -168,7 +168,7 @@ jobs:
 
       - name: Upload artifacts
         if: ${{ success() }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: PS2BBL_OPENTUNA
           path: |
