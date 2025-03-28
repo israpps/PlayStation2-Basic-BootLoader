@@ -28,15 +28,19 @@ int main(int argc, char *argv[])
     SifInitIopHeap(); // Initialize SIF services for loading modules and files.
     SifLoadFileInit();
     fioInit(); // NO scr_printf BEFORE here
+
+#if !defined(CHAINLOAD) || !defined(NO_DPRINTF)
     init_scr();
     scr_setCursor(0); // get rid of annoying that cursor.
+    scr_printf(".\n"); // GBS control does not detect image output with scr debug till the first char is printed
+#endif
+
     DPRINTF_INIT()
 #ifndef NO_DPRINTF
     DPRINTF("PS2BBL: starting with %d argumments:\n", argc);
     for (x = 0; x < argc; x++)
         DPRINTF("\targv[%d] = [%s]\n", x, argv[x]);
 #endif
-    scr_printf(".\n"); // GBS control does not detect image output with scr debug till the first char is printed
     // print a simple dot to allow gbs control to start displaying video before banner and pad timeout begins to run. othersiwe, users with timeout lower than 4000 will have issues to respond in time
     DPRINTF("enabling LoadModuleBuffer\n");
     sbv_patch_enable_lmb(); // The old IOP kernel has no support for LoadModuleBuffer. Apply the patch to enable it.
@@ -73,6 +77,8 @@ int main(int argc, char *argv[])
     DPRINTF(" [MCSERV]: ID=%d, ret=%d\n", j, x);
     mcInit(MC_TYPE_XMC);
 #endif
+
+#ifndef CHAINLOAD
 #ifdef USE_ROM_PADMAN
     j = SifLoadStartModule("rom0:PADMAN", 0, NULL, &x);
     DPRINTF(" [PADMAN]: ID=%d, ret=%d\n", j, x);
@@ -90,6 +96,7 @@ int main(int argc, char *argv[])
         sleep(1);
 #endif
     }
+#endif
 
 #ifdef FILEXIO
     if (LoadFIO() < 0) {
@@ -171,6 +178,22 @@ int main(int argc, char *argv[])
     // Remember to set the video output option (RGB or Y Cb/Pb Cr/Pr) accordingly, before SetGsCrt() is called.
     DPRINTF("Setting vmode\n");
     SetGsVParam(OSDConfigGetVideoOutput() == VIDEO_OUTPUT_RGB ? VIDEO_OUTPUT_RGB : VIDEO_OUTPUT_COMPONENT);
+
+#ifdef CHAINLOAD
+    char bootPath[] = CHAINLOAD_PATH;
+    for (j = '0'; j <'2'; j++) {
+        bootPath[2] = j;
+        if (exist(bootPath)) {
+            CleanUp();
+            RunLoaderElf(bootPath, NULL);
+        }
+    }
+    init_scr();
+    scr_setCursor(0); // get rid of annoying that cursor.
+    scr_printf("\n\n\n"CHAINLOAD_PATH" not found\n");
+    while (1) {}
+#endif
+
     DPRINTF("Init pads\n");
     PadInitPads();
     DPRINTF("Init timer and wait for rescue mode key\n");

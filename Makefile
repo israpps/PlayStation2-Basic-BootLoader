@@ -13,6 +13,8 @@ export HEADER
 # ---{BUILD CFG}--- #
 HAS_EMBED_IRX = 1 # whether to embed or not non vital IRX (wich will be loaded from memcard files)
 DEBUG ?= 0
+CHAINLOAD ?= 0 # Only inits the system and boots CHAINLOAD_PATH from the memory card
+CHAINLOAD_PATH ?= "mc?:BOOT/PAYLOAD.ELF"
 PSX ?= 0 # PSX DESR support
 HDD ?= 0 #wether to add internal HDD support
 MMCE ?= 0
@@ -75,6 +77,12 @@ EE_CFLAGS += -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DPATCHLEVE
 
 ifneq ($(VERBOSE), 1)
    .SILENT:
+endif
+
+ifeq ($(CHAINLOAD), 1)
+  HAS_EMBED_IRX = 1
+  EE_CFLAGS += -DCHAINLOAD -DCHAINLOAD_PATH=\"$(CHAINLOAD_PATH)\"
+  undefine EMBEDDED_STUFF
 endif
 
 ifeq ($(MX4SIO), 1)
