@@ -11,7 +11,7 @@ export HEADER
 
 
 # ---{BUILD CFG}--- #
-HAS_EMBED_IRX = 1 # whether to embed or not non vital IRX (wich will be loaded from memcard files)
+HAS_EMBED_IRX ?= 1# whether to embed or not non vital IRX (wich will be loaded from memcard files)
 DEBUG ?= 0
 CHAINLOAD ?= 0 # Only inits the system and boots CHAINLOAD_PATH from the memory card
 CHAINLOAD_PATH ?= "mc?:BOOT/PAYLOAD.ELF"
@@ -161,10 +161,12 @@ else
   EE_OBJS += sio2man_irx.o
 endif
 
-ifneq ($(HAS_EMBED_IRX), 1)
+ifeq ($(HAS_EMBED_IRX), 1)
   $(info --- USB drivers will be embedded)
   EE_OBJS += usbd_irx.o bdm_irx.o bdmfs_fatfs_irx.o usbmass_bd_irx.o
   EE_CFLAGS += -DHAS_EMBEDDED_IRX
+else
+  $(info --- USB drivers will be external)
 endif
 
 ifeq ($(HDD), 1)
