@@ -191,7 +191,15 @@ int main(int argc, char *argv[])
     init_scr();
     scr_setCursor(0); // get rid of annoying that cursor.
     scr_printf("\n\n\n"CHAINLOAD_PATH" not found\n");
-    while (1) {}
+    sleep(2);
+    j = LoadUSBIRX();
+    if (j != 0) {
+        scr_setfontcolor(0x0000ff);
+        scr_printf("ERROR: could not load USB modules (%d)\n", j);
+        scr_setfontcolor(0xffffff);
+        __builtin_trap();
+    }
+    EMERGENCY();
 #endif
 
     DPRINTF("Init pads\n");
