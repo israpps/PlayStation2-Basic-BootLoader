@@ -72,6 +72,14 @@ jobs:
         run: |
           make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PSX_MMCE/ PSX=1 MMCE=1 ${{ env.DEBUG }} PRINTF=${{ github.event.inputs.name }}
 
+      - name: Compile PS2 chainload build
+        run: |
+          make release COMMIT_HASH=${GITHUB_SHA::7} CHAINLOAD=1 BINDIR=PS2_CHAINLOAD/ ${{ env.DEBUG }} PRINTF=${{ github.event.inputs.name }}
+
+      - name: Compile PSX chainload build
+        run: |
+          make release COMMIT_HASH=${GITHUB_SHA::7} CHAINLOAD=1Z BINDIR=PSX_CHAINLOAD/ PSX=1 ${{ env.DEBUG }} PRINTF=${{ github.event.inputs.name }}
+
       - name: list
         run: |
           git ls-files -i --exclude-standard -c
@@ -86,6 +94,8 @@ jobs:
           mv PS2_MX4SIO/ release/PS2_MX4SIO/
           mv PS2_MMCE/ release/PS2_MMCE/
           mv PSX_MMCE/ release/PSX_MMCE/
+          mv PS2_CHAINLOAD/ release/PS2_CHAINLOAD/
+          mv PSX_CHAINLOAD/ release/PSX_CHAINLOAD/
 
       - name: pack release
         run: |
@@ -114,81 +124,53 @@ jobs:
           files: |
             PS2BBL.7z
 
-      - name: notify on discord
-        if: github.ref == 'refs/heads/main'
-        uses: tsickert/discord-webhook@v5.3.0
-        with:
-          webhook-url: ${{ secrets.DISCORD_FEED }}
-          content: "## PS2BBL has been updated!\nread the changelog here: https://github.com/israpps/PlayStation2-Basic-BootLoader/releases/tag/latest\n### [Download Page](https://israpps.github.io/PlayStation2-Basic-BootLoader/Downloads/)"
-
-
-  opentuna:
+  osdmenu:
     runs-on: ubuntu-latest
     needs: [build]
     container: ps2dev/ps2dev:latest
     steps:
-
       - name: Install dependencies
         run: |
           apk add build-base git p7zip
 
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4.1.7
+      - uses: actions/checkout@v4
+      - run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git fetch --prune --unshallow
+
+      - name: Compile OSDMenu chainloader build
+        run: |
+          make release CHAINLOAD=1 CHAINLOAD_PATH="mc?:/BOOT/patcher.elf" COMMIT_HASH=${GITHUB_SHA::7} BINDIR=OSDMENU/
+
+      - name: Compile OSDMenu SAS chainloader build
+        run: |
+          make release CHAINLOAD=1 CHAINLOAD_PATH="mc?:/OSDMENU/patcher.elf" COMMIT_HASH=${GITHUB_SHA::7} BINDIR=OSDMENU_SAS/
 
       - name: list
         run: |
-          ls -R
+          git ls-files -i --exclude-standard -c
 
-      - name: clone
+      - name: prepare release folder
         run: |
-          git clone --depth 1 -b PS2BBL https://github.com/israpps/Funtuna-Fork
-
-      - name: update binaries
-        run: |
-          cp PS2BBL/PS2/COMPRESSED_PS2BBL.ELF Funtuna-Fork/installer/INSTALLER_CONTENTS/BOOT/BOOT.ELF
-          cp PS2BBL/SYS-CONF/PS2BBL.INI Funtuna-Fork/installer/INSTALLER_CONTENTS/SYS-CONF/PS2BBL.INI
-
-      - name: update bundled software
-        run: |
-          wget https://github.com/israpps/wLaunchELF_ISR/releases/download/latest/BOOT-EXFAT.ELF -O Funtuna-Fork/installer/INSTALLER_CONTENTS/BOOT/ULE.ELF
-
-      - name: compile
-        run: |
-          cd Funtuna-Fork/installer
-          make clean all
-
-      - name: list
-        run: |
-          ls -R
+          cp LICENSE release/LICENSE.TXT
+          mv OSDMENU/ release/OSDMENU/
+          mv OSDMENU_SAS/ release/OSDMENU_SAS/
 
       - name: pack release
         run: |
-          mkdir release
           CSH=${GITHUB_SHA::7}
           DATE=$(date "+%d-%m-%Y")
-          TARGET="PS2BBL_OpenTuna_installer-[$DATE]-[$CSH]"
-          cp Funtuna-Fork/installer/bin/PS2BBL_OpenTuna_Installer.ELF release/PS2BBL_OpenTuna_Installer.ELF
-          cp PS2BBL/LICENSE.TXT release/LICENSE.TXT
-          echo "PS2BBL and installer by Matias Israelson">release/CREDITS.TXT
-          echo "OpenTuna by Alexander Lopez Parrado">>release/CREDITS.TXT
-          echo "If you bought this software you have been SCAMMED.">>release/CREDITS.TXT
-          echo "https://github.com/israpps/PlayStation2-Basic-BootLoader">>release/CREDITS.TXT
+          TARGET="PS2BBL[$DATE]-[$CSH]"
           cp -r release/ $TARGET/
-          7z a -t7z PS2BBL_OpenTuna_Installer.7z $TARGET/*
+          7z a -t7z PS2BBL_OSDMENU.7z $TARGET/*
 
       - name: Upload artifacts
         if: ${{ success() }}
         uses: actions/upload-artifact@v4
         with:
-          name: PS2BBL_OPENTUNA
+          name: PS2BBL_OSDMENU
           path: |
-            release/PS2BBL_OpenTuna_Installer.ELF
-
-#      - name: last week changelog
-#        run: |
-#          git --no-pager log --pretty=format:"- %h:%as %>(18)%an: %s" --since="Last Week">CHANGELOG
-#          echo CHANGELOG=$(cat CHANGELOG) >> $GITHUB_ENV
-#          echo ${{ env.CHANGELOG }}
+            release/*
 
       - name: Create prerelease
         if: github.ref == 'refs/heads/main'
@@ -196,7 +178,7 @@ jobs:
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: true
-          automatic_release_tag: "opentuna"
-          title: "Latest PS2BBL + OpenTuna"
+          automatic_release_tag: "osdmenu"
+          title: "PS2BBL for OSDMenu"
           files: |
-            PS2BBL_OpenTuna_Installer.7z
+            PS2BBL_OSDMENU.7z
