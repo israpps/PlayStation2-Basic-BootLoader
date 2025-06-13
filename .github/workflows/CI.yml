@@ -140,11 +140,11 @@ jobs:
 
       - name: Compile OSDMenu chainloader build
         run: |
-          make release CHAINLOAD=1 CHAINLOAD_PATH="mc?:/BOOT/patcher.elf" COMMIT_HASH=${GITHUB_SHA::7} BINDIR=OSDMENU/
+          make release CHAINLOAD=1 CHAINLOAD_PATH="mc?:/BOOT/osdmenu.elf" COMMIT_HASH=${GITHUB_SHA::7} BINDIR=OSDMENU/
 
       - name: Compile OSDMenu SAS chainloader build
         run: |
-          make release CHAINLOAD=1 CHAINLOAD_PATH="mc?:/OSDMENU/patcher.elf" COMMIT_HASH=${GITHUB_SHA::7} BINDIR=OSDMENU_SAS/
+          make release CHAINLOAD=1 CHAINLOAD_PATH="mc?:/OSDMENU/osdmenu.elf" COMMIT_HASH=${GITHUB_SHA::7} BINDIR=OSDMENU_SAS/
 
       - name: list
         run: |
