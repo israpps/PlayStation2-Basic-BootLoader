@@ -1,5 +1,8 @@
 #ifndef COMMONDEF
 #define COMMONDEF
+
+#define CONFIG_KEY_INDEXES 5
+
 enum
 {
     SOURCE_MC0 = 0,
@@ -128,22 +131,32 @@ char *DEFPATH[] = {
     "mc?:/BOOT/ULE.ELF", // AUTO [0]
     "mc?:/APPS/ULE/ELF",
     "mass:/BOOT/BOOT.ELF",
-    "mass:/PS2BBL/L2[1].ELF", // L2 [3]
+    "",
+    "",
+    "mass:/PS2BBL/L2[1].ELF", // L2 [1]
     "mass:/PS2BBL/L2[2].ELF",
     "mass:/PS2BBL/L2[3].ELF",
-    "mass:/PS2BBL/R2[1].ELF", // R2 [6]
+    "",
+    "",
+    "mass:/PS2BBL/R2[1].ELF", // R2 [2]
     "mass:/PS2BBL/R2[2].ELF",
     "mass:/PS2BBL/R2[3].ELF",
-    "mc?:/OPL/OPNPS2LD.ELF", // L1 [9]
+    "",
+    "",
+    "mc?:/OPL/OPNPS2LD.ELF", // L1 [3]
     "mc?:/APPS/OPNPS2LD/ELF",
     "mass:/PS2BBL/OPNPS2LD.ELF",
-    "mass:/RESCUE.ELF", // R1 [12]
+    "",
+    "",
+    "mass:/RESCUE.ELF", // R1 [4]
     "mc?:/BOOT/BOOT2.ELF",
     "mc?:/APPS/ULE.ELF",
+    "",
+    "",
 };
 
 #ifndef COMMIT_HASH
 #define COMMIT_HASH "UNKNOWn"
 #endif
 
-#endif // COMMONDEF
+#endif // COMMONDE
