@@ -3,7 +3,7 @@
 typedef struct
 {
     int SKIPLOGO;
-    char *KEYPATHS[17][3];
+    char *KEYPATHS[17][CONFIG_KEY_INDEXES];
     int DELAY;
     int OSDHISTORY_READ;
     int TRAYEJECT;
@@ -11,7 +11,7 @@ typedef struct
 } CONFIG;
 CONFIG GLOBCFG;
 
-char *EXECPATHS[3];
+char *EXECPATHS[CONFIG_KEY_INDEXES];
 u8 ROMVER[16];
 int PAD = 0;
 static int config_source = SOURCE_INVALID;
@@ -28,19 +28,15 @@ int main(int argc, char *argv[])
     SifInitIopHeap(); // Initialize SIF services for loading modules and files.
     SifLoadFileInit();
     fioInit(); // NO scr_printf BEFORE here
-
-#if !defined(CHAINLOAD) || !defined(NO_DPRINTF)
     init_scr();
     scr_setCursor(0); // get rid of annoying that cursor.
-    scr_printf(".\n"); // GBS control does not detect image output with scr debug till the first char is printed
-#endif
-
     DPRINTF_INIT()
 #ifndef NO_DPRINTF
     DPRINTF("PS2BBL: starting with %d argumments:\n", argc);
     for (x = 0; x < argc; x++)
         DPRINTF("\targv[%d] = [%s]\n", x, argv[x]);
 #endif
+    scr_printf(".\n"); // GBS control does not detect image output with scr debug till the first char is printed
     // print a simple dot to allow gbs control to start displaying video before banner and pad timeout begins to run. othersiwe, users with timeout lower than 4000 will have issues to respond in time
     DPRINTF("enabling LoadModuleBuffer\n");
     sbv_patch_enable_lmb(); // The old IOP kernel has no support for LoadModuleBuffer. Apply the patch to enable it.
@@ -77,8 +73,6 @@ int main(int argc, char *argv[])
     DPRINTF(" [MCSERV]: ID=%d, ret=%d\n", j, x);
     mcInit(MC_TYPE_XMC);
 #endif
-
-#ifndef CHAINLOAD
 #ifdef USE_ROM_PADMAN
     j = SifLoadStartModule("rom0:PADMAN", 0, NULL, &x);
     DPRINTF(" [PADMAN]: ID=%d, ret=%d\n", j, x);
@@ -96,7 +90,6 @@ int main(int argc, char *argv[])
         sleep(1);
 #endif
     }
-#endif
 
 #ifdef FILEXIO
     if (LoadFIO() < 0) {
@@ -178,30 +171,6 @@ int main(int argc, char *argv[])
     // Remember to set the video output option (RGB or Y Cb/Pb Cr/Pr) accordingly, before SetGsCrt() is called.
     DPRINTF("Setting vmode\n");
     SetGsVParam(OSDConfigGetVideoOutput() == VIDEO_OUTPUT_RGB ? VIDEO_OUTPUT_RGB : VIDEO_OUTPUT_COMPONENT);
-
-#ifdef CHAINLOAD
-    char bootPath[] = CHAINLOAD_PATH;
-    for (j = '0'; j <'2'; j++) {
-        bootPath[2] = j;
-        if (exist(bootPath)) {
-            CleanUp();
-            RunLoaderElf(bootPath, NULL);
-        }
-    }
-    init_scr();
-    scr_setCursor(0); // get rid of annoying that cursor.
-    scr_printf("\n\n\n"CHAINLOAD_PATH" not found\n");
-    sleep(2);
-    j = LoadUSBIRX();
-    if (j != 0) {
-        scr_setfontcolor(0x0000ff);
-        scr_printf("ERROR: could not load USB modules (%d)\n", j);
-        scr_setfontcolor(0xffffff);
-        __builtin_trap();
-    }
-    EMERGENCY();
-#endif
-
     DPRINTF("Init pads\n");
     PadInitPads();
     DPRINTF("Init timer and wait for rescue mode key\n");
@@ -270,9 +239,9 @@ int main(int argc, char *argv[])
                         GLOBCFG.LOGO_DISP = atoi(value);
                         continue;
                     }
-                    if (!strncmp("LK_", name, 3)) {
+                    if (!strncmp("LK_", name, CONFIG_KEY_INDEXES)) {
                         for (x = 0; x < 17; x++) {
-                            for (j = 0; j < 3; j++) {
+                            for (j = 0; j < CONFIG_KEY_INDEXES; j++) {
                                 sprintf(TMP, "LK_%s_E%d", KEYS_ID[x], j + 1);
                                 if (!strcmp(name, TMP)) {
                                     GLOBCFG.KEYPATHS[x][j] = value;
@@ -312,8 +281,8 @@ int main(int argc, char *argv[])
     } else {
         scr_printf("Can't find config, loading hardcoded paths\n");
         for (x = 0; x < 5; x++)
-            for (j = 0; j < 3; j++)
-                GLOBCFG.KEYPATHS[x][j] = CheckPath(DEFPATH[3 * x + j]);
+            for (j = 0; j < CONFIG_KEY_INDEXES; j++)
+                GLOBCFG.KEYPATHS[x][j] = CheckPath(DEFPATH[CONFIG_KEY_INDEXES * x + j]);
         sleep(1);
     }
 
@@ -380,7 +349,7 @@ int main(int argc, char *argv[])
             if (PAD & button) {
                 DPRINTF("PAD detected\n");
                 // if button detected, copy path to corresponding index
-                for (j = 0; j < 3; j++) {
+                for (j = 0; j < CONFIG_KEY_INDEXES; j++) {
                     EXECPATHS[j] = CheckPath(GLOBCFG.KEYPATHS[x + 1][j]);
                     if (exist(EXECPATHS[j])) {
                         scr_setfontcolor(0x00ff00);
@@ -400,7 +369,7 @@ int main(int argc, char *argv[])
     }
     DPRINTF("Wait time consummed. running AUTO entry\n");
     TimerEnd();
-    for (j = 0; j < 3; j++) {
+    for (j = 0; j < CONFIG_KEY_INDEXES; j++) {
         EXECPATHS[j] = CheckPath(GLOBCFG.KEYPATHS[0][j]);
         if (exist(EXECPATHS[j])) {
             scr_setfontcolor(0x00ff00);
@@ -519,7 +488,7 @@ void SetDefaultSettings(void)
 {
     int i, j;
     for (i = 0; i < 17; i++)
-        for (j = 0; j < 3; j++)
+        for (j = 0; j < CONFIG_KEY_INDEXES; j++)
             GLOBCFG.KEYPATHS[i][j] = "isra:/";
     GLOBCFG.SKIPLOGO = 0;
     GLOBCFG.OSDHISTORY_READ = 1;
