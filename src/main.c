@@ -3,7 +3,7 @@
 typedef struct
 {
     int SKIPLOGO;
-    char *KEYPATHS[17][3];
+    char *KEYPATHS[17][CONFIG_KEY_INDEXES];
     int DELAY;
     int OSDHISTORY_READ;
     int TRAYEJECT;
@@ -11,7 +11,7 @@ typedef struct
 } CONFIG;
 CONFIG GLOBCFG;
 
-char *EXECPATHS[3];
+char *EXECPATHS[CONFIG_KEY_INDEXES];
 u8 ROMVER[16];
 int PAD = 0;
 static int config_source = SOURCE_INVALID;
@@ -239,9 +239,9 @@ int main(int argc, char *argv[])
                         GLOBCFG.LOGO_DISP = atoi(value);
                         continue;
                     }
-                    if (!strncmp("LK_", name, 3)) {
+                    if (!strncmp("LK_", name, CONFIG_KEY_INDEXES)) {
                         for (x = 0; x < 17; x++) {
-                            for (j = 0; j < 3; j++) {
+                            for (j = 0; j < CONFIG_KEY_INDEXES; j++) {
                                 sprintf(TMP, "LK_%s_E%d", KEYS_ID[x], j + 1);
                                 if (!strcmp(name, TMP)) {
                                     GLOBCFG.KEYPATHS[x][j] = value;
@@ -281,8 +281,8 @@ int main(int argc, char *argv[])
     } else {
         scr_printf("Can't find config, loading hardcoded paths\n");
         for (x = 0; x < 5; x++)
-            for (j = 0; j < 3; j++)
-                GLOBCFG.KEYPATHS[x][j] = CheckPath(DEFPATH[3 * x + j]);
+            for (j = 0; j < CONFIG_KEY_INDEXES; j++)
+                GLOBCFG.KEYPATHS[x][j] = CheckPath(DEFPATH[CONFIG_KEY_INDEXES * x + j]);
         sleep(1);
     }
 
@@ -349,7 +349,7 @@ int main(int argc, char *argv[])
             if (PAD & button) {
                 DPRINTF("PAD detected\n");
                 // if button detected, copy path to corresponding index
-                for (j = 0; j < 3; j++) {
+                for (j = 0; j < CONFIG_KEY_INDEXES; j++) {
                     EXECPATHS[j] = CheckPath(GLOBCFG.KEYPATHS[x + 1][j]);
                     if (exist(EXECPATHS[j])) {
                         scr_setfontcolor(0x00ff00);
@@ -369,7 +369,7 @@ int main(int argc, char *argv[])
     }
     DPRINTF("Wait time consummed. running AUTO entry\n");
     TimerEnd();
-    for (j = 0; j < 3; j++) {
+    for (j = 0; j < CONFIG_KEY_INDEXES; j++) {
         EXECPATHS[j] = CheckPath(GLOBCFG.KEYPATHS[0][j]);
         if (exist(EXECPATHS[j])) {
             scr_setfontcolor(0x00ff00);
@@ -488,7 +488,7 @@ void SetDefaultSettings(void)
 {
     int i, j;
     for (i = 0; i < 17; i++)
-        for (j = 0; j < 3; j++)
+        for (j = 0; j < CONFIG_KEY_INDEXES; j++)
             GLOBCFG.KEYPATHS[i][j] = "isra:/";
     GLOBCFG.SKIPLOGO = 0;
     GLOBCFG.OSDHISTORY_READ = 1;
