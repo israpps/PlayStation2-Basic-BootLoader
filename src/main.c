@@ -239,7 +239,7 @@ int main(int argc, char *argv[])
                         GLOBCFG.LOGO_DISP = atoi(value);
                         continue;
                     }
-                    if (!strncmp("LK_", name, 3)) {
+                    if (!strncmp("LK_", name, CONFIG_KEY_INDEXES)) {
                         for (x = 0; x < 17; x++) {
                             for (j = 0; j < CONFIG_KEY_INDEXES; j++) {
                                 sprintf(TMP, "LK_%s_E%d", KEYS_ID[x], j + 1);
