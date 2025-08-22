@@ -29,7 +29,7 @@ void BootError(void)
 #define CNF_PATH_LEN_MAX 64
 #define CNF_LEN_MAX      1024
 
-static const char *CNFGetToken(const unsigned char *cnf, const char *key)
+static const unsigned char *CNFGetToken(const unsigned char *cnf, const char *key)
 {
     for (; isspace(*cnf); cnf++) {
     }
@@ -37,7 +37,7 @@ static const char *CNFGetToken(const unsigned char *cnf, const char *key)
     for (; *key != '\0'; key++, cnf++) {
         // End of file
         if (*cnf == '\0')
-            return (const char *)-1;
+            return (const unsigned char *)-1;
 
         if (*cnf != *key)
             return NULL; // Non-match
@@ -60,28 +60,28 @@ static const char *CNFAdvanceLine(const char *start, const char *end)
 
 #define CNF_PATH_LEN_MAX 64
 
-static const char *CNFGetKey(const char *line, char *key)
+static const unsigned char *CNFGetKey(const unsigned char *line, char *key)
 {
     int i;
 
     // Skip leading whitespace
-    for (; isspace(*line); line++) {
+    for (; isspace((unsigned char)*line); line++) {
     }
 
     if (*line == '\0') { // Unexpected end of file
-        return (const char *)-1;
+        return (const unsigned char *)-1;
     }
 
     for (i = 0; i < CNF_PATH_LEN_MAX && *line != '\0'; i++) {
-        if (isgraph(*line)) {
+        if (isgraph((unsigned char)*line)) {
             *key = *line;
             line++;
             key++;
-        } else if (isspace(*line)) {
+        } else if (isspace((unsigned char)*line)) {
             *key = '\0';
             break;
         } else if (*line == '\0') { // Unexpected end of file. This check exists, along with the other similar check above.
-            return (const char *)-1;
+            return (const unsigned char *)-1;
         }
     }
 
@@ -229,7 +229,8 @@ int PS2DiscBoot(int skip_PS2LOGO)
     char ps2disc_boot[CNF_PATH_LEN_MAX] = "";             // This was originally static/global.
     char system_cnf[CNF_LEN_MAX], line[CNF_PATH_LEN_MAX]; // These were originally globals/static.
     char *args[1];
-    const char *pChar, *cnf_start, *cnf_end;
+    const unsigned char *pChar;
+    const char *cnf_start, *cnf_end;
     int fd, size, size_remaining, size_read;
 
     switch (PS2GetBootFile(ps2disc_boot)) {
@@ -274,14 +275,14 @@ int PS2DiscBoot(int skip_PS2LOGO)
 
     // Parse SYSTEM.CNF
     cnf_start = system_cnf;
-    while ((pChar = CNFGetToken(cnf_start, "BOOT2")) == NULL)
+    while ((pChar = CNFGetToken((const unsigned char *)cnf_start, "BOOT2")) == NULL)
         cnf_start = CNFAdvanceLine(cnf_start, cnf_end);
 
-    if (pChar == (const char *)-1) { // Unexpected EOF
+    if (pChar == (const unsigned char *)-1) { // Unexpected EOF
         BootError();
     }
 
-    if ((pChar = CNFGetToken(pChar, "=")) == (const char *)-1) { // Unexpected EOF
+    if ((pChar = CNFGetToken(pChar, "=")) == (const unsigned char *)-1) { // Unexpected EOF
         BootError();
     }
 

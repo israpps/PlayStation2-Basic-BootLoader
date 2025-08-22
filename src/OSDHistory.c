@@ -21,9 +21,11 @@
 #define HISTORY_PATH_LEN 1024
 
 
+#ifndef CHAINLOAD
 extern unsigned char icon_sys_A[];
 extern unsigned char icon_sys_J[];
 extern unsigned char icon_sys_C[];
+#endif
 #ifdef WRITE_ICOBYSYS
 extern unsigned char icobysys_icn[];
 extern unsigned int size_icobysys_icn;
@@ -188,6 +190,7 @@ int SaveHistoryFile(int port)
         }
     }
 
+#ifndef CHAINLOAD
     if (!exist(ICONSYS)) // leave this one for the end, so if writing failed and folder was created it remains without icon (OSD deems it as corrupted data)
     {
         DPRINTF("%s: writing icon.sys for [%s]...\n", __func__, OSDGetSystemDataFolder());
@@ -210,6 +213,7 @@ int SaveHistoryFile(int port)
             close(fd);
         }
     }
+#endif
     /// TODO: Check if i work on real HW please!
     return 0;
 }

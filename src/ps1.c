@@ -97,7 +97,7 @@ static void CNFGetKey(unsigned char *cnf, char *line, const char *key)
 
     if ((len = strlen(key)) != 0) {
         do {
-            if (strncmp(cnf, key, len) == 0) {           // Key located.
+            if (strncmp((const char *)cnf, key, len) == 0) {           // Key located.
                 for (cnf += len; isspace(*cnf); cnf++) { // Eliminate leading whitespaces.
                     if (*cnf == '\n' || *cnf == '\0')
                         return;
@@ -112,7 +112,7 @@ static void CNFGetKey(unsigned char *cnf, char *line, const char *key)
                             return;
                     }
 
-                    pKey = cnf;
+                    pKey = (const char *)cnf;
 
                     // Carry on, until the end of the line.
                     for (;; cnf++) { // NULL-terminate at the newline character.
@@ -184,7 +184,7 @@ static int ParseBootCNF(void)
         line[0] = '\0';
 
         // Parse SYSTEM.CNF
-        CNFGetKey(system_cnf, line, "BOOT");
+        CNFGetKey((unsigned char *)system_cnf, line, "BOOT");
         pChar = line;
 
         // Locate the end of the line.
@@ -210,7 +210,7 @@ static int ParseBootCNF(void)
 
         // Get the version number
         ps1drv_ver[0] = '\0';
-        CNFGetKey(ps1drv_boot, ps1drv_ver, "VER");
+        CNFGetKey((unsigned char *)ps1drv_boot, ps1drv_ver, "VER");
         if (ps1drv_ver[0] == '\0')
             strcpy(ps1drv_ver, "???");
 

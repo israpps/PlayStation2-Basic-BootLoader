@@ -204,7 +204,7 @@ int main(int argc, char *argv[])
         DPRINTF("Allocating %d bytes for config\n", cnf_size);
         config_buf = (unsigned char *)malloc(cnf_size + 1);
         if (config_buf != NULL) {
-            CNFBUFF = config_buf;
+            CNFBUFF = (char *)config_buf;
             int temp;
             if ((temp = fread(config_buf, 1, cnf_size, fp)) == cnf_size) {
                 DPRINTF("Reading finished... Closing fp*\n");
