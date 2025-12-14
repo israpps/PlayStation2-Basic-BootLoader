@@ -28,7 +28,7 @@ FILEXIO_NEED ?= 0 # if we need filexio and imanx loaded for other features (HDD,
 DEV9_NEED ?= 0    # if we need DEV9 loaded for other features (HDD, UDPTTY, etc)
 
 # Related to binary size reduction (it disables some features, please be sure you won't disable something you need)
-KERNEL_NOPATCH = 1
+KERNEL_NOPATCH = 0
 NEWLIB_NANO = 1
 DUMMY_TIMEZONE = 1
 
