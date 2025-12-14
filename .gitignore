@@ -22,3 +22,4 @@ asm/
 *.XLF
 *.dat
 bin/CONFIG.INI
+PS2BBL.map

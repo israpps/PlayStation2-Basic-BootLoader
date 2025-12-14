@@ -60,13 +60,13 @@ EE_OBJS = main.o \
           modelname.o libcdvd_add.o OSDHistory.o OSDInit.o OSDConfig.o \
           $(EMBEDDED_STUFF) \
 		      $(IOP_OBJS)
-
 EMBEDDED_STUFF = icon_sys_A.o icon_sys_J.o icon_sys_C.o
 
+MAPFILE = PS2BBL.map
 EE_CFLAGS = -Wall
 EE_CFLAGS += -fdata-sections -ffunction-sections -DREPORT_FATAL_ERRORS
 EE_LDFLAGS += -L$(PS2SDK)/ports/lib
-EE_LDFLAGS += -Wl,--gc-sections -Wno-sign-compare
+EE_LDFLAGS += -Wl,--gc-sections -Wno-sign-compare  -Wl,-Map,$(MAPFILE)
 EE_LIBS += -ldebug -lmc -lpatches
 EE_INCS += -Iinclude -I$(PS2SDK)/ports/include
 EE_CFLAGS += -DVERSION=\"$(VERSION)\" -DSUBVERSION=\"$(SUBVERSION)\" -DPATCHLEVEL=\"$(PATCHLEVEL)\" -DSTATUS=\"$(STATUS)\"
