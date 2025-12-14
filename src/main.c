@@ -97,6 +97,14 @@ int main(int argc, char *argv[])
         scr_clear();
         sleep(4);
     }
+#if defined(HDD) || defined(HDD_BD)
+    else if (LoadHDDIRX() < 0) // only load HDD crap if filexio and iomanx are up and running
+    {
+        scr_setbgcolor(0x0000ff);
+        scr_clear();
+        sleep(4);
+    }
+#endif
 #endif
 
 #ifdef MMCE
@@ -107,15 +115,6 @@ int main(int argc, char *argv[])
 #ifdef MX4SIO
     j = SifExecModuleBuffer(mx4sio_bd_irx, size_mx4sio_bd_irx, 0, NULL, &x);
     DPRINTF(" [MX4SIO_BD]: ID=%d, ret=%d\n", j, x);
-#endif
-
-#ifdef HDD
-    else if (LoadHDDIRX() < 0) // only load HDD crap if filexio and iomanx are up and running
-    {
-        scr_setbgcolor(0x0000ff);
-        scr_clear();
-        sleep(4);
-    }
 #endif
 
     if ((fd = open("rom0:ROMVER", O_RDONLY)) >= 0) {
@@ -474,11 +473,16 @@ char *CheckPath(char *path)
         if (!MountParty(path))
             return strstr(path, "pfs:");
 #endif
-#ifdef MX4SIO
+#if defined(MX4SIO) || defined(HDD_BD)
     } else if (!strncmp("massX:", path, 6)) {
         int x = LookForBDMDevice();
-        if (x >= 0)
+        if (x >= 0) {
             path[4] = '0' + x;
+            if (PART != NULL) {
+                // Neither device type needs the partition name.
+                PART[0] = '\0';
+            }
+        }
 #endif
     }
     return path;
@@ -554,7 +558,7 @@ int LoadUSBIRX(void)
 }
 
 
-#ifdef MX4SIO
+#if defined(MX4SIO) || defined(HDD_BD)
 int LookForBDMDevice(void)
 {
     static char mass_path[] = "massX:";
@@ -569,6 +573,10 @@ int LookForBDMDevice(void)
             close(dd);
             if (!strncmp(DEVID, "sdc", 3)) {
                 DPRINTF("%s: Found MX4SIO device at mass%d:/\n", __func__, x);
+                return x;
+            }
+            if (!strncmp(DEVID, "ata", 3)) {
+                DPRINTF("%s: Found ATA mass device at mass%d:/\n", __func__, x);
                 return x;
             }
         }
@@ -665,8 +673,13 @@ int LoadHDDIRX(void)
     poweroffSetCallback(&poweroffCallback, NULL);
     DPRINTF("PowerOFF Callback installed...\n");
 
+#ifdef HDD_BD
+    ID = SifExecModuleBuffer(ata_bd_irx, size_ata_bd_irx, 0, NULL, &RET);
+    DPRINTF(" [ATA_BD]: ID=%d, ret=%d\n", ID, RET);
+#else
     ID = SifExecModuleBuffer(&ps2atad_irx, size_ps2atad_irx, 0, NULL, &RET);
     DPRINTF(" [ATAD]: ret=%d, ID=%d\n", RET, ID);
+#endif
     if (ID < 0 || RET == 1)
         return -3;
 

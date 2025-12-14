@@ -26,7 +26,14 @@ IMPORT_BIN2C(fileXio_irx);
 
 #ifdef HDD
 IMPORT_BIN2C(poweroff_irx);
+#ifdef HDD_BD
+#ifdef USE_ROM_SIO2MAN
+#error HDD_BD needs Homebrew SIO2MAN to work
+#endif
+IMPORT_BIN2C(ata_bd_irx);
+#else
 IMPORT_BIN2C(ps2atad_irx);
+#endif
 IMPORT_BIN2C(ps2hdd_irx);
 IMPORT_BIN2C(ps2fs_irx);
 #endif

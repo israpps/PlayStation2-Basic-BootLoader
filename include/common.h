@@ -5,7 +5,7 @@ enum
     SOURCE_MC0 = 0,
     SOURCE_MC1,
     SOURCE_MASS,
-#ifdef MX4SIO
+#if defined(MX4SIO) || defined(HDD_BD)
     SOURCE_MX4SIO,
 #endif
 #ifdef HDD
@@ -30,7 +30,7 @@ char *CONFIG_PATHS[SOURCE_COUNT] = {
     "mc0:/SYS-CONF/PS2BBL.INI",
     "mc1:/SYS-CONF/PS2BBL.INI",
     "mass:/PS2BBL/CONFIG.INI",
-#ifdef MX4SIO
+#if defined(MX4SIO) || defined(HDD_BD)
     "massX:/PS2BBL/CONFIG.INI",
 #endif
 #ifdef HDD

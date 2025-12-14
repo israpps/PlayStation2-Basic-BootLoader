@@ -17,7 +17,7 @@
 void RunLoaderElf(const char *filename, const char *party)
 {
     DPRINTF("%s\n", __FUNCTION__);
-    if (party == NULL) {
+    if (party == NULL || strlen(party) == 0) {
         DPRINTF("LoadELFFromFile(%s, 0, NULL)\n", filename);
         DBGWAIT(2);
         LoadELFFromFile(filename, 0, NULL);

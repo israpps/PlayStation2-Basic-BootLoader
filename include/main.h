@@ -114,7 +114,7 @@ void poweroffCallback(void *arg);
 #define MPART NULL
 #endif
 
-#ifdef MX4SIO
+#if defined(MX4SIO) || defined(HDD_BD)
 int LookForBDMDevice(void);
 #endif
 
