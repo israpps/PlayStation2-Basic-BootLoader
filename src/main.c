@@ -478,10 +478,10 @@ char *CheckPath(char *path)
         int x = LookForBDMDevice();
         if (x >= 0) {
             path[4] = '0' + x;
-            if (PART != NULL) {
-                // Neither device type needs the partition name.
-                PART[0] = '\0';
-            }
+#ifdef HDD
+            // Neither device type needs the partition name.
+            MPART[0] = '\0';
+#endif
         }
 #endif
     }
