@@ -8,6 +8,9 @@ enum
 #ifdef MX4SIO
     SOURCE_MX4SIO,
 #endif
+#ifdef HDD_BD
+    SOURCE_HDD_BD,
+#endif
 #ifdef HDD
     SOURCE_HDD,
 #endif
@@ -33,6 +36,9 @@ char *CONFIG_PATHS[SOURCE_COUNT] = {
 #ifdef MX4SIO
     "massX:/PS2BBL/CONFIG.INI",
 #endif
+#ifdef HDD_BD
+    "massH:/PS2BBL/CONFIG.INI",
+#endif
 #ifdef HDD
     "hdd0:__sysconf:pfs:/PS2BBL/CONFIG.INI",
 #endif
@@ -56,6 +62,9 @@ static const char *SOURCES[SOURCE_COUNT] = {
     "usb",
 #ifdef MX4SIO
     "mx4sio",
+#endif
+#ifdef HDD_BD
+    "hdd_bd",
 #endif
 #ifdef HDD
     "hdd",

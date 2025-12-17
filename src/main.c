@@ -97,6 +97,14 @@ int main(int argc, char *argv[])
         scr_clear();
         sleep(4);
     }
+#if defined(HDD) || defined(HDD_BD)
+    else if (LoadHDDIRX() < 0) // only load HDD crap if filexio and iomanx are up and running
+    {
+        scr_setbgcolor(0x0000ff);
+        scr_clear();
+        sleep(4);
+    }
+#endif
 #endif
 
 #ifdef MMCE
@@ -107,15 +115,6 @@ int main(int argc, char *argv[])
 #ifdef MX4SIO
     j = SifExecModuleBuffer(mx4sio_bd_irx, size_mx4sio_bd_irx, 0, NULL, &x);
     DPRINTF(" [MX4SIO_BD]: ID=%d, ret=%d\n", j, x);
-#endif
-
-#ifdef HDD
-    else if (LoadHDDIRX() < 0) // only load HDD crap if filexio and iomanx are up and running
-    {
-        scr_setbgcolor(0x0000ff);
-        scr_clear();
-        sleep(4);
-    }
 #endif
 
     if ((fd = open("rom0:ROMVER", O_RDONLY)) >= 0) {
@@ -474,9 +473,17 @@ char *CheckPath(char *path)
         if (!MountParty(path))
             return strstr(path, "pfs:");
 #endif
+#ifdef HDD_BD
+    } else if (!strncmp("massH:", path, 6)) {
+        int x = LookForBDMDevice("ata");
+        if (x >= 0) {
+            path[4] = '0' + x;
+            PART[0] = '\0';
+        }
+#endif
 #ifdef MX4SIO
     } else if (!strncmp("massX:", path, 6)) {
-        int x = LookForBDMDevice();
+        int x = LookForBDMDevice("sdc");
         if (x >= 0)
             path[4] = '0' + x;
 #endif
@@ -553,9 +560,8 @@ int LoadUSBIRX(void)
     return 0;
 }
 
-
-#ifdef MX4SIO
-int LookForBDMDevice(void)
+#if defined(MX4SIO) || defined(HDD_BD)
+int LookForBDMDevice(char *driver_name)
 {
     static char mass_path[] = "massX:";
     static char DEVID[5];
@@ -567,8 +573,8 @@ int LookForBDMDevice(void)
             int *intptr_ctl = (int *)DEVID;
             *intptr_ctl = fileXioIoctl(dd, USBMASS_IOCTL_GET_DRIVERNAME, "");
             close(dd);
-            if (!strncmp(DEVID, "sdc", 3)) {
-                DPRINTF("%s: Found MX4SIO device at mass%d:/\n", __func__, x);
+            if (!strncmp(DEVID, driver_name, 3)) {
+                DPRINTF("%s: Found %s device at mass%d:/\n", __func__, driver_name, x);
                 return x;
             }
         }
@@ -576,7 +582,6 @@ int LookForBDMDevice(void)
     return -1;
 }
 #endif
-
 
 #ifdef FILEXIO
 int LoadFIO(void)
@@ -665,8 +670,13 @@ int LoadHDDIRX(void)
     poweroffSetCallback(&poweroffCallback, NULL);
     DPRINTF("PowerOFF Callback installed...\n");
 
+#ifdef HDD_BD
+    ID = SifExecModuleBuffer(ata_bd_irx, size_ata_bd_irx, 0, NULL, &RET);
+    DPRINTF(" [ATA_BD]: ID=%d, ret=%d\n", ID, RET);
+#else
     ID = SifExecModuleBuffer(&ps2atad_irx, size_ps2atad_irx, 0, NULL, &RET);
     DPRINTF(" [ATAD]: ret=%d, ID=%d\n", RET, ID);
+#endif
     if (ID < 0 || RET == 1)
         return -3;
 

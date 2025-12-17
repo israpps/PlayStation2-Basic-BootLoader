@@ -114,8 +114,8 @@ void poweroffCallback(void *arg);
 #define MPART NULL
 #endif
 
-#ifdef MX4SIO
-int LookForBDMDevice(void);
+#if defined(MX4SIO) || defined(HDD_BD)
+int LookForBDMDevice(char *driver_name);
 #endif
 
 #ifdef FILEXIO
