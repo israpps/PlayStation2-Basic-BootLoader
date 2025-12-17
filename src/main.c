@@ -473,16 +473,19 @@ char *CheckPath(char *path)
         if (!MountParty(path))
             return strstr(path, "pfs:");
 #endif
-#if defined(MX4SIO) || defined(HDD_BD)
-    } else if (!strncmp("massX:", path, 6)) {
-        int x = LookForBDMDevice();
+#ifdef HDD_BD
+    } else if (!strncmp("massH:", path, 6)) {
+        int x = LookForBDMDevice("ata");
         if (x >= 0) {
             path[4] = '0' + x;
-#ifdef HDD
-            // Neither device type needs the partition name.
-            MPART[0] = '\0';
-#endif
+            PART[0] = '\0';
         }
+#endif
+#ifdef MX4SIO
+    } else if (!strncmp("massX:", path, 6)) {
+        int x = LookForBDMDevice("sdc");
+        if (x >= 0)
+            path[4] = '0' + x;
 #endif
     }
     return path;
@@ -557,9 +560,8 @@ int LoadUSBIRX(void)
     return 0;
 }
 
-
 #if defined(MX4SIO) || defined(HDD_BD)
-int LookForBDMDevice(void)
+int LookForBDMDevice(char *driver_name)
 {
     static char mass_path[] = "massX:";
     static char DEVID[5];
@@ -571,12 +573,8 @@ int LookForBDMDevice(void)
             int *intptr_ctl = (int *)DEVID;
             *intptr_ctl = fileXioIoctl(dd, USBMASS_IOCTL_GET_DRIVERNAME, "");
             close(dd);
-            if (!strncmp(DEVID, "sdc", 3)) {
-                DPRINTF("%s: Found MX4SIO device at mass%d:/\n", __func__, x);
-                return x;
-            }
-            if (!strncmp(DEVID, "ata", 3)) {
-                DPRINTF("%s: Found ATA mass device at mass%d:/\n", __func__, x);
+            if (!strncmp(DEVID, driver_name, 3)) {
+                DPRINTF("%s: Found %s device at mass%d:/\n", __func__, driver_name, x);
                 return x;
             }
         }
@@ -584,7 +582,6 @@ int LookForBDMDevice(void)
     return -1;
 }
 #endif
-
 
 #ifdef FILEXIO
 int LoadFIO(void)

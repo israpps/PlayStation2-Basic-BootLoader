@@ -104,8 +104,6 @@ endif
 ifeq ($(HDD), 1)
   $(info --- compiling with HDD support)
   ifeq ($(HDD_BD), 1)
-    # This needs homebrew SIO2MAN
-    HOMEBREW_IRX = 1
     EE_OBJS += ata_bd_irx.o
     EE_CFLAGS += -DHDD_BD
   else

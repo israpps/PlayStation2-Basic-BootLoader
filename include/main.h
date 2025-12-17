@@ -115,7 +115,7 @@ void poweroffCallback(void *arg);
 #endif
 
 #if defined(MX4SIO) || defined(HDD_BD)
-int LookForBDMDevice(void);
+int LookForBDMDevice(char *driver_name);
 #endif
 
 #ifdef FILEXIO
