@@ -17,16 +17,13 @@
 void RunLoaderElf(const char *filename, const char *party)
 {
     DPRINTF("%s\n", __FUNCTION__);
-    if (party == NULL)
-	{
-		DPRINTF("LoadELFFromFile(%s, 0, NULL)\n", filename);
+    if (party == NULL) {
+        DPRINTF("LoadELFFromFile(%s, 0, NULL)\n", filename);
         DBGWAIT(2);
         LoadELFFromFile(filename, 0, NULL);
-	}
-    else
-	{
-		DPRINTF("LoadELFFromFileWithPartition(%s, %s, 0, NULL);\n", filename, party);
+    } else {
+        DPRINTF("LoadELFFromFileWithPartition(%s, %s, 0, NULL);\n", filename, party);
         DBGWAIT(2);
         LoadELFFromFileWithPartition(filename, party, 0, NULL);
-	}
+    }
 }

@@ -20,10 +20,10 @@ void delay(int count);
 */
 int loadIRXFile(char *path, u32 arg_len, const char *args, int *mod_res);
 
+/// @brief config loop iterator borrowed from wLaunchELF
 int get_CNF_string(char **CNF_p_p,
                    char **name_p_p,
                    char **value_p_p);
-
 
 /**
  * @brief  method returns true if it can extract needed info from path, otherwise false.
@@ -37,5 +37,3 @@ int get_CNF_string(char **CNF_p_p,
  * @return true on success
 */
 int getMountInfo(char *path, char *mountString, char *mountPoint, char *newCWD);
-
-char** str_split(char* a_str, const char a_delim);

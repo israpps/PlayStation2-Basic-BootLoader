@@ -12,6 +12,7 @@ on:
       - '**.MD'
       - '**.gitkeep'
       - '**.gitignore'
+  pull_request:
   workflow_dispatch:
     inputs:
       debug:
@@ -37,7 +38,7 @@ jobs:
         run: |
           apk add build-base git p7zip
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git fetch --prune --unshallow
@@ -63,11 +64,13 @@ jobs:
         run: |
           make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PS2_HDD/ HDD=1 ${{ env.DEBUG }} PRINTF=${{ github.event.inputs.name }}
 
-      - name: Compile PS2 discboot build
+      - name: Compile PS2 MMCE build
         run: |
-          make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PS2_BOOTDISK/ DISC_STOP_AT_BOOT=1 ${{ env.DEBUG }} PRINTF=${{ github.event.inputs.name }}
-          echo "the executables on this folder are the same than normal PS2BBL, but they try to stop disc spinning as soon as possible, ideal for freedv">PS2_BOOTDISK/README.TXT
-          
+          make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PS2_MMCE/ MMCE=1 ${{ env.DEBUG }} PRINTF=${{ github.event.inputs.name }}
+
+      - name: Compile PSX MMCE build
+        run: |
+          make release COMMIT_HASH=${GITHUB_SHA::7} BINDIR=PSX_MMCE/ PSX=1 MMCE=1 ${{ env.DEBUG }} PRINTF=${{ github.event.inputs.name }}
       - name: list
         run: |
           git ls-files -i --exclude-standard -c
@@ -80,7 +83,8 @@ jobs:
           mv PSX/ release/PSX/
           mv PS2_HDD/ release/PS2_HDD/
           mv PS2_MX4SIO/ release/PS2_MX4SIO/
-          mv PS2_BOOTDISK/ release/PS2_BOOTDISK/
+          mv PS2_MMCE/ release/PS2_MMCE/
+          mv PSX_MMCE/ release/PSX_MMCE/
 
       - name: pack release
         run: |
@@ -92,21 +96,30 @@ jobs:
 
       - name: Upload artifacts
         if: ${{ success() }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: PS2BBL
           path: |
             release/*
 
-      - name: Create release
+      - name: Create prerelease
         if: github.ref == 'refs/heads/main'
-        uses: marvinpinto/action-automatic-releases@latest
+        uses: mathieucarbou/marvinpinto-action-automatic-releases@latest
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          prerelease: true
           automatic_release_tag: "latest"
           title: "Latest development build"
           files: |
             PS2BBL.7z
+
+      - name: notify on discord
+        if: github.ref == 'refs/heads/main'
+        uses: tsickert/discord-webhook@v5.3.0
+        with:
+          webhook-url: ${{ secrets.DISCORD_FEED }}
+          content: "## PS2BBL has been updated!\nread the changelog here: https://github.com/israpps/PlayStation2-Basic-BootLoader/releases/tag/latest\n### [Download Page](https://israpps.github.io/PlayStation2-Basic-BootLoader/Downloads/)"
+
 
   opentuna:
     runs-on: ubuntu-latest
@@ -119,7 +132,7 @@ jobs:
           apk add build-base git p7zip
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.7
 
       - name: list
         run: |
@@ -132,7 +145,7 @@ jobs:
       - name: update binaries
         run: |
           cp PS2BBL/PS2/COMPRESSED_PS2BBL.ELF Funtuna-Fork/installer/INSTALLER_CONTENTS/BOOT/BOOT.ELF
-          cp PS2BBL/PS2BBL/CONFIG.INI Funtuna-Fork/installer/INSTALLER_CONTENTS/PS2BBL/CONFIG.INI
+          cp PS2BBL/SYS-CONF/PS2BBL.INI Funtuna-Fork/installer/INSTALLER_CONTENTS/SYS-CONF/PS2BBL.INI
 
       - name: update bundled software
         run: |
@@ -160,21 +173,28 @@ jobs:
           echo "If you bought this software you have been SCAMMED.">>release/CREDITS.TXT
           echo "https://github.com/israpps/PlayStation2-Basic-BootLoader">>release/CREDITS.TXT
           cp -r release/ $TARGET/
-          7z a -t7z PS2BBL_OpenTuna_Installer.7z $TARGET/* 
+          7z a -t7z PS2BBL_OpenTuna_Installer.7z $TARGET/*
 
       - name: Upload artifacts
         if: ${{ success() }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: PS2BBL
+          name: PS2BBL_OPENTUNA
           path: |
             release/PS2BBL_OpenTuna_Installer.ELF
 
-      - name: Create release
+#      - name: last week changelog
+#        run: |
+#          git --no-pager log --pretty=format:"- %h:%as %>(18)%an: %s" --since="Last Week">CHANGELOG
+#          echo CHANGELOG=$(cat CHANGELOG) >> $GITHUB_ENV
+#          echo ${{ env.CHANGELOG }}
+
+      - name: Create prerelease
         if: github.ref == 'refs/heads/main'
-        uses: marvinpinto/action-automatic-releases@latest
+        uses: mathieucarbou/marvinpinto-action-automatic-releases@latest
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          prerelease: true
           automatic_release_tag: "opentuna"
           title: "Latest PS2BBL + OpenTuna"
           files: |

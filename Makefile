@@ -1,8 +1,8 @@
 define HEADER
-__________  _________________   ____________________.____     
-\______   \/   _____/\_____  \  \______   \______   \    |    
- |     ___/\_____  \  /  ____/   |    |  _/|    |  _/    |    
- |    |    /        \/       \   |    |   \|    |   \    |___ 
+__________  _________________   ____________________.____
+\______   \/   _____/\_____  \  \______   \______   \    |
+ |     ___/\_____  \  /  ____/   |    |  _/|    |  _/    |
+ |    |    /        \/       \   |    |   \|    |   \    |___
  |____|   /_______  /\_______ \  |______  /|______  /_______ \\
                   \/         \/         \/        \/        \/
 		PlayStation2 Basic BootLoader - By El_isra
@@ -11,14 +11,16 @@ export HEADER
 
 
 # ---{BUILD CFG}--- #
-HAS_EMBED_IRX = 1 # whether to embed or not non vital IRX (wich will be loaded from memcard files)
+HAS_EMBED_IRX ?= 1# whether to embed or not non vital IRX (wich will be loaded from memcard files)
 DEBUG ?= 0
 PSX ?= 0 # PSX DESR support
 HDD ?= 0 #wether to add internal HDD support
+MMCE ?= 0
 MX4SIO ?= 0
 PROHBIT_DVD_0100 ?= 0 # prohibit the DVD Players v1.00 and v1.01 from being booted.
 XCDVD_READKEY ?= 0 # Enable the newer sceCdReadKey checks, which are only supported by a newer CDVDMAN module.
-UDPTTY ?= 0 # printf ove UDP
+UDPTTY ?= 0 # printf over UDP
+PPCTTY ?= 0 # printf over PowerPC UART
 PRINTF ?= NONE
 DISC_STOP_AT_BOOT ?= 0
 
@@ -26,11 +28,10 @@ HOMEBREW_IRX ?= 0 # if we need homebrew SIO2MAN, MCMAN, MCSERV & PADMAN embedded
 FILEXIO_NEED ?= 0 # if we need filexio and imanx loaded for other features (HDD, mx4sio, etc)
 DEV9_NEED ?= 0    # if we need DEV9 loaded for other features (HDD, UDPTTY, etc)
 
-# Related to binary size reduction
-KERNEL_NOPATCH = 1 
+# Related to binary size reduction (it disables some features, please be sure you won't disable something you need)
+KERNEL_NOPATCH = 0
 NEWLIB_NANO = 1
-DUMMY_TIMEZONE = 0
-DUMMY_LIBC_INIT = 1
+DUMMY_TIMEZONE = 1
 
 # ---{ VERSIONING }--- #
 
@@ -84,10 +85,23 @@ endif
 ifeq ($(MX4SIO), 1)
   HOMEBREW_IRX = 1
   FILEXIO_NEED = 1
-  EE_OBJS += mx4sio_bd.o
+  EE_OBJS += mx4sio_bd_irx.o
   EE_CFLAGS += -DMX4SIO
   ifeq ($(USE_ROM_SIO2MAN), 1)
     $(error MX4SIO needs Homebrew SIO2MAN to work)
+  endif
+endif
+
+ifeq ($(MMCE), 1)
+  HOMEBREW_IRX = 1
+  FILEXIO_NEED = 1
+  EE_OBJS += mmceman_irx.o
+  EE_CFLAGS += -DMMCE
+  ifeq ($(USE_ROM_SIO2MAN), 1)
+    $(error MMCE needs Homebrew SIO2MAN to work)
+  endif
+  ifeq ($(MX4SIO), 1)
+    $(error MX4SIO cant coexist with MMCE)
   endif
 endif
 
@@ -117,7 +131,7 @@ ifeq ($(DEBUG), 1)
    $(info --- debugging enabled)
   EE_CFLAGS += -DDEBUG -O0 -g
   EE_LIBS += -lelf-loader
-else 
+else
   EE_CFLAGS += -Os
   EE_LDFLAGS += -s
   EE_LIBS += -lelf-loader-nocolour
@@ -144,10 +158,12 @@ else
   EE_OBJS += sio2man_irx.o
 endif
 
-ifneq ($(HAS_EMBED_IRX), 1)
+ifeq ($(HAS_EMBED_IRX), 1)
   $(info --- USB drivers will be embedded)
   EE_OBJS += usbd_irx.o bdm_irx.o bdmfs_fatfs_irx.o usbmass_bd_irx.o
   EE_CFLAGS += -DHAS_EMBEDDED_IRX
+else
+  $(info --- USB drivers will be external)
 endif
 
 ifeq ($(HDD), 1)
@@ -165,6 +181,13 @@ ifeq ($(UDPTTY), 1)
   EE_CFLAGS += -DUDPTTY
   EE_OBJS += udptty_irx.o ps2ip_irx.o netman_irx.o smap_irx.o
   DEV9_NEED = 1
+  ifneq ($(PRINTF), EE_SIO) # only enable common printf if EE_SIO is disabled. this allows separating EE and IOP printf
+    PRINTF = PRINTF
+  endif
+else ifeq ($(PPCTTY), 1)
+  $(info --- PPCTTY enabled)
+  EE_CFLAGS += -DPPCTTY
+  EE_OBJS += ppctty_irx.o
   ifneq ($(PRINTF), EE_SIO) # only enable common printf if EE_SIO is disabled. this allows separating EE and IOP printf
     PRINTF = PRINTF
   endif
@@ -248,12 +271,8 @@ release: clean $(EE_BIN_PACKED)
 	@echo "$$HEADER"
 
 clean:
-	@echo cleaning...
-	@echo - Executables
 	@rm -rf $(EE_BIN) $(EE_BIN_STRIPPED) $(EE_BIN_ENCRYPTED) $(EE_BIN_PACKED)
-	@echo - Object folders 
 	@rm -rf $(EE_OBJS_DIR) $(EE_ASM_DIR)
-	@echo  "\n"
 
 $(EE_BIN_STRIPPED): $(EE_BIN)
 	@echo " -- Stripping"
@@ -270,9 +289,9 @@ endif
 $(EE_BIN_ENCRYPTED): $(EE_BIN_PACKED)
 	@echo " -- Encrypting ($(KELFTYPE))"
 ifeq ($(KELFTYPE), MC)
-	thirdparty/kelftool_dnasload.exe encrypt dnasload $< $@
+	thirdparty/kelftool encrypt dnasload $< $@
 else ifeq ($(KELFTYPE), HDD)
-	thirdparty/kelftool_dnasload.exe encrypt fhdb $< $@
+	thirdparty/kelftool encrypt fhdb $< $@
 else
 	$(error UNKNOWN KELF TYPE: '$(KELFTYPE)')
 endif
@@ -296,7 +315,7 @@ ifneq ($(VERBOSE),1)
 endif
 	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
 
-$(EE_OBJS_DIR)%.o: $(EE_ASN_DIR)%.c | $(EE_OBJS_DIR)
+$(EE_OBJS_DIR)%.o: $(EE_ASM_DIR)%.c | $(EE_OBJS_DIR)
 ifneq ($(VERBOSE),1)
 	@echo "  - $@"
 endif

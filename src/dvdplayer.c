@@ -114,7 +114,7 @@ static int CheckFileFromMC(int port, int slot, const char *file)
     return 1;
 }
 
-/*  Note: this is a mesh-up of the two versions of this function.
+/** NOTE: this is a mesh-up of the two versions of this function.
     Originally, the OSDSYS from ROM v2.20 had two similar versions, one for
     DVDPlayerGetVersion() and the other for DVDPlayerGetUpdateVersion().
 
@@ -176,8 +176,7 @@ static int DVDPlayerUpdateCheck(int *pPort, int *pSlot, char *pVersion)
                         }
 
                         if (result == 0) { // DVD Player update of the right region exists and is newer.
-#ifdef PROHBIT_DVD_0100
-                                           // Ensure that the banned DVD Player is not being booted.
+#ifdef PROHBIT_DVD_0100                    // Ignore DVDPlayer versions banned by $ony
                             if (strcmp(version, "1.00\n") != 0 && strcmp(version, "1.01\n") != 0) {
 #endif
                                 // This is done for DVDPlayerGetUpdateVersion().
@@ -299,7 +298,6 @@ int DVDPlayerInit(void)
         fd = open("rom1:DVDID", O_RDONLY);
 
     if (fd < 0) { // Not having a DVD player is not an error.
-
         // 0100J and 0101J has no ROM DVD Player. This rule is copied from the HDD Browser, as it is absent in the normal browser.
         if (ConsoleROMVER[0] == '0' && ConsoleROMVER[1] == '1' && ConsoleROMVER[2] == '0' && (ConsoleROMVER[3] == '0' || ConsoleROMVER[3] == '1') && ConsoleROMVER[4] == 'J')
             ROMDVDPlayer.region = 'J';

@@ -14,15 +14,21 @@ enum
 #ifdef XFROM
     SOURCE_XFROM,
 #endif
+#ifdef MMCE
+    SOURCE_MMCE1,
+    SOURCE_MMCE0,
+#endif
+#ifdef PSX
     SOURCE_XCONFIG,
+#endif
     SOURCE_CWD,
     SOURCE_INVALID,
     SOURCE_COUNT,
 } CONFIG_SOURCES_ID;
 
-char* CONFIG_PATHS[SOURCE_COUNT] = {
-    "mc0:/PS2BBL/CONFIG.INI",
-    "mc1:/PS2BBL/CONFIG.INI",
+char *CONFIG_PATHS[SOURCE_COUNT] = {
+    "mc0:/SYS-CONF/PS2BBL.INI",
+    "mc1:/SYS-CONF/PS2BBL.INI",
     "mass:/PS2BBL/CONFIG.INI",
 #ifdef MX4SIO
     "massX:/PS2BBL/CONFIG.INI",
@@ -33,12 +39,18 @@ char* CONFIG_PATHS[SOURCE_COUNT] = {
 #ifdef XFROM
     "xfrom:/PS2BBL/CONFIG.INI",
 #endif
-    "mc?:/PS2BBL/XCONFIG.INI",
+#ifdef MMCE
+    "mmce0:/PS2BBL/PS2BBL.INI",
+    "mmce1:/PS2BBL/PS2BBL.INI",
+#endif
+#ifdef PSX
+    "mc?:/SYS-CONF/PSXBBL.INI",
+#endif
     "CONFIG.INI",
     "",
 };
 
-static const char* SOURCES[SOURCE_COUNT] = {
+static const char *SOURCES[SOURCE_COUNT] = {
     "mc0",
     "mc1",
     "usb",
@@ -51,7 +63,13 @@ static const char* SOURCES[SOURCE_COUNT] = {
 #ifdef XFROM
     "xfrom",
 #endif
+#ifdef MMCE
+    "mmce0",
+    "mmce1",
+#endif
+#ifdef PSX
     "XCONF",
+#endif
     "CWD",
     "NOT FOUND",
 };
