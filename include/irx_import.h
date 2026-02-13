@@ -26,7 +26,11 @@ IMPORT_BIN2C(fileXio_irx);
 
 #ifdef HDD
 IMPORT_BIN2C(poweroff_irx);
+#ifdef HDD_BD
+IMPORT_BIN2C(ata_bd_irx);
+#else
 IMPORT_BIN2C(ps2atad_irx);
+#endif
 IMPORT_BIN2C(ps2hdd_irx);
 IMPORT_BIN2C(ps2fs_irx);
 #endif
