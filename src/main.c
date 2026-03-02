@@ -371,12 +371,6 @@ char *CheckPath(char *path)
         if (!MountParty(path))
             return strstr(path, "pfs:");
 #endif
-#ifdef MX4SIO
-    } else if (!strncmp("massX:", path, 6)) {
-        int x = LookForBDMDevice();
-        if (x >= 0)
-            path[4] = '0' + x;
-#endif
     }
     return path;
 }
@@ -393,32 +387,6 @@ void SetDefaultSettings(void)
     GLOBCFG.TRAYEJECT = 0;
     GLOBCFG.LOGO_DISP = 2;
 }
-
-
-#ifdef MX4SIO
-int LookForBDMDevice(void)
-{
-    static char mass_path[] = "massX:";
-    static char DEVID[5];
-    int dd;
-    int x = 0;
-    for (x = 0; x < 5; x++) {
-        mass_path[4] = '0' + x;
-        if ((dd = fileXioDopen(mass_path)) >= 0) {
-            int *intptr_ctl = (int *)DEVID;
-            *intptr_ctl = fileXioIoctl(dd, USBMASS_IOCTL_GET_DRIVERNAME, "");
-            close(dd);
-            if (!strncmp(DEVID, "sdc", 3)) {
-                DPRINTF("%s: Found MX4SIO device at mass%d:/\n", __func__, x);
-                return x;
-            }
-        }
-    }
-    return -1;
-}
-#endif
-
-
 
 #ifdef DEV9
 int loadDEV9(void)

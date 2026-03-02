@@ -35,7 +35,7 @@ char *CONFIG_PATHS[SOURCE_COUNT] = {
     "mc1:/SYS-CONF/PS2BBL.INI",
     "mass:/PS2BBL/CONFIG.INI",
 #ifdef MX4SIO
-    "massX:/PS2BBL/CONFIG.INI",
+    "mx4sio:/PS2BBL/CONFIG.INI",
 #endif
 #ifdef HDD
     "hdd0:__sysconf:pfs:/PS2BBL/CONFIG.INI",
