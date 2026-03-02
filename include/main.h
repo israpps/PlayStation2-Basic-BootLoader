@@ -52,8 +52,8 @@
 #endif
 
 #ifdef DEV9
-static int dev9_loaded = 0;
-int loadDEV9(void);
+extern int dev9_loaded;
+extern int loadDEV9(void);
 #endif
 
 // For avoiding define NEWLIB_AWARE
@@ -72,7 +72,6 @@ void TimerEnd(void);
 
 /// check path for processing pseudo-devices like `mc?:/`
 char *CheckPath(char *path);
-static void AlarmCallback(s32 alarm_id, u16 time, void *common);
 int dischandler();
 // there is no need to call this on a PSX DESR since OSDSYS performs it at boot
 void CDVDBootCertify(u8 romver[16]);
@@ -81,10 +80,6 @@ void CleanUp(void);
 int LoadUSBIRX(void);
 // Execute OSDSYS with parameters to avoid booting memory card or HDD updates
 void runOSDNoUpdate(void);
-#ifdef PSX
-// Satisfy special necesities of the PSX DESR
-static void InitPSX();
-#endif
 #ifndef NO_TEMP_DISP
 /// @brief Print console temperature on screen
 /// @note only supported by DRAGON Mechacons. function will do nothing on older mechacon
@@ -106,12 +101,7 @@ void loadUDPTTY();
 #endif
 
 #ifdef HDD
-#include <hdd-ioctl.h>
-#include <io_common.h>
-#include <assert.h>
-#include <libpwroff.h>
-char PART[128] = "\0";
-int HDD_USABLE = 0;
+extern char PART[128];
 #define MPART PART
 int LoadHDDIRX(void);             // Load HDD IRXes
 int MountParty(const char *path); ///processes strings in the format `hdd0:/$PARTITION:pfs:$PATH_TO_FILE/` to mount partition
