@@ -1,5 +1,9 @@
 #ifndef COMMONDEF
 #define COMMONDEF
+/// common definitions that should not be used outside of main.c
+
+#include "banner.h"
+
 enum
 {
     SOURCE_MC0 = 0,
@@ -141,6 +145,16 @@ char *DEFPATH[] = {
     "mc?:/BOOT/BOOT2.ELF",
     "mc?:/APPS/ULE.ELF",
 };
+
+typedef struct
+{
+    int SKIPLOGO;
+    char *KEYPATHS[17][3];
+    int DELAY;
+    int OSDHISTORY_READ;
+    int TRAYEJECT;
+    int LOGO_DISP; //0: NO, 1: Only Console info, any other value: YES
+} CONFIG;
 
 #ifndef COMMIT_HASH
 #define COMMIT_HASH "UNKNOWn"

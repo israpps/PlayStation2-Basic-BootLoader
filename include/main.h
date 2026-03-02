@@ -30,7 +30,6 @@
 #include "debugprintf.h"
 #include "pad.h"
 #include "util.h"
-#include "common.h"
 
 #include "libcdvd_add.h"
 #include "dvdplayer.h"
@@ -40,8 +39,13 @@
 #include "ps1.h"
 #include "ps2.h"
 #include "modelname.h"
-#include "banner.h"
+#include "init.h"
 
+#ifdef DEBUG
+#define DG(x...) x// DEBUG GUARD, a little macro to isolate code that should be included only if debug enabled
+#else
+#define DG(x...)// DEBUG GUARD, a little macro to isolate code that should be included only if debug enabled
+#endif
 #ifdef PSX
 #include <iopcontrol_special.h>
 #include "psx/plibcdvd_add.h"
@@ -86,11 +90,15 @@ static void InitPSX();
 /// @note only supported by DRAGON Mechacons. function will do nothing on older mechacon
 void PrintTemperature();
 #endif
+
 #ifdef HDD
 int LoadHDDIRX(void);             // Load HDD IRXes
-int LoadFIO(void);                // Load FileXio and it´s dependencies
 int MountParty(const char *path); ///processes strings in the format `hdd0:/$PARTITION:pfs:$PATH_TO_FILE/` to mount partition
 int mnt(const char *path);        ///mount partition specified on path
+#endif
+
+#ifdef FILEXIO
+int LoadIOX(void); // Load FileXio and it´s dependencies
 #endif
 
 #ifdef UDPTTY
@@ -120,7 +128,9 @@ int LookForBDMDevice(void);
 
 #ifdef FILEXIO
 #include <fileXio_rpc.h>
-int LoadFIO(void); // Load FileXio and it´s dependencies
+int LoadIOX(void); // Load FileXio and it´s dependencies
 #endif
+
+#define GS_BGCOLOUR(x) *((volatile unsigned long int *)0x120000E0) = x
 
 #endif
